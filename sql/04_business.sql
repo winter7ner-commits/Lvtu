@@ -3,7 +3,7 @@ USE lvtu;
 -- 服务类型表
 CREATE TABLE service_type (
     service_type_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '服务类型ID',
-    name VARCHAR(50) NOT NULL COMMENT '服务名称（咨询律师/文书代写/合同审核/解困热线）',
+    name VARCHAR(50) NOT NULL COMMENT '服务名称（在线法律咨询/电话法律咨询/文书代写/合同审核/婚姻家事/诉讼代理）',
     description VARCHAR(255) COMMENT '服务描述'
 ) COMMENT='服务类型表';
 
@@ -15,8 +15,10 @@ CREATE TABLE `order` (
     lawyer_id BIGINT COMMENT '律师ID',
     service_type_id INT NOT NULL COMMENT '服务类型ID',
     total_amount DECIMAL(10,2) DEFAULT 0 COMMENT '订单总金额',
-    status VARCHAR(20) DEFAULT '待支付' COMMENT '订单状态（待支付/已支付/待接单/处理中/待评价/已完成）',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    status VARCHAR(20) NOT NULL DEFAULT '待支付' COMMENT '订单状态（待支付/待接单/处理中/待评价/已完成/已取消）',
+    created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 
     CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users(user_id),
     CONSTRAINT fk_order_lawyer FOREIGN KEY (lawyer_id) REFERENCES lawyer(lawyer_id),
