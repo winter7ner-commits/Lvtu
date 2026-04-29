@@ -1,4 +1,5 @@
 USE lvtu;
+--哈哈哈哈哈哈哈哈
 
 CREATE TABLE service_result (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '服务结果ID',
