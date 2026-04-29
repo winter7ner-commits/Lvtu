@@ -1,0 +1,31 @@
+USE lvtu;
+
+CREATE TABLE service_result (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '服务结果ID',
+    order_id BIGINT NOT NULL COMMENT '订单ID',
+    lawyer_id BIGINT NOT NULL COMMENT '提交结果的律师ID',
+    title VARCHAR(100) NOT NULL COMMENT '服务结果标题',
+    content TEXT NULL COMMENT '服务结果说明',
+    status TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0已提交，1用户确认，2需修改',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) COMMENT='服务结果表';
+
+CREATE TABLE service_result_attachment (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '附件ID',
+    result_id BIGINT NOT NULL COMMENT '服务结果ID',
+    file_name VARCHAR(100) NOT NULL COMMENT '文件名',
+    file_url VARCHAR(255) NOT NULL COMMENT '文件路径',
+    file_type VARCHAR(50) NULL COMMENT '文件类型',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间'
+) COMMENT='服务结果附件表';
+
+CREATE TABLE lawyer_settlement (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '结算ID',
+    order_id BIGINT NOT NULL COMMENT '订单ID',
+    lawyer_id BIGINT NOT NULL COMMENT '律师ID',
+    amount DECIMAL(10,2) NOT NULL COMMENT '结算金额',
+    status TINYINT NOT NULL DEFAULT 0 COMMENT '状态：0待结算，1已结算',
+    settled_at DATETIME NULL COMMENT '结算时间',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+) COMMENT='律师结算表';
