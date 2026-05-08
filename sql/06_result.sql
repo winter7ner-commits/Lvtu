@@ -12,6 +12,12 @@ CREATE TABLE service_result (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) COMMENT='服务结果表';
 
+INSERT INTO service_result (
+    id, order_id, lawyer_id, title, content, status, created_at, updated_at
+) VALUES
+    (900001, 800004, 700001, '劳动争议仲裁代理方案', '已完成仲裁申请书、证据目录和风险提示说明，建议用户按约定时间提交仲裁材料。', 0, '2026-05-05 17:30:00', '2026-05-05 17:30:00'),
+    (900002, 800005, 700001, '合同解除法律意见', '已向用户说明解除通知送达、生效时间以及证据保全要点，用户已确认服务完成。', 1, '2026-04-29 15:30:00', '2026-04-29 16:10:00');
+
 CREATE TABLE service_result_attachment (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '附件ID',
     result_id BIGINT NOT NULL COMMENT '服务结果ID',
@@ -20,6 +26,13 @@ CREATE TABLE service_result_attachment (
     file_type VARCHAR(50) NULL COMMENT '文件类型',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间'
 ) COMMENT='服务结果附件表';
+
+INSERT INTO service_result_attachment (
+    id, result_id, file_name, file_url, file_type, created_at
+) VALUES
+    (910001, 900001, '仲裁申请书.docx', '/mock/files/arbitration-application.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '2026-05-05 17:31:00'),
+    (910002, 900001, '证据目录.pdf', '/mock/files/evidence-list.pdf', 'application/pdf', '2026-05-05 17:32:00'),
+    (910003, 900002, '法律意见书.pdf', '/mock/files/legal-opinion.pdf', 'application/pdf', '2026-04-29 15:40:00');
 
 CREATE TABLE lawyer_settlement (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '结算ID',
@@ -30,3 +43,8 @@ CREATE TABLE lawyer_settlement (
     settled_at DATETIME NULL COMMENT '结算时间',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) COMMENT='律师结算表';
+
+INSERT INTO lawyer_settlement (
+    id, order_id, lawyer_id, amount, status, settled_at, created_at
+) VALUES
+    (920001, 800005, 700001, 129.00, 0, NULL, '2026-04-29 16:15:00');
