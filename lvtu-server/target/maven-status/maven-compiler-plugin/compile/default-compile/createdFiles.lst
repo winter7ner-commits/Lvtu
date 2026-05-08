@@ -1,0 +1,11 @@
+com\bitzh\lvtu\service\LawyerService.class
+com\bitzh\lvtu\config\SpecialtiesJsonTypeHandler.class
+com\bitzh\lvtu\LvtuApplication.class
+com\bitzh\lvtu\service\impl\LawyerServiceImpl.class
+com\bitzh\lvtu\common\ApiResponse.class
+com\bitzh\lvtu\entity\Lawyer.class
+com\bitzh\lvtu\config\CorsConfig.class
+com\bitzh\lvtu\controller\LawyerController.class
+com\bitzh\lvtu\dto\LawyerDTO.class
+com\bitzh\lvtu\dto\SpecialtyDTO.class
+com\bitzh\lvtu\mapper\LawyerMapper.class
