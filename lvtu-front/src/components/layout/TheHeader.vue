@@ -3,7 +3,7 @@
     <div class="header-container">
       <!-- Logo -->
       <div class="logo" @click="goToHome">
-        <img src="/public/icons/logo.png" alt="LVTU" class="logo-img" />
+        <img src="/public/icons/sign.png" alt="LVTU" class="logo-img" />
         <span class="logo-text">律途</span>
       </div>
 
