@@ -1,7 +1,7 @@
 USE lvtu;
 
 -- 服务类型表
-CREATE TABLE service_type (
+CREATE TABLE IF NOT EXISTS service_type (
     service_type_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '服务类型ID',
     name VARCHAR(50) NOT NULL COMMENT '服务名称（在线法律咨询/电话法律咨询/文书代写/合同审核/婚姻家事/诉讼代理）',
     description VARCHAR(255) COMMENT '服务描述'
@@ -17,7 +17,7 @@ INSERT INTO service_type (service_type_id, name, description) VALUES
 
 
 -- 订单表
-CREATE TABLE `order` (
+CREATE TABLE IF NOT EXISTS `order` (
     order_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '订单ID',
     user_id BIGINT NOT NULL COMMENT '用户ID',
     lawyer_id BIGINT COMMENT '律师ID',
@@ -45,7 +45,7 @@ INSERT INTO `order` (
 
 
 -- 订单服务详情表
-CREATE TABLE order_service_detail (
+CREATE TABLE IF NOT EXISTS order_service_detail (
     detail_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '详情ID',
     order_id BIGINT NOT NULL COMMENT '订单ID',
     form_data JSON NOT NULL COMMENT '表单数据',
@@ -94,7 +94,7 @@ INSERT INTO order_service_detail (detail_id, order_id, form_data) VALUES
 
 
 -- 支付表
-CREATE TABLE payment (
+CREATE TABLE IF NOT EXISTS payment (
     payment_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '支付ID',
     order_id BIGINT NOT NULL COMMENT '订单ID',
     amount DECIMAL(10,2) NOT NULL COMMENT '支付金额',

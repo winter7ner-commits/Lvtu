@@ -1,9 +1,5 @@
 USE lvtu;
 
--- 创建数据库
-CREATE DATABASE IF NOT EXISTS lvt DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT '律途法律平台数据库';
-USE lvt;
-
 -- 法规分类表
 CREATE TABLE IF NOT EXISTS legal_category (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '分类ID',
