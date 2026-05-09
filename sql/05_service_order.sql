@@ -99,15 +99,19 @@ CREATE TABLE IF NOT EXISTS payment (
     order_id BIGINT NOT NULL COMMENT '订单ID',
     amount DECIMAL(10,2) NOT NULL COMMENT '支付金额',
     status VARCHAR(20) DEFAULT '未支付' COMMENT '支付状态（未支付/已支付/已取消）',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '支付创建时间',
     payment_time DATETIME COMMENT '支付时间',
 
-    CONSTRAINT fk_payment_order FOREIGN KEY (order_id) REFERENCES `order`(order_id)
+    CONSTRAINT fk_payment_order 
+        FOREIGN KEY (order_id) REFERENCES `order`(order_id)
 ) COMMENT='支付表';
 
-INSERT INTO payment (payment_id, order_id, amount, status, payment_time) VALUES
-    (860001, 800001, 199.00, '已支付', '2026-05-01 10:05:00'),
-    (860002, 800002, 299.00, '已支付', '2026-05-02 11:05:00'),
-    (860003, 800003, 399.00, '已支付', '2026-05-03 09:35:00'),
-    (860004, 800004, 899.00, '已支付', '2026-05-04 14:25:00'),
-    (860005, 800005, 129.00, '已支付', '2026-04-28 08:50:00'),
-    (860006, 800006, 599.00, '已支付', '2026-05-06 13:20:00');
+
+-- 测试数据
+INSERT INTO payment (payment_id, order_id, amount, status, create_time, payment_time) VALUES
+    (860001, 800001, 199.00, '已支付', '2026-05-01 09:58:00', '2026-05-01 10:05:00'),
+    (860002, 800002, 299.00, '已支付', '2026-05-02 10:52:00', '2026-05-02 11:05:00'),
+    (860003, 800003, 399.00, '已支付', '2026-05-03 09:20:00', '2026-05-03 09:35:00'),
+    (860004, 800004, 899.00, '已支付', '2026-05-04 14:10:00', '2026-05-04 14:25:00'),
+    (860005, 800005, 129.00, '已支付', '2026-04-28 08:40:00', '2026-04-28 08:50:00'),
+    (860006, 800006, 599.00, '已支付', '2026-05-06 13:05:00', '2026-05-06 13:20:00');
