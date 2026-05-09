@@ -1,0 +1,76 @@
+
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"&gt;
+&lt;mapper namespace="com.bitzh.lvtu.mapper.LegalArticleMapper"&gt;
+
+    &lt;resultMap id="BaseResultMap" type="com.bitzh.lvtu.entity.LegalArticle"&gt;
+        &lt;id column="id" property="id"/&gt;
+        &lt;result column="document_id" property="documentId"/&gt;
+        &lt;result column="article_no" property="articleNo"/&gt;
+        &lt;result column="chapter_title" property="chapterTitle"/&gt;
+        &lt;result column="content" property="content"/&gt;
+        &lt;result column="sort_order" property="sortOrder"/&gt;
+        &lt;result column="status" property="status"/&gt;
+        &lt;result column="created_at" property="createdAt"/&gt;
+        &lt;result column="updated_at" property="updatedAt"/&gt;
+    &lt;/resultMap&gt;
+
+    &lt;sql id="Base_Column_List"&gt;
+        id, document_id, article_no, chapter_title, content, sort_order, status, created_at, updated_at
+    &lt;/sql&gt;
+
+    &lt;select id="selectAll" resultMap="BaseResultMap"&gt;
+        SELECT &lt;include refid="Base_Column_List"/&gt;
+        FROM legal_article
+        ORDER BY sort_order ASC
+    &lt;/select&gt;
+
+    &lt;select id="selectByDocumentId" resultMap="BaseResultMap"&gt;
+        SELECT &lt;include refid="Base_Column_List"/&gt;
+        FROM legal_article
+        WHERE document_id = #{documentId}
+        ORDER BY sort_order ASC
+    &lt;/select&gt;
+
+    &lt;select id="selectByDocumentIdAndStatus" resultMap="BaseResultMap"&gt;
+        SELECT &lt;include refid="Base_Column_List"/&gt;
+        FROM legal_article
+        WHERE document_id = #{documentId} AND status = #{status}
+        ORDER BY sort_order ASC
+    &lt;/select&gt;
+
+    &lt;select id="selectById" resultMap="BaseResultMap"&gt;
+        SELECT &lt;include refid="Base_Column_List"/&gt;
+        FROM legal_article
+        WHERE id = #{id}
+    &lt;/select&gt;
+
+    &lt;insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalArticle" useGeneratedKeys="true" keyProperty="id"&gt;
+        INSERT INTO legal_article (document_id, article_no, chapter_title, content, sort_order, status, created_at, updated_at)
+        VALUES (#{documentId}, #{articleNo}, #{chapterTitle}, #{content}, #{sortOrder}, #{status}, NOW(), NOW())
+    &lt;/insert&gt;
+
+    &lt;update id="update" parameterType="com.bitzh.lvtu.entity.LegalArticle"&gt;
+        UPDATE legal_article
+        &lt;set&gt;
+            &lt;if test="documentId != null"&gt;document_id = #{documentId},&lt;/if&gt;
+            &lt;if test="articleNo != null"&gt;article_no = #{articleNo},&lt;/if&gt;
+            &lt;if test="chapterTitle != null"&gt;chapter_title = #{chapterTitle},&lt;/if&gt;
+            &lt;if test="content != null"&gt;content = #{content},&lt;/if&gt;
+            &lt;if test="sortOrder != null"&gt;sort_order = #{sortOrder},&lt;/if&gt;
+            &lt;if test="status != null"&gt;status = #{status},&lt;/if&gt;
+            updated_at = NOW()
+        &lt;/set&gt;
+        WHERE id = #{id}
+    &lt;/update&gt;
+
+    &lt;delete id="deleteById"&gt;
+        DELETE FROM legal_article WHERE id = #{id}
+    &lt;/delete&gt;
+
+    &lt;select id="existsById" resultType="boolean"&gt;
+        SELECT COUNT(*) &gt; 0 FROM legal_article WHERE id = #{id}
+    &lt;/select&gt;
+
+&lt;/mapper&gt;

@@ -1,27 +1,25 @@
+
 package com.bitzh.lvtu.entity;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "legal_document")
+import java.time.LocalDateTime;
+
+/**
+ * 法律文件实体
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class LegalDocument {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
-    @Column(nullable = false)
+    private Long id;
     private String name;
-
-    @Column(name = "category_id")
-    private Integer categoryId;
-
-    @Column(columnDefinition = "TEXT")
-    private String content;
+    private Long categoryId;
+    private LocalDateTime publishDate;
+    private Integer sortOrder = 0;
+    private Integer status = 1;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

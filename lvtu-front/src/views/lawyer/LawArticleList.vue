@@ -31,7 +31,8 @@ const loadCategories = async () => {
   try {
     const response = await fetch(`${API_BASE}/categories`)
     if (response.ok) {
-      categories.value = await response.json()
+      const result = await response.json()
+      categories.value = result.data || []
     } else {
       loadMockCategories()
     }
@@ -62,9 +63,10 @@ const selectCategory = async (categoryId) => {
   loading.value = true
   
   try {
-    const response = await fetch(`${API_BASE}/documents?categoryId=${categoryId}`)
+    const response = await fetch(`${API_BASE}/documents/category/${categoryId}`)
     if (response.ok) {
-      documents.value = await response.json()
+      const result = await response.json()
+      documents.value = result.data || []
     } else {
       loadMockDocuments(categoryId)
     }
@@ -101,9 +103,10 @@ const selectDocument = async (documentId) => {
   loading.value = true
   
   try {
-    const response = await fetch(`${API_BASE}/articles?documentId=${documentId}`)
+    const response = await fetch(`${API_BASE}/articles/document/${documentId}`)
     if (response.ok) {
-      articles.value = await response.json()
+      const result = await response.json()
+      articles.value = result.data || []
     } else {
       loadMockArticles(documentId)
     }

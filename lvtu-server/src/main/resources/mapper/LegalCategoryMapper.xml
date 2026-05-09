@@ -1,0 +1,79 @@
+
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"&gt;
+&lt;mapper namespace="com.bitzh.lvtu.mapper.LegalCategoryMapper"&gt;
+
+    &lt;resultMap id="BaseResultMap" type="com.bitzh.lvtu.entity.LegalCategory"&gt;
+        &lt;id column="id" property="id"/&gt;
+        &lt;result column="name" property="name"/&gt;
+        &lt;result column="parent_id" property="parentId"/&gt;
+        &lt;result column="sort_order" property="sortOrder"/&gt;
+        &lt;result column="status" property="status"/&gt;
+        &lt;result column="created_at" property="createdAt"/&gt;
+        &lt;result column="updated_at" property="updatedAt"/&gt;
+    &lt;/resultMap&gt;
+
+    &lt;sql id="Base_Column_List"&gt;
+        id, name, parent_id, sort_order, status, created_at, updated_at
+    &lt;/sql&gt;
+
+    &lt;select id="selectAll" resultMap="BaseResultMap"&gt;
+        SELECT &lt;include refid="Base_Column_List"/&gt;
+        FROM legal_category
+        ORDER BY sort_order ASC
+    &lt;/select&gt;
+
+    &lt;select id="selectByStatus" resultMap="BaseResultMap"&gt;
+        SELECT &lt;include refid="Base_Column_List"/&gt;
+        FROM legal_category
+        WHERE status = #{status}
+        ORDER BY sort_order ASC
+    &lt;/select&gt;
+
+    &lt;select id="selectByParentId" resultMap="BaseResultMap"&gt;
+        SELECT &lt;include refid="Base_Column_List"/&gt;
+        FROM legal_category
+        WHERE parent_id = #{parentId}
+        ORDER BY sort_order ASC
+    &lt;/select&gt;
+
+    &lt;select id="selectByParentIdAndStatus" resultMap="BaseResultMap"&gt;
+        SELECT &lt;include refid="Base_Column_List"/&gt;
+        FROM legal_category
+        WHERE parent_id = #{parentId} AND status = #{status}
+        ORDER BY sort_order ASC
+    &lt;/select&gt;
+
+    &lt;select id="selectById" resultMap="BaseResultMap"&gt;
+        SELECT &lt;include refid="Base_Column_List"/&gt;
+        FROM legal_category
+        WHERE id = #{id}
+    &lt;/select&gt;
+
+    &lt;insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalCategory" useGeneratedKeys="true" keyProperty="id"&gt;
+        INSERT INTO legal_category (name, parent_id, sort_order, status, created_at, updated_at)
+        VALUES (#{name}, #{parentId}, #{sortOrder}, #{status}, NOW(), NOW())
+    &lt;/insert&gt;
+
+    &lt;update id="update" parameterType="com.bitzh.lvtu.entity.LegalCategory"&gt;
+        UPDATE legal_category
+        &lt;set&gt;
+            &lt;if test="name != null"&gt;name = #{name},&lt;/if&gt;
+            &lt;if test="parentId != null"&gt;parent_id = #{parentId},&lt;/if&gt;
+            &lt;if test="sortOrder != null"&gt;sort_order = #{sortOrder},&lt;/if&gt;
+            &lt;if test="status != null"&gt;status = #{status},&lt;/if&gt;
+            updated_at = NOW()
+        &lt;/set&gt;
+        WHERE id = #{id}
+    &lt;/update&gt;
+
+    &lt;delete id="deleteById"&gt;
+        DELETE FROM legal_category WHERE id = #{id}
+    &lt;/delete&gt;
+
+    &lt;select id="existsById" resultType="boolean"&gt;
+        SELECT COUNT(*) &gt; 0 FROM legal_category WHERE id = #{id}
+    &lt;/select&gt;
+
+&lt;/mapper&gt;

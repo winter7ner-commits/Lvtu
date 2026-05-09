@@ -1,24 +1,25 @@
+
 package com.bitzh.lvtu.entity;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "legal_category")
+import java.time.LocalDateTime;
+
+/**
+ * 法律分类实体
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class LegalCategory {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
-    @Column(nullable = false, unique = true)
+    private Long id;
     private String name;
-
-    @Column(columnDefinition = "INT DEFAULT 1")
-    private Integer status;
+    private Long parentId = 0L;
+    private Integer sortOrder = 0;
+    private Integer status = 1;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
+
