@@ -46,6 +46,21 @@ const loading = ref(false)
 
 
 
+const loadHotLawyers = async () => {
+  loading.value = true
+  try {
+    const res = await getTopRatedLawyers()
+    if (res?.code === 200) {
+      hotLawyers.value = res.data || []
+    }
+  } catch (error) {
+    console.error('加载热门律师失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
     router.push({
@@ -91,6 +106,10 @@ onMounted(() => {
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
+
+  position: relative; 
+  z-index: 1;
+  margin-top: 0;
 }
 
 .hero-content {
