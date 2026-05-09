@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS payment (
     payment_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '支付ID',
     order_id BIGINT NOT NULL COMMENT '订单ID',
     amount DECIMAL(10,2) NOT NULL COMMENT '支付金额',
-    status VARCHAR(20) DEFAULT '未支付' COMMENT '支付状态（未支付/已支付）',
+    status VARCHAR(20) DEFAULT '未支付' COMMENT '支付状态（未支付/已支付/已取消）',
     payment_time DATETIME COMMENT '支付时间',
 
     CONSTRAINT fk_payment_order FOREIGN KEY (order_id) REFERENCES `order`(order_id)
