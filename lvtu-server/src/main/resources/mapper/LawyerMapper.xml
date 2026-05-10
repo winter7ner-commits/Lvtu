@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitzh.lvtu.mapper.LawyerMapper">
+
+    <!-- 通用映射 -->
+    <resultMap id="lawyerMap" type="com.bitzh.lvtu.dto.LawyerDTO">
+        <id property="lawyerId" column="lawyer_id"/>
+        <result property="name" column="name"/>
+        <result property="avatar" column="avatar"/>
+        <result property="phone" column="phone"/>
+        <result property="lawFirm" column="law_firm"/>
+        <result property="practiceYears" column="practice_years"/>
+        <result property="rating" column="rating"/>
+        <result property="status" column="status"/>
+        <result property="auditStatus" column="audit_status"/>
+        <result property="auditRemark" column="audit_remark"/>
+        <result property="specialty" column="specialty"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="licenseNo" column="license_no"/>
+        <!-- 使用自定义TypeHandler处理JSON字符串到List<SpecialtyDTO>的转换 -->
+        <result property="specialties" column="specialties" typeHandler="com.bitzh.lvtu.config.SpecialtiesJsonTypeHandler"/>
+    </resultMap>
+
+    <!-- 查询已审核律师 -->
+    <select id="selectLawyerList" resultMap="lawyerMap">
+        SELECT
+            l.lawyer_id,
+            l.name,
+            l.avatar,
+            l.phone,
+            l.law_firm,
+            l.practice_years,
+            l.rating,
+            l.status,
+            l.audit_status,
+            l.audit_remark,
+            l.description,
+            l.create_time,
+            l.update_time,
+            l.license_no,
+            GROUP_CONCAT(DISTINCT s.name) AS specialty,
+            COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
+        FROM lawyer l
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE l.audit_status = 1
+          AND l.status = 1
+        GROUP BY l.lawyer_id, l.name, l.avatar, l.phone, l.law_firm, l.practice_years, l.rating,
+                 l.status, l.audit_status, l.audit_remark, l.description, l.create_time, l.update_time, l.license_no
+    </select>
+
+    <!-- 评分最高律师 -->
+    <select id="selectByTopRating" resultMap="lawyerMap">
+        SELECT
+            l.lawyer_id,
+            l.name,
+            l.avatar,
+            l.phone,
+            l.law_firm,
+            l.practice_years,
+            l.rating,
+            l.status,
+            l.audit_status,
+            l.audit_remark,
+            l.description,
+            l.create_time,
+            l.update_time,
+            l.license_no,
+            GROUP_CONCAT(DISTINCT s.name) AS specialty,
+            COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
+        FROM lawyer l
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE l.audit_status = 1
+          AND l.status = 1
+        GROUP BY l.lawyer_id, l.name, l.avatar, l.phone, l.law_firm, l.practice_years, l.rating,
+                 l.status, l.audit_status, l.audit_remark, l.description, l.create_time, l.update_time, l.license_no
+        ORDER BY l.rating DESC, l.practice_years DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 按领域筛选 -->
+    <select id="selectBySpecialty" resultMap="lawyerMap">
+        SELECT DISTINCT
+            l.lawyer_id,
+            l.name,
+            l.avatar,
+            l.phone,
+            l.law_firm,
+            l.practice_years,
+            l.rating,
+            l.status,
+            l.audit_status,
+            l.audit_remark,
+            l.description,
+            l.create_time,
+            l.update_time,
+            l.license_no,
+            GROUP_CONCAT(DISTINCT s.name) AS specialty,
+            COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
+        FROM lawyer l
+                 JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE l.audit_status = 1 AND l.status = 1
+          AND s.name LIKE CONCAT('%', #{specialty}, '%')
+        GROUP BY l.lawyer_id, l.name, l.avatar, l.phone, l.law_firm, l.practice_years, l.rating,
+                 l.status, l.audit_status, l.audit_remark, l.description, l.create_time, l.update_time, l.license_no
+    </select>
+
+    <!-- 待审核 -->
+    <select id="selectPendingList" resultMap="lawyerMap">
+        SELECT
+            l.lawyer_id,
+            l.name,
+            l.avatar,
+            l.phone,
+            l.law_firm,
+            l.practice_years,
+            l.rating,
+            l.status,
+            l.audit_status,
+            l.audit_remark,
+            l.description,
+            l.create_time,
+            l.update_time,
+            l.license_no,
+            GROUP_CONCAT(DISTINCT s.name) AS specialty,
+            COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
+        FROM lawyer l
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE l.audit_status = 0
+        GROUP BY l.lawyer_id, l.name, l.avatar, l.phone, l.law_firm, l.practice_years, l.rating,
+                 l.status, l.audit_status, l.audit_remark, l.description, l.create_time, l.update_time, l.license_no
+    </select>
+
+    <!-- 审核通过 -->
+    <update id="approve">
+        UPDATE lawyer
+        SET audit_status = 1
+        WHERE lawyer_id = #{lawyerId}
+    </update>
+
+    <!-- 审核拒绝 -->
+    <update id="reject">
+        UPDATE lawyer
+        SET audit_status = 2,
+            audit_remark = #{remark}
+        WHERE lawyer_id = #{lawyerId}
+    </update>
+
+</mapper>
