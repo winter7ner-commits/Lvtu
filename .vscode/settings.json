@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "java.compile.nullAnalysis.mode": "disabled",
     "editor.formatOnSave": true,
     "prettier.enable": true,
@@ -18,4 +19,7 @@
         "editor.defaultFormatter": "redhat.vscode-xml"
     },
     "java.configuration.updateBuildConfiguration": "automatic"
+=======
+    "java.compile.nullAnalysis.mode": "disabled"
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 }

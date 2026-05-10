@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
@@ -51,3 +52,64 @@
     </update>
 
 </mapper>
+=======
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitzh.lvtu.mapper.UserMapper">
+
+    <resultMap id="userMap" type="com.bitzh.lvtu.entity.User">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="avatarUrl" column="avatar_url"/>
+        <result property="userType" column="user_type"/>
+        <result property="status" column="status"/>
+        <result property="isVerified" column="is_verified"/>
+        <result property="authStatus" column="auth_status"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="updatedTime" column="updated_time"/>
+        <result property="region" column="region"/>
+    </resultMap>
+
+    <select id="selectByUsername" resultMap="userMap">
+        SELECT * FROM users WHERE username = #{username} LIMIT 1
+    </select>
+
+    <select id="selectByEmail" resultMap="userMap">
+        SELECT * FROM users WHERE email = #{email} LIMIT 1
+    </select>
+
+    <select id="selectByPhone" resultMap="userMap">
+        SELECT * FROM users WHERE phone = #{phone} LIMIT 1
+    </select>
+
+    <select id="selectById" resultMap="userMap">
+        SELECT * FROM users WHERE user_id = #{userId} LIMIT 1
+    </select>
+
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users
+            (username, password_hash, phone, email, avatar_url, user_type, status, is_verified, auth_status, region)
+        VALUES
+            (#{username}, #{passwordHash}, #{phone}, #{email}, #{avatarUrl}, #{userType}, #{status}, #{isVerified}, #{authStatus}, #{region})
+    </insert>
+
+    <update id="updatePassword">
+        UPDATE users
+        SET password_hash = #{passwordHash}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE users
+        SET status = #{status}
+        WHERE user_id = #{userId}
+    </update>
+
+</mapper>
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b

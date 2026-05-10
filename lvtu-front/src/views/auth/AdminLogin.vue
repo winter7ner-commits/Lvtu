@@ -24,6 +24,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+<<<<<<< HEAD
 
 const router = useRouter()
 const route = useRoute()
@@ -31,6 +32,18 @@ const loading = ref(false)
 const form = ref({ username: '', password: '' })
 
 const redirectPath = route.query.redirect ? String(route.query.redirect) : '/admin-articles'
+=======
+import { useAuthStore } from '../../store/auth'
+import { adminLogin } from '../../api/auth'
+
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+const loading = ref(false)
+const form = ref({ username: '', password: '' })
+
+const redirectPath = route.query.redirect ? String(route.query.redirect) : '/admin' // 假设管理员面板在 /admin
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 
 const handleSubmit = async () => {
   if (!form.value.username || !form.value.password) {
@@ -39,6 +52,7 @@ const handleSubmit = async () => {
   }
   loading.value = true
   try {
+<<<<<<< HEAD
     const response = await fetch('http://localhost:8081/api/auth/admin/login', {
       method: 'POST',
       headers: {
@@ -54,6 +68,15 @@ const handleSubmit = async () => {
       router.push(redirectPath)
     } else {
       window.alert(data?.message || '管理员登录失败')
+=======
+    const response = await adminLogin(form.value)
+    if (response?.code === 200) {
+      const data = response.data
+      authStore.setAuth(data.token, data.user)
+      router.push(redirectPath)
+    } else {
+      window.alert(response?.message || '管理员登录失败')
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
     }
   } catch (error) {
     window.alert('登录失败，请稍后重试')

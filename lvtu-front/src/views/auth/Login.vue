@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
@@ -165,10 +166,33 @@ const sendRegisterCode = () => {
         </div>
         <button type="submit" class="submit-btn">注册</button>
       </form>
+=======
+﻿<template>
+  <div class="auth-page">
+    <div class="auth-card">
+      <h2>登录</h2>
+      <el-form :model="form" label-position="top">
+        <el-form-item label="用户名">
+          <el-input v-model="form.username" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input type="password" v-model="form.password" placeholder="请输入密码" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSubmit" :loading="loading">登录</el-button>
+          <router-link to="/forgot-password" class="auth-link">忘记密码？</router-link>
+        </el-form-item>
+        <el-form-item class="auth-footer">
+          <span>还没有账号？</span>
+          <router-link to="/register" class="auth-link">立即注册</router-link>
+        </el-form-item>
+      </el-form>
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
     </div>
   </div>
 </template>
 
+<<<<<<< HEAD
 <style scoped>
 .login-container {
   min-height: 100vh;
@@ -196,3 +220,81 @@ const sendRegisterCode = () => {
   margin-bottom: 1.5rem;
 }
 
+=======
+<script setup>
+import { ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '../../store/auth'
+import { login } from '../../api/auth'
+
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+const loading = ref(false)
+const form = ref({ username: '', password: '' })
+
+const redirectPath = route.query.redirect ? String(route.query.redirect) : '/'
+
+const handleSubmit = async () => {
+  if (!form.value.username || !form.value.password) {
+    window.alert('请输入用户名和密码')
+    return
+  }
+  loading.value = true
+  try {
+    const response = await login(form.value)
+    if (response?.code === 200) {
+      const data = response.data
+      const user = data.user
+
+      if(user.userType === 3) {
+        window.alert('管理员请使用管理员专用入口')
+        return
+      }
+
+      authStore.setAuth(data.token, data.user)
+      router.push(redirectPath)
+    } else {
+      window.alert(response?.message || '登录失败')
+    }
+  } catch (error) {
+    window.alert('登录失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style scoped>
+.auth-page {
+  min-height: calc(100vh - 70px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 16px;
+  background: #f5f7fb;
+}
+.auth-card {
+  width: 420px;
+  padding: 32px;
+  border-radius: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+}
+.auth-card h2 {
+  margin-bottom: 24px;
+  font-size: 28px;
+  color: #1f2a56;
+}
+.auth-link {
+  margin-left: 16px;
+  color: #409eff;
+}
+.auth-footer {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+}
+</style>
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
