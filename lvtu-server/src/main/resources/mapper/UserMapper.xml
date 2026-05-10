@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="com.bitzh.lvtu.entity.User">
+        <id column="id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="email" property="email"/>
+        <result column="user_type" property="userType"/>
+        <result column="avatar_url" property="avatarUrl"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, username, password, email, user_type, avatar_url, status, created_at, updated_at
+    </sql>
+
+    <select id="findByUsername" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE username = #{username}
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM users
+        WHERE id = #{userId}
+    </select>
+
+    <insert id="insert" parameterType="com.bitzh.lvtu.entity.User" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users (username, password, email, user_type, avatar_url, status, created_at, updated_at)
+        VALUES (#{username}, #{password}, #{email}, #{userType}, #{avatarUrl}, #{status}, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="com.bitzh.lvtu.entity.User">
+        UPDATE users
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="userType != null">user_type = #{userType},</if>
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            <if test="status != null">status = #{status},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{userId}
+    </update>
+
+</mapper>
