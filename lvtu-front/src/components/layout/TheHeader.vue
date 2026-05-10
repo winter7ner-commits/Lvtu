@@ -62,8 +62,9 @@
         
         <!-- Not Logged In -->
         <template v-if="!isLoggedIn">
-          <button class="login-btn" @click="handleLogin">登录</button>
-          <button class="signup-btn" @click="handleSignup">注册</button>
+          <router-link to="/login" class="login-btn auth-action">登录</router-link>
+          <router-link to="/register" class="signup-btn auth-action">注册</router-link>
+          <router-link to="/admin/login" class="admin-login-btn auth-action">管理员登录</router-link>
         </template>
 
         <!-- Logged In - User Menu -->
@@ -74,8 +75,8 @@
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu user-dropdown">
-            <a href="/user-profile" class="dropdown-item">个人资料</a>
-            <a href="/settings" class="dropdown-item">设置</a>
+            <router-link to="/user-profile" class="dropdown-item">个人资料</router-link>
+            <router-link to="/settings" class="dropdown-item">设置</router-link>
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item logout" @click="handleLogout">退出登录</a>
           </div>
@@ -98,28 +99,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../../store/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const showSearch = ref(false)
 const searchQuery = ref('')
-const isLoggedIn = ref(false)
-const userName = ref('我的')
-const userAvatar = ref('https://via.placeholder.com/32')
 
-onMounted(() => {
-  // 从本地存储检查登录状态
-  const loginStatus = localStorage.getItem('isLoggedIn')
-  const userInfo = localStorage.getItem('userInfo')
-  
-  if (loginStatus === 'true' && userInfo) {
-    isLoggedIn.value = true
-    const user = JSON.parse(userInfo)
-    userName.value = user.name || '我的'
-    userAvatar.value = user.avatar || 'https://via.placeholder.com/32'
-  }
-})
+const isLoggedIn = computed(() => authStore.isAuthenticated)
+const userName = computed(() => authStore.user?.username || '我的')
+const userAvatar = computed(() => authStore.user?.avatarUrl || 'https://via.placeholder.com/32')
 
 const toggleSearch = () => {
   showSearch.value = !showSearch.value
@@ -140,14 +131,12 @@ const handleLogin = () => {
 }
 
 const handleSignup = () => {
-  router.push('/signup')
+  router.push('/register')
 }
 
 const handleLogout = (e) => {
   e.preventDefault()
-  localStorage.removeItem('isLoggedIn')
-  localStorage.removeItem('userInfo')
-  isLoggedIn.value = false
+  authStore.logout()
   router.push('/')
 }
 </script>
@@ -357,6 +346,23 @@ const handleLogout = (e) => {
 
 .signup-btn:hover {
   background: #f3f4f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.admin-login-btn {
+  background: #ff6b35;
+  border: none;
+  color: #ffffff;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.admin-login-btn:hover {
+  background: #e55a2b;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 

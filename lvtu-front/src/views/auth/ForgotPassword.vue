@@ -1,21 +1,20 @@
 ﻿<template>
   <div class="auth-page">
     <div class="auth-card">
-      <h2>登录</h2>
+      <h2>忘记密码</h2>
       <el-form :model="form" label-position="top">
         <el-form-item label="用户名">
           <el-input v-model="form.username" placeholder="请输入用户名" />
         </el-form-item>
-        <el-form-item label="密码">
-          <el-input type="password" v-model="form.password" placeholder="请输入密码" />
+        <el-form-item label="新密码">
+          <el-input type="password" v-model="form.password" placeholder="请输入新密码" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSubmit" :loading="loading">登录</el-button>
-          <router-link to="/forgot-password" class="auth-link">忘记密码？</router-link>
+          <el-button type="primary" @click="handleSubmit" :loading="loading">重置密码</el-button>
         </el-form-item>
         <el-form-item class="auth-footer">
-          <span>还没有账号？</span>
-          <router-link to="/register" class="auth-link">立即注册</router-link>
+          <span>记得密码了？</span>
+          <router-link to="/login" class="auth-link">去登录</router-link>
         </el-form-item>
       </el-form>
     </div>
@@ -24,42 +23,29 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../../store/auth'
-import { login } from '../../api/auth'
+import { useRouter } from 'vue-router'
+import { forgotPassword } from '../../api/auth'
 
 const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
 const loading = ref(false)
 const form = ref({ username: '', password: '' })
 
-const redirectPath = route.query.redirect ? String(route.query.redirect) : '/'
-
 const handleSubmit = async () => {
   if (!form.value.username || !form.value.password) {
-    window.alert('请输入用户名和密码')
+    window.alert('请输入用户名和新密码')
     return
   }
   loading.value = true
   try {
-    const response = await login(form.value)
+    const response = await forgotPassword(form.value)
     if (response?.code === 200) {
-      const data = response.data
-      const user = data.user
-
-      if(user.userType === 3) {
-        window.alert('管理员请使用管理员专用入口')
-        return
-      }
-
-      authStore.setAuth(data.token, data.user)
-      router.push(redirectPath)
+      window.alert('密码已重置，请使用新密码登录')
+      router.push('/login')
     } else {
-      window.alert(response?.message || '登录失败')
+      window.alert(response?.message || '重置失败')
     }
   } catch (error) {
-    window.alert('登录失败，请稍后重试')
+    window.alert('重置失败，请稍后重试')
   } finally {
     loading.value = false
   }

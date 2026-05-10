@@ -1,7 +1,7 @@
-﻿<template>
+<template>
   <div class="auth-page">
     <div class="auth-card">
-      <h2>注册</h2>
+      <h2>管理员注册用户</h2>
       <el-form :model="form" label-position="top">
         <el-form-item label="用户名">
           <el-input v-model="form.username" placeholder="请输入用户名" />
@@ -15,12 +15,15 @@
         <el-form-item label="手机号">
           <el-input v-model="form.phone" placeholder="请输入手机号" />
         </el-form-item>
+        <el-form-item label="用户类型">
+          <el-select v-model="form.userType" placeholder="请选择用户类型">
+            <el-option label="普通用户" :value="1" />
+            <el-option label="律师" :value="2" />
+            <el-option label="管理员" :value="3" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSubmit" :loading="loading">注册</el-button>
-        </el-form-item>
-        <el-form-item class="auth-footer">
-          <span>已有账号？</span>
-          <router-link to="/login" class="auth-link">去登录</router-link>
         </el-form-item>
       </el-form>
     </div>
@@ -30,23 +33,31 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { register } from '../../api/auth'
+import { useAuthStore } from '../../store/auth'
+import { adminRegister } from '../../api/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const loading = ref(false)
-const form = ref({ username: '', password: '', email: '', phone: '' })
+const form = ref({
+  username: '',
+  password: '',
+  email: '',
+  phone: '',
+  userType: 1
+})
 
 const handleSubmit = async () => {
-  if (!form.value.username || !form.value.password) {
-    window.alert('请输入用户名和密码')
+  if (!form.value.username || !form.value.password || !form.value.userType) {
+    window.alert('请填写必需信息')
     return
   }
   loading.value = true
   try {
-    const response = await register(form.value)
+    const response = await adminRegister(form.value)
     if (response?.code === 200) {
-      window.alert('注册成功，请登录')
-      router.push('/login')
+      window.alert('用户注册成功')
+      router.push('/admin') // 假设有管理员面板
     } else {
       window.alert(response?.message || '注册失败')
     }
@@ -78,15 +89,5 @@ const handleSubmit = async () => {
   margin-bottom: 24px;
   font-size: 28px;
   color: #1f2a56;
-}
-.auth-link {
-  margin-left: 16px;
-  color: #409eff;
-}
-.auth-footer {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 8px;
 }
 </style>

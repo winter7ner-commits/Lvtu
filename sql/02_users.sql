@@ -1,7 +1,7 @@
 USE lvtu;
 
 
-CREATE TABLE IF NOT EXISTS users (
+create table users (
 	user_id bigint auto_increment primary key comment '主键ID',
     username varchar(50) not null unique comment '用户名',
     password_hash varchar(255) not null comment '加密后的密码',
@@ -17,19 +17,25 @@ CREATE TABLE IF NOT EXISTS users (
     region varchar(255) default 0 comment '所在地区',
     index idx_username(username),
     index idx_phone(phone)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户基本信息表';
+) engine=InnoDB default charset=utf8mb4 comment='用户基本信息表';
 
+-- 测试用户数据（所有密码均为: test123456）
 INSERT INTO users (
     user_id, username, password_hash, phone, email, avatar_url, user_type,
     `status`, is_verified, auth_status, created_time, updated_time, region
 ) VALUES
-    (500001, 'user_order_a', 'test123456', '13800000001', 'user_order_a@lvtu.test', NULL, 1, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
-    (500002, 'user_order_b', 'test123456', '13800000002', 'user_order_b@lvtu.test', NULL, 1, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '北京'),
-    (500003, 'lawyer_alpha_user', 'test123456', '13800000003', 'lawyer_alpha@lvtu.test', NULL, 2, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
-    (500004, 'lawyer_beta_user', 'test123456', '13800000004', 'lawyer_beta@lvtu.test', NULL, 2, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '深圳'),
-    (500005, 'admin_finance', 'test123456', '13800000005', 'admin_finance@lvtu.test', NULL, 3, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州');
+    -- 用户1: user_order_a (普通用户)
+    (500001, 'user_order_a', '$2b$10$jq2QdT9WGxb55eluNSi6qOzb4mndZdVYO.PRTZ.JmNuhggqctolWC', '13800000001', 'user_order_a@lvtu.test', NULL, 1, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
+    -- 用户2: user_order_b (普通用户)
+    (500002, 'user_order_b', '$2b$10$z.6RcrDaZKgE/ihtf8F4Rei0yaQmKYGRoGgE1uPVWAmkhf9fkDaoO', '13800000002', 'user_order_b@lvtu.test', NULL, 1, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '北京'),
+    -- 用户3: lawyer_alpha_user (律师)
+    (500003, 'lawyer_alpha_user', '$2b$10$FCJo2M.Jzeio4jYqqh2ndex/Pg1WR4ll7DF8IBspQXvHp2tOl8U5S', '13800000003', 'lawyer_alpha@lvtu.test', NULL, 2, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
+    -- 用户4: lawyer_beta_user (律师)
+    (500004, 'lawyer_beta_user', '$2b$10$gzfDpedOuG.6EO09UJAUZuXyt2LUAD4dhFIb0U0139LwPCW6LNIzu', '13800000004', 'lawyer_beta@lvtu.test', NULL, 2, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '深圳'),
+    -- 用户5: admin_finance (管理员)
+    (500005, 'admin_finance', '$2b$10$1RTvAJcWLmV/fBshcTFf/OgOAHJhigOeo6xTUk0gI6p1Flno78aDu', '13800000005', 'admin_finance@lvtu.test', NULL, 3, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州');
 
-CREATE TABLE IF NOT EXISTS users_verfications (
+create table users_verfications (
 	verification_id bigint auto_increment primary key comment '实名认证记录ID',
     user_id bigint not null unique comment '关联用户ID',
     real_name varchar(100) not null comment '真实姓名',
@@ -43,8 +49,8 @@ CREATE TABLE IF NOT EXISTS users_verfications (
     created_time timestamp default current_timestamp comment '认证提交时间',
     updated_time timestamp default current_timestamp on update current_timestamp comment '更新时间',
     
-    CONSTRAINT `fk_user_id` FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户实名认证信息表';
+    constraint `fk_user_id` foreign key (user_id) references users (user_id) on delete cascade
+) engine=InnoDB default charset=utf8mb4 comment='用户实名认证信息表';
 
 -- 发单用户和律师用户都先完成实名认证
 INSERT INTO users_verfications (
