@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
@@ -7,40 +6,64 @@ const router = useRouter()
 const activeTab = ref('login')
 
 const loginForm = reactive({
-  phone: '',
+  username: '',
   password: '',
-  code: '',
   remember: false
 })
 
 const registerForm = reactive({
-  phone: '',
-  code: '',
+  username: '',
   password: '',
   confirmPassword: '',
   agree: false
 })
 
-const handleLogin = () => {
-  if (!loginForm.phone) {
-    alert('请输入手机号')
+const handleLogin = async () => {
+  if (!loginForm.username) {
+    alert('请输入用户名')
     return
   }
   if (!loginForm.password) {
     alert('请输入密码')
     return
   }
-  localStorage.setItem('token', 'demo-token')
-  router.push('/')
+  
+  try {
+    const response = await fetch('http://localhost:8081/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username: loginForm.username,
+        password: loginForm.password
+      })
+    })
+    
+    const data = await response.json()
+    
+    if (data?.code === 200) {
+      localStorage.setItem('authToken', data.data.token)
+      localStorage.setItem('currentUser', JSON.stringify(data.data.user))
+      localStorage.setItem('isLoggedIn', 'true')
+      
+      if (data.data.user.userType === 3) {
+        router.push('/admin-articles')
+      } else {
+        router.push('/')
+      }
+    } else {
+      alert(data?.message || '登录失败')
+    }
+  } catch (error) {
+    console.error('登录失败:', error)
+    alert('登录失败，请检查后端服务是否启动')
+  }
 }
 
-const handleRegister = () => {
-  if (!registerForm.phone) {
-    alert('请输入手机号')
-    return
-  }
-  if (!registerForm.code) {
-    alert('请输入验证码')
+const handleRegister = async () => {
+  if (!registerForm.username) {
+    alert('请输入用户名')
     return
   }
   if (!registerForm.password) {
@@ -55,24 +78,31 @@ const handleRegister = () => {
     alert('请同意用户协议和隐私政策')
     return
   }
-  alert('注册成功，请登录')
-  activeTab.value = 'login'
-}
-
-const sendCode = () => {
-  if (!loginForm.phone) {
-    alert('请输入手机号')
-    return
+  
+  try {
+    const response = await fetch('http://localhost:8081/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username: registerForm.username,
+        password: registerForm.password
+      })
+    })
+    
+    const data = await response.json()
+    
+    if (data?.code === 200) {
+      alert('注册成功，请登录')
+      activeTab.value = 'login'
+    } else {
+      alert(data?.message || '注册失败')
+    }
+  } catch (error) {
+    console.error('注册失败:', error)
+    alert('注册失败，请检查后端服务是否启动')
   }
-  alert('验证码已发送')
-}
-
-const sendRegisterCode = () => {
-  if (!registerForm.phone) {
-    alert('请输入手机号')
-    return
-  }
-  alert('验证码已发送')
 }
 </script>
 
@@ -91,9 +121,9 @@ const sendRegisterCode = () => {
       <form v-if="activeTab === 'login'" @submit.prevent="handleLogin" class="form">
         <div class="form-item">
           <input 
-            v-model="loginForm.phone" 
+            v-model="loginForm.username" 
             type="text" 
-            placeholder="请输入手机号" 
+            placeholder="请输入用户名" 
             class="form-input"
           />
         </div>
@@ -105,42 +135,26 @@ const sendRegisterCode = () => {
             class="form-input"
           />
         </div>
-        <div class="form-item">
-          <input 
-            v-model="loginForm.code" 
-            type="text" 
-            placeholder="请输入验证码" 
-            class="form-input code-input"
-          />
-          <button type="button" class="code-btn" @click="sendCode">获取验证码</button>
-        </div>
         <div class="form-item remember">
           <label>
             <input type="checkbox" v-model="loginForm.remember" />
-            <span>已阅读并同意《用户协议》和《隐私政策》</span>
+            <span>记住我</span>
           </label>
         </div>
         <button type="submit" class="submit-btn">登录</button>
-        <a href="#" class="forgot-link">忘记密码？</a>
+        <div class="links">
+          <a href="#" class="forgot-link">忘记密码？</a>
+        </div>
       </form>
 
       <form v-else @submit.prevent="handleRegister" class="form">
         <div class="form-item">
           <input 
-            v-model="registerForm.phone" 
+            v-model="registerForm.username" 
             type="text" 
-            placeholder="请输入手机号" 
+            placeholder="请输入用户名" 
             class="form-input"
           />
-        </div>
-        <div class="form-item">
-          <input 
-            v-model="registerForm.code" 
-            type="text" 
-            placeholder="请输入验证码" 
-            class="form-input code-input"
-          />
-          <button type="button" class="code-btn" @click="sendRegisterCode">获取验证码</button>
         </div>
         <div class="form-item">
           <input 
@@ -166,33 +180,10 @@ const sendRegisterCode = () => {
         </div>
         <button type="submit" class="submit-btn">注册</button>
       </form>
-=======
-﻿<template>
-  <div class="auth-page">
-    <div class="auth-card">
-      <h2>登录</h2>
-      <el-form :model="form" label-position="top">
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input type="password" v-model="form.password" placeholder="请输入密码" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSubmit" :loading="loading">登录</el-button>
-          <router-link to="/forgot-password" class="auth-link">忘记密码？</router-link>
-        </el-form-item>
-        <el-form-item class="auth-footer">
-          <span>还没有账号？</span>
-          <router-link to="/register" class="auth-link">立即注册</router-link>
-        </el-form-item>
-      </el-form>
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
     </div>
   </div>
 </template>
 
-<<<<<<< HEAD
 <style scoped>
 .login-container {
   min-height: 100vh;
@@ -220,81 +211,109 @@ const sendRegisterCode = () => {
   margin-bottom: 1.5rem;
 }
 
-=======
-<script setup>
-import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../../store/auth'
-import { login } from '../../api/auth'
-
-const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
-const loading = ref(false)
-const form = ref({ username: '', password: '' })
-
-const redirectPath = route.query.redirect ? String(route.query.redirect) : '/'
-
-const handleSubmit = async () => {
-  if (!form.value.username || !form.value.password) {
-    window.alert('请输入用户名和密码')
-    return
-  }
-  loading.value = true
-  try {
-    const response = await login(form.value)
-    if (response?.code === 200) {
-      const data = response.data
-      const user = data.user
-
-      if(user.userType === 3) {
-        window.alert('管理员请使用管理员专用入口')
-        return
-      }
-
-      authStore.setAuth(data.token, data.user)
-      router.push(redirectPath)
-    } else {
-      window.alert(response?.message || '登录失败')
-    }
-  } catch (error) {
-    window.alert('登录失败，请稍后重试')
-  } finally {
-    loading.value = false
-  }
+.logo-text {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e88e5;
 }
-</script>
 
-<style scoped>
-.auth-page {
-  min-height: calc(100vh - 70px);
+.tabs {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 16px;
-  background: #f5f7fb;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
 }
-.auth-card {
-  width: 420px;
-  padding: 32px;
-  border-radius: 20px;
-  background-color: #ffffff;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+
+.tabs button {
+  flex: 1;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #666;
+  position: relative;
 }
-.auth-card h2 {
-  margin-bottom: 24px;
-  font-size: 28px;
-  color: #1f2a56;
+
+.tabs button.active {
+  color: #1e88e5;
+  font-weight: 500;
 }
-.auth-link {
-  margin-left: 16px;
-  color: #409eff;
+
+.tabs button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #1e88e5;
 }
-.auth-footer {
+
+.form {
   display: flex;
-  justify-content: flex-start;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.form-input:focus {
+  border-color: #1e88e5;
+}
+
+.form-item.remember {
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.form-item.remember input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: box-shadow 0.3s;
+}
+
+.submit-btn:hover {
+  box-shadow: 0 2px 10px rgba(30, 136, 229, 0.4);
+}
+
+.links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.forgot-link {
+  color: #1e88e5;
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
 }
 </style>
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b

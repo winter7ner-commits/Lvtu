@@ -1,42 +1,19 @@
 <template>
-<<<<<<< HEAD
-  <!-- 顶部导航栏 -->
   <header class="header">
     <div class="header-container">
-      <!-- Logo区域：点击返回首页 -->
       <div class="logo" @click="goToHome">
-        <img src="/public/icons/sign.png" alt="LVTU" class="logo-img" />
+        <img src="/icons/sign.png" alt="LVTU" class="logo-img" />
         <span class="logo-text">律途</span>
       </div>
 
-      <!-- 主导航菜单 -->
-      <nav class="nav-menu">
-        <!-- 首页链接 -->
-        <router-link to="/" class="nav-item">首页</router-link>
-
-        <!-- 法律法规下拉菜单 -->
-=======
-  <header class="header">
-    <div class="header-container">
-      <!-- Logo -->
-      <div class="logo">
-        <img src="/public/icons/logo.png" alt="LVTU" class="logo-img" />
-        <span class="logo-text">律途</span>
-      </div>
-
-      <!-- Navigation Menu -->
       <nav class="nav-menu">
         <router-link to="/" class="nav-item">首页</router-link>
-        
-        <!-- Laws & Regulations Dropdown -->
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
+
         <div class="nav-item-dropdown">
           <button class="nav-item dropdown-toggle">
             法律法规
             <i class="dropdown-icon">▼</i>
           </button>
-<<<<<<< HEAD
-          <!-- 下拉选项：通过category参数传递分类ID -->
           <div class="dropdown-menu">
             <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(1)">宪法</router-link>
             <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(2)">民法</router-link>
@@ -49,37 +26,14 @@
           </div>
         </div>
 
-        <!-- 服务下拉菜单 -->
-=======
-          <div class="dropdown-menu">
-            <a href="#" class="dropdown-item">第一编 总则</a>
-            <a href="#" class="dropdown-item">第二编 物权</a>
-            <a href="#" class="dropdown-item">第三编 合同</a>
-            <a href="#" class="dropdown-item">第四编 人格权</a>
-            <a href="#" class="dropdown-item">第五编 婚姻家庭</a>
-            <a href="#" class="dropdown-item">第六编 继承</a>
-            <a href="#" class="dropdown-item">第七编 侵权责任</a>
-          </div>
-        </div>
-
-        <!-- Services Dropdown -->
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
         <div class="nav-item-dropdown">
           <button class="nav-item dropdown-toggle">
             服务
           </button>
         </div>
-<<<<<<< HEAD
 
-        <!-- 律师列表链接 -->
         <router-link to="/lawyer-list" class="nav-item">律师</router-link>
 
-        <!-- 订单下拉菜单 -->
-=======
-        <router-link to="/lawyer-list" class="nav-item">律师</router-link>
-        
-        <!-- Orders Dropdown -->
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
         <div class="nav-item-dropdown">
           <button class="nav-item dropdown-toggle">
             订单
@@ -94,60 +48,28 @@
           </div>
         </div>
 
-<<<<<<< HEAD
-        <!-- 关于我们链接 -->
         <router-link to="/about" class="nav-item">关于我们</router-link>
       </nav>
 
-      <!-- 右侧操作区：搜索和用户登录 -->
       <div class="header-right">
-        <!-- 搜索按钮 -->
         <button class="search-btn" @click="toggleSearch">
           <i class="icon-search">🔍</i>
         </button>
 
-        <!-- 未登录状态：显示登录和注册按钮 -->
         <template v-if="!isLoggedIn">
           <button class="login-btn" @click="handleLogin">登录</button>
           <button class="signup-btn" @click="handleSignup">注册</button>
         </template>
 
-        <!-- 已登录状态：显示用户菜单 -->
-=======
-        <router-link to="/about" class="nav-item">关于我们</router-link>
-      </nav>
-
-      <!-- Right Actions -->
-      <div class="header-right">
-        <button class="search-btn" @click="toggleSearch">
-          <i class="icon-search">🔍</i>
-        </button>
-        
-        <!-- Not Logged In -->
-        <template v-if="!isLoggedIn">
-          <router-link to="/login" class="login-btn auth-action">登录</router-link>
-          <router-link to="/register" class="signup-btn auth-action">注册</router-link>
-          <router-link to="/admin/login" class="admin-login-btn auth-action">管理员登录</router-link>
-        </template>
-
-        <!-- Logged In - User Menu -->
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
         <div v-else class="user-menu-dropdown">
           <button class="user-menu-btn">
             <img :src="userAvatar" :alt="userName" class="user-avatar" />
             <span>{{ userName }}</span>
             <i class="dropdown-icon">▼</i>
           </button>
-<<<<<<< HEAD
-          <!-- 用户下拉菜单 -->
           <div class="dropdown-menu user-dropdown">
             <a href="/user-profile" class="dropdown-item">个人资料</a>
             <a href="/settings" class="dropdown-item">设置</a>
-=======
-          <div class="dropdown-menu user-dropdown">
-            <router-link to="/user-profile" class="dropdown-item">个人资料</router-link>
-            <router-link to="/settings" class="dropdown-item">设置</router-link>
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item logout" @click="handleLogout">退出登录</a>
           </div>
@@ -155,19 +77,10 @@
       </div>
     </div>
 
-<<<<<<< HEAD
-    <!-- 搜索栏：显示/隐藏 -->
     <div v-if="showSearch" class="search-bar">
       <input
         type="text"
         placeholder="搜索律师..."
-=======
-    <!-- Search Bar (Hidden by default) -->
-    <div v-if="showSearch" class="search-bar">
-      <input 
-        type="text" 
-        placeholder="搜索律师..." 
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
         class="search-input"
         v-model="searchQuery"
         @keyup.enter="handleSearch"
@@ -178,58 +91,32 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
-// Vue组合式API导入
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-// 路由实例
 const router = useRouter()
+const showSearch = ref(false)
+const searchQuery = ref('')
+const isLoggedIn = ref(false)
+const userName = ref('我的')
+const userAvatar = ref('https://via.placeholder.com/32')
 
-// 响应式状态
-const showSearch = ref(false)      // 搜索栏显示状态
-const searchQuery = ref('')         // 搜索关键词
-const isLoggedIn = ref(false)      // 登录状态
-const userName = ref('我的')       // 用户名称
-const userAvatar = ref('https://via.placeholder.com/32')  // 用户头像
-
-// 组件挂载时：检查本地存储的登录状态
 onMounted(() => {
   const loginStatus = localStorage.getItem('isLoggedIn')
-  const userInfo = localStorage.getItem('userInfo')
+  const userInfo = localStorage.getItem('currentUser')
 
   if (loginStatus === 'true' && userInfo) {
     isLoggedIn.value = true
     const user = JSON.parse(userInfo)
-    userName.value = user.name || '我的'
-    userAvatar.value = user.avatar || 'https://via.placeholder.com/32'
+    userName.value = user.username || '我的'
+    userAvatar.value = user.avatarUrl || 'https://via.placeholder.com/32'
   }
 })
 
-// 切换搜索栏显示/隐藏
-=======
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../store/auth'
-
-const router = useRouter()
-const authStore = useAuthStore()
-const showSearch = ref(false)
-const searchQuery = ref('')
-
-const isLoggedIn = computed(() => authStore.isAuthenticated)
-const userName = computed(() => authStore.user?.username || '我的')
-const userAvatar = computed(() => authStore.user?.avatarUrl || 'https://via.placeholder.com/32')
-
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 const toggleSearch = () => {
   showSearch.value = !showSearch.value
 }
 
-<<<<<<< HEAD
-// 处理搜索提交：跳转到律师列表页
-=======
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
     router.push({
@@ -240,35 +127,27 @@ const handleSearch = () => {
   }
 }
 
-<<<<<<< HEAD
-// 跳转到登录页
-=======
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 const handleLogin = () => {
   router.push('/login')
 }
 
-<<<<<<< HEAD
-// 跳转到注册页
 const handleSignup = () => {
-  router.push('/signup')
+  router.push('/login')
 }
 
-// 处理退出登录
 const handleLogout = (e) => {
   e.preventDefault()
   localStorage.removeItem('isLoggedIn')
-  localStorage.removeItem('userInfo')
+  localStorage.removeItem('currentUser')
+  localStorage.removeItem('authToken')
   isLoggedIn.value = false
   router.push('/')
 }
 
-// 返回首页
 const goToHome = () => {
   router.push('/')
 }
 
-// 跳转到法律法规列表页（带分类参数）
 const goToLawArticle = (categoryId) => {
   router.push({
     name: 'LawArticleList',
@@ -278,21 +157,6 @@ const goToLawArticle = (categoryId) => {
 </script>
 
 <style scoped>
-/* 导航栏整体样式：蓝色渐变背景，固定在顶部 */
-=======
-const handleSignup = () => {
-  router.push('/register')
-}
-
-const handleLogout = (e) => {
-  e.preventDefault()
-  authStore.logout()
-  router.push('/')
-}
-</script>
-
-<style scoped>
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 .header {
   background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -301,10 +165,6 @@ const handleLogout = (e) => {
   z-index: 100;
 }
 
-<<<<<<< HEAD
-/* 导航栏容器：最大宽度1400px，居中显示 */
-=======
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 .header-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -315,11 +175,6 @@ const handleLogout = (e) => {
   justify-content: space-between;
 }
 
-<<<<<<< HEAD
-/* Logo样式 */
-=======
-/* Logo */
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 .logo {
   display: flex;
   align-items: center;
@@ -341,11 +196,6 @@ const handleLogout = (e) => {
   letter-spacing: 2px;
 }
 
-<<<<<<< HEAD
-/* 导航菜单样式 */
-=======
-/* Navigation Menu */
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 .nav-menu {
   display: flex;
   gap: 5px;
@@ -380,11 +230,6 @@ const handleLogout = (e) => {
   font-weight: 600;
 }
 
-<<<<<<< HEAD
-/* 下拉菜单样式 */
-=======
-/* Dropdown Menu */
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 .nav-item-dropdown {
   position: relative;
 }
@@ -446,10 +291,6 @@ const handleLogout = (e) => {
   margin: 8px 0;
 }
 
-<<<<<<< HEAD
-/* 下拉动画 */
-=======
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -461,11 +302,6 @@ const handleLogout = (e) => {
   }
 }
 
-<<<<<<< HEAD
-/* 右侧操作区样式 */
-=======
-/* Header Right */
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 .header-right {
   display: flex;
   align-items: center;
@@ -524,28 +360,6 @@ const handleLogout = (e) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-<<<<<<< HEAD
-/* 用户菜单样式 */
-=======
-.admin-login-btn {
-  background: #ff6b35;
-  border: none;
-  color: #ffffff;
-  padding: 8px 20px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.admin-login-btn:hover {
-  background: #e55a2b;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* User Menu */
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 .user-menu-dropdown {
   position: relative;
 }
@@ -597,11 +411,6 @@ const handleLogout = (e) => {
   background-color: #fee2e2;
 }
 
-<<<<<<< HEAD
-/* 搜索栏样式 */
-=======
-/* Search Bar */
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 .search-bar {
   background: rgba(255, 255, 255, 0.95);
   padding: 15px 20px;
@@ -643,11 +452,6 @@ const handleLogout = (e) => {
   box-shadow: 0 2px 8px rgba(30, 64, 175, 0.2);
 }
 
-<<<<<<< HEAD
-/* 响应式布局：平板和手机端适配 */
-=======
-/* Responsive */
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 @media (max-width: 1024px) {
   .nav-menu {
     gap: 0;
@@ -684,8 +488,4 @@ const handleLogout = (e) => {
     font-size: 12px;
   }
 }
-<<<<<<< HEAD
 </style>
-=======
-</style>
->>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b

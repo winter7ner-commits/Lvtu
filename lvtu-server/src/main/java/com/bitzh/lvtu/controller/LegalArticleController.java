@@ -1,19 +1,14 @@
-
 package com.bitzh.lvtu.controller;
 
-import com.bitzh.lvtu.dto.ResponseDTO;
+import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.entity.LegalArticle;
 import com.bitzh.lvtu.service.LegalArticleService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * 法律条文控制器
- */
 @RestController
 @RequestMapping("/api/articles")
-@CrossOrigin(origins = "*")
 public class LegalArticleController {
 
     private final LegalArticleService articleService;
@@ -23,37 +18,60 @@ public class LegalArticleController {
     }
 
     @GetMapping
-    public ResponseDTO&lt;List&lt;LegalArticle&gt;&gt; getAllArticles() {
-        return ResponseDTO.success(articleService.getAllArticles());
-    }
-
-    @GetMapping("/document/{documentId}")
-    public ResponseDTO&lt;List&lt;LegalArticle&gt;&gt; getArticlesByDocument(@PathVariable Long documentId) {
-        return ResponseDTO.success(articleService.getArticlesByDocumentId(documentId));
+    public ApiResponse<List<LegalArticle>> getAllArticles() {
+        try {
+            List<LegalArticle> articles = articleService.getAllArticles();
+            return ApiResponse.success(articles);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "获取条文列表失败: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseDTO&lt;LegalArticle&gt; getArticleById(@PathVariable Long id) {
-        LegalArticle article = articleService.getArticleById(id);
-        if (article == null) {
-            return ResponseDTO.error("条文不存在");
+    public ApiResponse<LegalArticle> getArticleById(@PathVariable Long id) {
+        try {
+            LegalArticle article = articleService.getArticleById(id);
+            if (article == null) {
+                return ApiResponse.fail(404, "条文不存在");
+            }
+            return ApiResponse.success(article);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "获取条文失败: " + e.getMessage());
         }
-        return ResponseDTO.success(article);
     }
 
     @PostMapping
-    public ResponseDTO&lt;LegalArticle&gt; createArticle(@RequestBody LegalArticle article) {
-        return ResponseDTO.success(articleService.createArticle(article));
+    public ApiResponse<LegalArticle> createArticle(@RequestBody LegalArticle article) {
+        try {
+            LegalArticle created = articleService.createArticle(article);
+            return ApiResponse.success(created);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "创建条文失败: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseDTO&lt;LegalArticle&gt; updateArticle(@PathVariable Long id, @RequestBody LegalArticle article) {
-        return ResponseDTO.success(articleService.updateArticle(id, article));
+    public ApiResponse<LegalArticle> updateArticle(@PathVariable Long id, @RequestBody LegalArticle article) {
+        try {
+            LegalArticle updated = articleService.updateArticle(id, article);
+            return ApiResponse.success(updated);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "更新条文失败: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseDTO&lt;Void&gt; deleteArticle(@PathVariable Long id) {
-        articleService.deleteArticle(id);
-        return ResponseDTO.success();
+    public ApiResponse<Void> deleteArticle(@PathVariable Long id) {
+        try {
+            articleService.deleteArticle(id);
+            return ApiResponse.success(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "删除条文失败: " + e.getMessage());
+        }
     }
 }

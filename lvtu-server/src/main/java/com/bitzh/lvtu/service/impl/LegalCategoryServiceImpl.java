@@ -1,17 +1,12 @@
-
 package com.bitzh.lvtu.service.impl;
 
 import com.bitzh.lvtu.entity.LegalCategory;
 import com.bitzh.lvtu.mapper.LegalCategoryMapper;
 import com.bitzh.lvtu.service.LegalCategoryService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * 法律分类业务逻辑实现
- */
 @Service
 public class LegalCategoryServiceImpl implements LegalCategoryService {
 
@@ -22,37 +17,35 @@ public class LegalCategoryServiceImpl implements LegalCategoryService {
     }
 
     @Override
-    public List&lt;LegalCategory&gt; getAllCategories() {
-        return categoryMapper.selectByStatus(1);
-    }
-
-    @Override
-    public List&lt;LegalCategory&gt; getCategoriesByParentId(Long parentId) {
-        return categoryMapper.selectByParentIdAndStatus(parentId, 1);
+    public List<LegalCategory> getAllCategories() {
+        return categoryMapper.findAll();
     }
 
     @Override
     public LegalCategory getCategoryById(Long id) {
-        return categoryMapper.selectById(id);
+        return categoryMapper.findById(id);
     }
 
     @Override
-    @Transactional
     public LegalCategory createCategory(LegalCategory category) {
+        if (category.getStatus() == null) {
+            category.setStatus(1);
+        }
+        if (category.getSortOrder() == null) {
+            category.setSortOrder(0);
+        }
         categoryMapper.insert(category);
         return category;
     }
 
     @Override
-    @Transactional
     public LegalCategory updateCategory(Long id, LegalCategory category) {
         category.setId(id);
         categoryMapper.update(category);
-        return categoryMapper.selectById(id);
+        return category;
     }
 
     @Override
-    @Transactional
     public void deleteCategory(Long id) {
         categoryMapper.deleteById(id);
     }

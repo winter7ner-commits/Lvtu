@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS legal_document (
 CREATE TABLE IF NOT EXISTS legal_article (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     document_id BIGINT NOT NULL,
-    article_no VARCHAR(50),
-    chapter_title VARCHAR(200),
+    article_number VARCHAR(50),
+    title VARCHAR(200),
     content TEXT NOT NULL,
     sort_order INT DEFAULT 0,
     status INT DEFAULT 1,

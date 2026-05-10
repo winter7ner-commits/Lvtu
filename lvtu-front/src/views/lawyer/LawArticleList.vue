@@ -15,7 +15,7 @@ const articleModalVisible = ref(false)
 const selectedArticle = ref(null)
 const loading = ref(false)
 
-const API_BASE = 'http://localhost:8080/api'
+const API_BASE = 'http://localhost:8081/api'
 
 onMounted(() => {
   loadCategories()
@@ -33,26 +33,11 @@ const loadCategories = async () => {
     if (response.ok) {
       const result = await response.json()
       categories.value = result.data || []
-    } else {
-      loadMockCategories()
     }
-  } catch {
-    loadMockCategories()
+  } catch (error) {
+    console.error('加载分类失败:', error)
   }
   loading.value = false
-}
-
-const loadMockCategories = () => {
-  categories.value = [
-    { id: 1, name: '宪法', status: 1 },
-    { id: 2, name: '民法', status: 1 },
-    { id: 3, name: '刑法', status: 1 },
-    { id: 4, name: '行政法', status: 1 },
-    { id: 5, name: '商法', status: 1 },
-    { id: 6, name: '民事诉讼法', status: 1 },
-    { id: 7, name: '刑事诉讼法', status: 1 },
-    { id: 8, name: '行政诉讼法', status: 1 }
-  ]
 }
 
 const selectCategory = async (categoryId) => {
@@ -67,31 +52,16 @@ const selectCategory = async (categoryId) => {
     if (response.ok) {
       const result = await response.json()
       documents.value = result.data || []
-    } else {
-      loadMockDocuments(categoryId)
     }
-  } catch {
-    loadMockDocuments(categoryId)
+  } catch (error) {
+    console.error('加载文件失败:', error)
+    documents.value = []
   }
   
   if (documents.value.length > 0) {
     selectDocument(documents.value[0].id)
   }
   loading.value = false
-}
-
-const loadMockDocuments = (categoryId) => {
-  const mockDocuments = {
-    1: [{ id: 1, name: '中华人民共和国宪法', categoryId: 1 }],
-    2: [{ id: 2, name: '中华人民共和国民法典', categoryId: 2 }],
-    3: [{ id: 3, name: '中华人民共和国刑法', categoryId: 3 }],
-    4: [{ id: 4, name: '中华人民共和国行政许可法', categoryId: 4 }],
-    5: [{ id: 5, name: '中华人民共和国公司法', categoryId: 5 }],
-    6: [{ id: 6, name: '中华人民共和国民事诉讼法', categoryId: 6 }],
-    7: [{ id: 7, name: '中华人民共和国刑事诉讼法', categoryId: 7 }],
-    8: [{ id: 8, name: '中华人民共和国行政诉讼法', categoryId: 8 }]
-  }
-  documents.value = mockDocuments[categoryId] || []
 }
 
 const selectDocument = async (documentId) => {
@@ -103,54 +73,17 @@ const selectDocument = async (documentId) => {
   loading.value = true
   
   try {
-    const response = await fetch(`${API_BASE}/articles/document/${documentId}`)
+    const response = await fetch(`${API_BASE}/articles`)
     if (response.ok) {
       const result = await response.json()
-      articles.value = result.data || []
-    } else {
-      loadMockArticles(documentId)
+      const allArticles = result.data || []
+      articles.value = allArticles.filter(a => a.documentId === documentId)
     }
-  } catch {
-    loadMockArticles(documentId)
+  } catch (error) {
+    console.error('加载条文失败:', error)
+    articles.value = []
   }
   loading.value = false
-}
-
-const loadMockArticles = (documentId) => {
-  const mockArticles = {
-    1: [
-      { id: 1, documentId: 1, articleNo: '第一条', chapterTitle: '第一章 总则', content: '中华人民共和国是工人阶级领导的、以工农联盟为基础的人民民主专政的社会主义国家。', sortOrder: 1 },
-      { id: 2, documentId: 1, articleNo: '第二条', chapterTitle: '第一章 总则', content: '中华人民共和国的一切权力属于人民。', sortOrder: 2 },
-      { id: 3, documentId: 1, articleNo: '第三条', chapterTitle: '第一章 总则', content: '中华人民共和国的国家机构实行民主集中制的原则。', sortOrder: 3 }
-    ],
-    2: [
-      { id: 4, documentId: 2, articleNo: '第一条', chapterTitle: '第一章 基本规定', content: '为了保护民事主体的合法权益，调整民事关系，维护社会和经济秩序，适应中国特色社会主义发展要求，弘扬社会主义核心价值观，根据宪法，制定本法。', sortOrder: 1 },
-      { id: 5, documentId: 2, articleNo: '第二条', chapterTitle: '第一章 基本规定', content: '民法调整平等主体的自然人、法人和非法人组织之间的人身关系和财产关系。', sortOrder: 2 },
-      { id: 6, documentId: 2, articleNo: '第三条', chapterTitle: '第一章 基本规定', content: '民事主体的人身权利、财产权利以及其他合法权益受法律保护，任何组织或者个人不得侵犯。', sortOrder: 3 },
-      { id: 7, documentId: 2, articleNo: '第四条', chapterTitle: '第一章 基本规定', content: '民事主体在民事活动中的法律地位一律平等。', sortOrder: 4 },
-      { id: 8, documentId: 2, articleNo: '第五条', chapterTitle: '第一章 基本规定', content: '民事主体从事民事活动，应当遵循自愿原则，按照自己的意思设立、变更、终止民事法律关系。', sortOrder: 5 }
-    ],
-    3: [
-      { id: 9, documentId: 3, articleNo: '第一条', chapterTitle: '第一章 刑法的任务、基本原则和适用范围', content: '为了惩罚犯罪，保护人民，根据宪法，结合我国同犯罪作斗争的具体经验及实际情况，制定本法。', sortOrder: 1 },
-      { id: 10, documentId: 3, articleNo: '第二条', chapterTitle: '第一章 刑法的任务、基本原则和适用范围', content: '中华人民共和国刑法的任务，是用刑罚同一切犯罪行为作斗争，以保卫国家安全，保卫人民民主专政的政权和社会主义制度，保护国有财产和劳动群众集体所有的财产，保护公民私人所有的财产，保护公民的人身权利、民主权利和其他权利，维护社会秩序、经济秩序，保障社会主义建设事业的顺利进行。', sortOrder: 2 }
-    ],
-    4: [
-      { id: 11, documentId: 4, articleNo: '第一条', chapterTitle: '第一章 总则', content: '为了规范行政许可的设定和实施，保护公民、法人和其他组织的合法权益，维护公共利益和社会秩序，保障和监督行政机关有效实施行政管理，根据宪法，制定本法。', sortOrder: 1 }
-    ],
-    5: [
-      { id: 12, documentId: 5, articleNo: '第一条', chapterTitle: '第一章 总则', content: '为了规范公司的组织和行为，保护公司、股东和债权人的合法权益，维护社会经济秩序，促进社会主义市场经济的发展，制定本法。', sortOrder: 1 }
-    ],
-    6: [
-      { id: 13, documentId: 6, articleNo: '第一条', chapterTitle: '第一章 任务、适用范围和基本原则', content: '中华人民共和国民事诉讼法以宪法为根据，结合我国民事审判工作的经验和实际情况制定。', sortOrder: 1 }
-    ],
-    7: [
-      { id: 14, documentId: 7, articleNo: '第一条', chapterTitle: '第一章 任务和基本原则', content: '为了保证刑法的正确实施，惩罚犯罪，保护人民，保障国家安全和社会公共安全，维护社会主义社会秩序，根据宪法，制定本法。', sortOrder: 1 }
-    ],
-    8: [
-      { id: 15, documentId: 8, articleNo: '第一条', chapterTitle: '第一章 总则', content: '为保证人民法院公正、及时审理行政案件，解决行政争议，保护公民、法人和其他组织的合法权益，监督行政机关依法行使职权，根据宪法，制定本法。', sortOrder: 1 }
-    ]
-  }
-  articles.value = mockArticles[documentId] || []
 }
 
 const truncateContent = (content) => {
@@ -215,8 +148,8 @@ const openArticleModal = (article) => {
             @click="openArticleModal(article)"
           >
             <div class="article-header">
-              <span class="article-no">{{ article.articleNo }}</span>
-              <span v-if="article.chapterTitle" class="chapter-title">{{ article.chapterTitle }}</span>
+              <span class="article-no">{{ article.articleNumber }}</span>
+              <span v-if="article.title" class="article-title">{{ article.title }}</span>
             </div>
             <p class="article-content">{{ truncateContent(article.content) }}</p>
           </div>
@@ -240,11 +173,11 @@ const openArticleModal = (article) => {
           </div>
           <div class="detail-row">
             <span class="detail-label">条文编号：</span>
-            <span class="detail-value">{{ selectedArticle.articleNo }}</span>
+            <span class="detail-value">{{ selectedArticle.articleNumber }}</span>
           </div>
-          <div v-if="selectedArticle.chapterTitle" class="detail-row">
-            <span class="detail-label">章节标题：</span>
-            <span class="detail-value">{{ selectedArticle.chapterTitle }}</span>
+          <div v-if="selectedArticle.title" class="detail-row">
+            <span class="detail-label">标题：</span>
+            <span class="detail-value">{{ selectedArticle.title }}</span>
           </div>
           <div class="detail-row content-row">
             <span class="detail-label">条文内容：</span>
@@ -396,7 +329,7 @@ const openArticleModal = (article) => {
   font-size: 1rem;
 }
 
-.chapter-title {
+.article-title {
   font-size: 0.85rem;
   color: #67c23a;
 }

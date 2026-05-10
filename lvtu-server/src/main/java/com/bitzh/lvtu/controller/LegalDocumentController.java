@@ -1,19 +1,14 @@
-
 package com.bitzh.lvtu.controller;
 
-import com.bitzh.lvtu.dto.ResponseDTO;
+import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.entity.LegalDocument;
 import com.bitzh.lvtu.service.LegalDocumentService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * 法律文件控制器
- */
 @RestController
 @RequestMapping("/api/documents")
-@CrossOrigin(origins = "*")
 public class LegalDocumentController {
 
     private final LegalDocumentService documentService;
@@ -23,37 +18,71 @@ public class LegalDocumentController {
     }
 
     @GetMapping
-    public ResponseDTO&lt;List&lt;LegalDocument&gt;&gt; getAllDocuments() {
-        return ResponseDTO.success(documentService.getAllDocuments());
+    public ApiResponse<List<LegalDocument>> getAllDocuments() {
+        try {
+            List<LegalDocument> documents = documentService.getAllDocuments();
+            return ApiResponse.success(documents);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "获取文件列表失败: " + e.getMessage());
+        }
     }
 
     @GetMapping("/category/{categoryId}")
-    public ResponseDTO&lt;List&lt;LegalDocument&gt;&gt; getDocumentsByCategory(@PathVariable Long categoryId) {
-        return ResponseDTO.success(documentService.getDocumentsByCategoryId(categoryId));
+    public ApiResponse<List<LegalDocument>> getDocumentsByCategory(@PathVariable Long categoryId) {
+        try {
+            List<LegalDocument> documents = documentService.getDocumentsByCategoryId(categoryId);
+            return ApiResponse.success(documents);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "获取文件列表失败: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseDTO&lt;LegalDocument&gt; getDocumentById(@PathVariable Long id) {
-        LegalDocument document = documentService.getDocumentById(id);
-        if (document == null) {
-            return ResponseDTO.error("文件不存在");
+    public ApiResponse<LegalDocument> getDocumentById(@PathVariable Long id) {
+        try {
+            LegalDocument document = documentService.getDocumentById(id);
+            if (document == null) {
+                return ApiResponse.fail(404, "文件不存在");
+            }
+            return ApiResponse.success(document);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "获取文件失败: " + e.getMessage());
         }
-        return ResponseDTO.success(document);
     }
 
     @PostMapping
-    public ResponseDTO&lt;LegalDocument&gt; createDocument(@RequestBody LegalDocument document) {
-        return ResponseDTO.success(documentService.createDocument(document));
+    public ApiResponse<LegalDocument> createDocument(@RequestBody LegalDocument document) {
+        try {
+            LegalDocument created = documentService.createDocument(document);
+            return ApiResponse.success(created);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "创建文件失败: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseDTO&lt;LegalDocument&gt; updateDocument(@PathVariable Long id, @RequestBody LegalDocument document) {
-        return ResponseDTO.success(documentService.updateDocument(id, document));
+    public ApiResponse<LegalDocument> updateDocument(@PathVariable Long id, @RequestBody LegalDocument document) {
+        try {
+            LegalDocument updated = documentService.updateDocument(id, document);
+            return ApiResponse.success(updated);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "更新文件失败: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseDTO&lt;Void&gt; deleteDocument(@PathVariable Long id) {
-        documentService.deleteDocument(id);
-        return ResponseDTO.success();
+    public ApiResponse<Void> deleteDocument(@PathVariable Long id) {
+        try {
+            documentService.deleteDocument(id);
+            return ApiResponse.success(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "删除文件失败: " + e.getMessage());
+        }
     }
 }

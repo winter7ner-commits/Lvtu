@@ -1,79 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.LegalCategoryMapper">
 
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
-    "http://mybatis.org/dtd/mybatis-3-mapper.dtd"&gt;
-&lt;mapper namespace="com.bitzh.lvtu.mapper.LegalCategoryMapper"&gt;
+    <resultMap id="BaseResultMap" type="com.bitzh.lvtu.entity.LegalCategory">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
 
-    &lt;resultMap id="BaseResultMap" type="com.bitzh.lvtu.entity.LegalCategory"&gt;
-        &lt;id column="id" property="id"/&gt;
-        &lt;result column="name" property="name"/&gt;
-        &lt;result column="parent_id" property="parentId"/&gt;
-        &lt;result column="sort_order" property="sortOrder"/&gt;
-        &lt;result column="status" property="status"/&gt;
-        &lt;result column="created_at" property="createdAt"/&gt;
-        &lt;result column="updated_at" property="updatedAt"/&gt;
-    &lt;/resultMap&gt;
-
-    &lt;sql id="Base_Column_List"&gt;
+    <sql id="Base_Column_List">
         id, name, parent_id, sort_order, status, created_at, updated_at
-    &lt;/sql&gt;
+    </sql>
 
-    &lt;select id="selectAll" resultMap="BaseResultMap"&gt;
-        SELECT &lt;include refid="Base_Column_List"/&gt;
-        FROM legal_category
-        ORDER BY sort_order ASC
-    &lt;/select&gt;
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM legal_category ORDER BY sort_order
+    </select>
 
-    &lt;select id="selectByStatus" resultMap="BaseResultMap"&gt;
-        SELECT &lt;include refid="Base_Column_List"/&gt;
-        FROM legal_category
-        WHERE status = #{status}
-        ORDER BY sort_order ASC
-    &lt;/select&gt;
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM legal_category WHERE id = #{id}
+    </select>
 
-    &lt;select id="selectByParentId" resultMap="BaseResultMap"&gt;
-        SELECT &lt;include refid="Base_Column_List"/&gt;
-        FROM legal_category
-        WHERE parent_id = #{parentId}
-        ORDER BY sort_order ASC
-    &lt;/select&gt;
-
-    &lt;select id="selectByParentIdAndStatus" resultMap="BaseResultMap"&gt;
-        SELECT &lt;include refid="Base_Column_List"/&gt;
-        FROM legal_category
-        WHERE parent_id = #{parentId} AND status = #{status}
-        ORDER BY sort_order ASC
-    &lt;/select&gt;
-
-    &lt;select id="selectById" resultMap="BaseResultMap"&gt;
-        SELECT &lt;include refid="Base_Column_List"/&gt;
-        FROM legal_category
-        WHERE id = #{id}
-    &lt;/select&gt;
-
-    &lt;insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalCategory" useGeneratedKeys="true" keyProperty="id"&gt;
+    <insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalCategory" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO legal_category (name, parent_id, sort_order, status, created_at, updated_at)
-        VALUES (#{name}, #{parentId}, #{sortOrder}, #{status}, NOW(), NOW())
-    &lt;/insert&gt;
+        VALUES (#{name}, #{parentId}, #{sortOrder}, #{status}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
 
-    &lt;update id="update" parameterType="com.bitzh.lvtu.entity.LegalCategory"&gt;
+    <update id="update" parameterType="com.bitzh.lvtu.entity.LegalCategory">
         UPDATE legal_category
-        &lt;set&gt;
-            &lt;if test="name != null"&gt;name = #{name},&lt;/if&gt;
-            &lt;if test="parentId != null"&gt;parent_id = #{parentId},&lt;/if&gt;
-            &lt;if test="sortOrder != null"&gt;sort_order = #{sortOrder},&lt;/if&gt;
-            &lt;if test="status != null"&gt;status = #{status},&lt;/if&gt;
-            updated_at = NOW()
-        &lt;/set&gt;
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="status != null">status = #{status},</if>
+            updated_at = CURRENT_TIMESTAMP
+        </set>
         WHERE id = #{id}
-    &lt;/update&gt;
+    </update>
 
-    &lt;delete id="deleteById"&gt;
+    <delete id="deleteById">
         DELETE FROM legal_category WHERE id = #{id}
-    &lt;/delete&gt;
+    </delete>
 
-    &lt;select id="existsById" resultType="boolean"&gt;
-        SELECT COUNT(*) &gt; 0 FROM legal_category WHERE id = #{id}
-    &lt;/select&gt;
-
-&lt;/mapper&gt;
+</mapper>
