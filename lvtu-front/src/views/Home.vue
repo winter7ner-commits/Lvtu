@@ -49,7 +49,7 @@ const loading = ref(false)
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
     router.push({
-      path: '/lawyer-list',
+      name: 'LawyerList',
       query: { keyword: searchKeyword.value }
     })
   }
@@ -57,17 +57,30 @@ const handleSearch = () => {
 
 const searchByKeyword = (keyword) => {
   router.push({
-    path: '/lawyer-list',
+    name: 'LawyerList',
     query: { keyword }
   })
 }
 
 const goToLawyerDetail = (id) => {
-  router.push(`/lawyer/${id}`)
+  router.push({ name: 'LawyerDetail', params: { id } })
 }
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const loadHotLawyers = async () => {
+  loading.value = true
+  try {
+    const res = await getTopRatedLawyers()
+    hotLawyers.value = res.data || []
+  } catch (error) {
+    console.error('加载热门律师失败:', error)
+    hotLawyers.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {

@@ -2,56 +2,86 @@
   <header class="header">
     <div class="header-container">
       <!-- Logo -->
-      <div class="logo">
+      <div class="logo" @click="goHome">
         <img src="/public/icons/logo.png" alt="LVTU" class="logo-img" />
         <span class="logo-text">律途</span>
       </div>
 
       <!-- Navigation Menu -->
       <nav class="nav-menu">
-        <router-link to="/" class="nav-item">首页</router-link>
+        <router-link to="/" class="nav-item" @click="closeDropdowns">首页</router-link>
         
         <!-- Laws & Regulations Dropdown -->
-        <div class="nav-item-dropdown">
-          <button class="nav-item dropdown-toggle">
+        <div
+          class="nav-item-dropdown"
+          :class="{ 'is-open': activeDropdown === 'laws' }"
+          @mouseenter="openDropdown('laws')"
+          @mouseleave="scheduleCloseDropdown"
+          @focusin="openDropdown('laws')"
+          @focusout="scheduleCloseDropdown"
+        >
+          <button class="nav-item dropdown-toggle" type="button">
             法律法规
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <a href="#" class="dropdown-item">第一编 总则</a>
-            <a href="#" class="dropdown-item">第二编 物权</a>
-            <a href="#" class="dropdown-item">第三编 合同</a>
-            <a href="#" class="dropdown-item">第四编 人格权</a>
-            <a href="#" class="dropdown-item">第五编 婚姻家庭</a>
-            <a href="#" class="dropdown-item">第六编 继承</a>
-            <a href="#" class="dropdown-item">第七编 侵权责任</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第一编 总则</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第二编 物权</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第三编 合同</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第四编 人格权</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第五编 婚姻家庭</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第六编 继承</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第七编 侵权责任</a>
           </div>
         </div>
 
         <!-- Services Dropdown -->
-        <div class="nav-item-dropdown">
-          <button class="nav-item dropdown-toggle">
+        <div
+          class="nav-item-dropdown"
+          :class="{ 'is-open': activeDropdown === 'services' }"
+          @mouseenter="openDropdown('services')"
+          @mouseleave="scheduleCloseDropdown"
+          @focusin="openDropdown('services')"
+          @focusout="scheduleCloseDropdown"
+        >
+          <button class="nav-item dropdown-toggle" type="button">
             服务
+            <i class="dropdown-icon">▼</i>
           </button>
+          <div class="dropdown-menu">
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'ONLINE_CONSULT' } }" class="dropdown-item" @click="closeDropdowns">在线法律咨询</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'PHONE_CONSULT' } }" class="dropdown-item" @click="closeDropdowns">电话法律咨询</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'DOCUMENT_WRITING' } }" class="dropdown-item" @click="closeDropdowns">文书代写</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'CONTRACT_REVIEW' } }" class="dropdown-item" @click="closeDropdowns">合同审核</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'MARRIAGE_FAMILY' } }" class="dropdown-item" @click="closeDropdowns">婚姻家事</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'LITIGATION_AGENT' } }" class="dropdown-item" @click="closeDropdowns">诉讼代理</router-link>
+          </div>
         </div>
-        <router-link to="/lawyer-list" class="nav-item">律师</router-link>
+        <router-link to="/lawyer-list" class="nav-item" @click="closeDropdowns">律师</router-link>
         
         <!-- Orders Dropdown -->
-        <div class="nav-item-dropdown">
-          <button class="nav-item dropdown-toggle">
+        <div
+          class="nav-item-dropdown"
+          :class="{ 'is-open': activeDropdown === 'orders' }"
+          @mouseenter="openDropdown('orders')"
+          @mouseleave="scheduleCloseDropdown"
+          @focusin="openDropdown('orders')"
+          @focusout="scheduleCloseDropdown"
+        >
+          <button class="nav-item dropdown-toggle" type="button">
             订单
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <a href="#" class="dropdown-item">全部</a>
-            <a href="#" class="dropdown-item">待支付</a>
-            <a href="#" class="dropdown-item">待回复</a>
-            <a href="#" class="dropdown-item">待评价</a>
-            <a href="#" class="dropdown-item">已完成</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">全部</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">待支付</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">待回复</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">待评价</a>
+            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">已完成</a>
           </div>
         </div>
 
-        <router-link to="/about" class="nav-item">关于我们</router-link>
+        <router-link to="/about" class="nav-item" @click="closeDropdowns">关于我们</router-link>
       </nav>
 
       <!-- Right Actions -->
@@ -62,20 +92,28 @@
         
         <!-- Not Logged In -->
         <template v-if="!isLoggedIn">
-          <button class="login-btn" @click="handleLogin">登录</button>
-          <button class="signup-btn" @click="handleSignup">注册</button>
+          <button class="login-btn" type="button" @click="handleLogin">登录</button>
+          <button class="signup-btn" type="button" @click="handleSignup">注册</button>
         </template>
 
         <!-- Logged In - User Menu -->
-        <div v-else class="user-menu-dropdown">
-          <button class="user-menu-btn">
+        <div
+          v-else
+          class="user-menu-dropdown"
+          :class="{ 'is-open': activeDropdown === 'user' }"
+          @mouseenter="openDropdown('user')"
+          @mouseleave="scheduleCloseDropdown"
+          @focusin="openDropdown('user')"
+          @focusout="scheduleCloseDropdown"
+        >
+          <button class="user-menu-btn" type="button">
             <img :src="userAvatar" :alt="userName" class="user-avatar" />
             <span>{{ userName }}</span>
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu user-dropdown">
-            <a href="/user-profile" class="dropdown-item">个人资料</a>
-            <a href="/settings" class="dropdown-item">设置</a>
+            <router-link to="/user-profile" class="dropdown-item" @click="closeDropdowns">个人资料</router-link>
+            <router-link to="/settings" class="dropdown-item" @click="closeDropdowns">设置</router-link>
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item logout" @click="handleLogout">退出登录</a>
           </div>
@@ -107,6 +145,34 @@ const searchQuery = ref('')
 const isLoggedIn = ref(false)
 const userName = ref('我的')
 const userAvatar = ref('https://via.placeholder.com/32')
+const activeDropdown = ref(null)
+let closeDropdownTimer = null
+
+const openDropdown = (name) => {
+  if (closeDropdownTimer) {
+    clearTimeout(closeDropdownTimer)
+    closeDropdownTimer = null
+  }
+  activeDropdown.value = name
+}
+
+const scheduleCloseDropdown = () => {
+  if (closeDropdownTimer) {
+    clearTimeout(closeDropdownTimer)
+  }
+  closeDropdownTimer = setTimeout(() => {
+    activeDropdown.value = null
+    closeDropdownTimer = null
+  }, 120)
+}
+
+const closeDropdowns = () => {
+  if (closeDropdownTimer) {
+    clearTimeout(closeDropdownTimer)
+    closeDropdownTimer = null
+  }
+  activeDropdown.value = null
+}
 
 onMounted(() => {
   // 从本地存储检查登录状态
@@ -122,11 +188,13 @@ onMounted(() => {
 })
 
 const toggleSearch = () => {
+  closeDropdowns()
   showSearch.value = !showSearch.value
 }
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
+    closeDropdowns()
     router.push({
       name: 'LawyerList',
       query: { keyword: searchQuery.value }
@@ -135,16 +203,24 @@ const handleSearch = () => {
   }
 }
 
+const goHome = () => {
+  closeDropdowns()
+  router.push({ name: 'Home' })
+}
+
 const handleLogin = () => {
+  closeDropdowns()
   router.push('/login')
 }
 
 const handleSignup = () => {
+  closeDropdowns()
   router.push('/signup')
 }
 
 const handleLogout = (e) => {
   e.preventDefault()
+  closeDropdowns()
   localStorage.removeItem('isLoggedIn')
   localStorage.removeItem('userInfo')
   isLoggedIn.value = false
@@ -233,6 +309,16 @@ const handleLogout = (e) => {
   position: relative;
 }
 
+.nav-item-dropdown::after,
+.user-menu-dropdown::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 8px;
+}
+
 .dropdown-toggle {
   display: flex;
   align-items: center;
@@ -245,27 +331,38 @@ const handleLogout = (e) => {
   transition: transform 0.3s ease;
 }
 
-.nav-item-dropdown:hover .dropdown-menu {
-  display: block;
-  animation: slideDown 0.3s ease-out;
+.nav-item-dropdown.is-open .dropdown-menu,
+.user-menu-dropdown.is-open .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
 }
 
-.nav-item-dropdown:hover .dropdown-toggle .dropdown-icon {
+.nav-item-dropdown.is-open .dropdown-toggle .dropdown-icon,
+.user-menu-dropdown.is-open .dropdown-icon {
   transform: rotate(180deg);
 }
 
 .dropdown-menu {
-  display: none;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
   background: #ffffff;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 180px;
   padding: 8px 0;
-  margin-top: 8px;
   z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0s linear 0.18s;
 }
 
 .dropdown-item {
@@ -279,6 +376,23 @@ const handleLogout = (e) => {
 }
 
 .dropdown-item:hover {
+  background-color: #f3f4f6;
+  color: #1e40af;
+  padding-left: 20px;
+}
+
+/* 确保 router-link 在 dropdown 中正确显示 */
+.dropdown-menu .router-link {
+  display: block;
+  padding: 10px 16px;
+  color: #333333;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.dropdown-menu .router-link:hover {
   background-color: #f3f4f6;
   color: #1e40af;
   padding-left: 20px;
@@ -389,14 +503,6 @@ const handleLogout = (e) => {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-}
-
-.user-menu-dropdown:hover .dropdown-menu {
-  display: block;
-}
-
-.user-menu-dropdown:hover .dropdown-toggle .dropdown-icon {
-  transform: rotate(180deg);
 }
 
 .user-dropdown {
