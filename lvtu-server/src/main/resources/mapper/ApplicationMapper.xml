@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitzh.lvtu.mapper.ApplicationMapper">
+
+    <!-- 定义 ApplicationDTO 的映射（明确字段映射，避免依赖自动驼峰） -->
+    <resultMap id="applicationDTOMap" type="com.bitzh.lvtu.dto.ApplicationDTO">
+        <id property="applicationId" column="application_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="licenseNo" column="license_no"/>
+        <result property="licenseUrl" column="license_url"/>
+        <result property="lawFirm" column="law_firm"/>
+        <result property="practiceStartYear" column="practice_start_year"/>
+        <result property="status" column="status"/>
+        <result property="rejectReason" column="reject_reason"/>
+        <result property="createTime" column="create_time"/>
+        <result property="auditTime" column="audit_time"/>
+        <result property="applyType" column="apply_type"/>
+        <result property="username" column="username"/>
+        <result property="realname" column="realname"/>
+        <result property="avatarUrl" column="avatar_url"/>
+    </resultMap>
+
+    <!-- 插入申请 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="applicationId">
+        INSERT INTO application (user_id, license_no, license_url, law_firm,
+                                 practice_start_year, apply_type, status, create_time)
+        VALUES (#{userId}, #{licenseNo}, #{licenseUrl}, #{lawFirm},
+                #{practiceStartYear}, #{applyType}, 0, NOW())
+    </insert>
+
+    <!-- 根据 applicationId 查询 -->
+    <select id="selectByApplicationId" resultMap="applicationDTOMap">
+        SELECT
+            a.application_id,
+            a.user_id,
+            a.license_no,
+            a.license_url,
+            a.law_firm,
+            a.practice_start_year,
+            a.status,
+            a.reject_reason,
+            a.create_time,
+            a.audit_time,
+            a.apply_type,
+            u.username,
+            uv.real_name AS realname
+        FROM application a
+                 LEFT JOIN users u ON a.user_id = u.user_id
+                 LEFT JOIN users_verfications uv ON a.user_id = uv.user_id
+        WHERE a.application_id = #{applicationId}
+    </select>
+
+    <!-- 根据 userId 查询最新一条申请 -->
+    <select id="selectByUserId" resultMap="applicationDTOMap">
+        SELECT
+            a.application_id,
+            a.user_id,
+            a.license_no,
+            a.license_url,
+            a.law_firm,
+            a.practice_start_year,
+            a.status,
+            a.reject_reason,
+            a.create_time,
+            a.audit_time,
+            a.apply_type,
+            u.username,
+            u.avatar_url,
+            uv.real_name AS realname
+        FROM application a
+                 LEFT JOIN users u ON a.user_id = u.user_id
+                 LEFT JOIN users_verfications uv ON a.user_id = uv.user_id
+        WHERE a.user_id = #{userId}
+        ORDER BY a.create_time DESC
+            LIMIT 1
+    </select>
+
+    <!-- 查询所有申请列表（管理员用） -->
+    <select id="selectAll" resultMap="applicationDTOMap">
+        SELECT
+            a.application_id,
+            a.user_id,
+            a.license_no,
+            a.license_url,
+            a.law_firm,
+            a.practice_start_year,
+            a.status,
+            a.reject_reason,
+            a.create_time,
+            a.audit_time,
+            a.apply_type,
+            u.username,
+            u.avatar_url,
+            uv.real_name AS realname
+        FROM application a
+                 LEFT JOIN users u ON a.user_id = u.user_id
+                 LEFT JOIN users_verfications uv ON a.user_id = uv.user_id
+        ORDER BY a.application_id DESC
+    </select>
+
+    <!-- 待审核列表 -->
+    <select id="selectPendingList" resultMap="applicationDTOMap">
+        SELECT
+            a.application_id,
+            a.user_id,
+            a.license_no,
+            a.license_url,
+            a.law_firm,
+            a.practice_start_year,
+            a.status,
+            a.reject_reason,
+            a.create_time,
+            a.audit_time,
+            a.apply_type,
+            u.username,
+            u.avatar_url,
+            uv.real_name AS realname
+        FROM application a
+                 LEFT JOIN users u ON a.user_id = u.user_id
+                 LEFT JOIN users_verfications uv ON a.user_id = uv.user_id
+        WHERE a.status = 0
+        ORDER BY a.create_time ASC
+    </select>
+
+    <!-- 审核通过 -->
+    <update id="approveApplication">
+        UPDATE application
+        SET status = 1, audit_time = NOW()
+        WHERE application_id = #{applicationId}
+    </update>
+
+    <!-- 审核驳回 -->
+    <update id="rejectApplication">
+        UPDATE application
+        SET status = 2, audit_time = NOW(), reject_reason = #{rejectReason}
+        WHERE application_id = #{applicationId}
+    </update>
+
+</mapper>

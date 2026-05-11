@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitzh.lvtu.mapper.LawyerMapper">
+
+    <resultMap id="lawyerMap" type="com.bitzh.lvtu.dto.LawyerDTO">
+        <id property="lawyerId" column="lawyer_id"/>
+        <result property="userId" column="user_id"/>
+
+        <result property="licenseNo" column="license_no"/>
+        <result property="lawFirm" column="law_firm"/>
+        <result property="bio" column="bio"/>
+
+        <result property="practiceYears" column="practice_years"/>
+        <result property="rating" column="rating"/>
+        <result property="status" column="status"/>
+
+        <result property="createTime" column="create_time"/>
+
+        <!-- users 表 -->
+        <result property="username" column="username"/>
+        <result property="avatarUrl" column="avatar_url"/>
+
+        <!-- 拼接字段 -->
+        <result property="specialties" column="specialties"/>
+    </resultMap>
+
+    <!-- 插入律师 -->
+    <insert id="insertLawyer" useGeneratedKeys="true" keyProperty="lawyerId">
+        INSERT INTO lawyer
+        (user_id, license_no, law_firm, bio, status, practice_years, rating, create_time)
+        VALUES
+            (#{userId}, #{licenseNo}, #{lawFirm}, #{bio}, #{status}, #{practiceYears}, 0.0, NOW())
+    </insert>
+
+    <!-- 查询律师列表，带用户信息和擅长领域 -->
+    <select id="selectLawyerList" resultType="com.bitzh.lvtu.dto.LawyerDTO">
+        SELECT
+            l.lawyer_id,
+            l.user_id,
+            l.license_no,
+            l.law_firm,
+            l.bio,
+            l.practice_years,
+            l.rating,
+            l.status,
+            l.create_time,
+            u.username,
+            u.avatar_url,
+            GROUP_CONCAT(s.name) AS specialties
+        FROM lawyer l
+                 LEFT JOIN users u ON l.user_id = u.user_id
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        GROUP BY l.lawyer_id
+        ORDER BY l.create_time DESC
+    </select>
+
+    <!-- 查询热门律师（按 rating 排序） -->
+    <select id="selectByTopRating" resultType="com.bitzh.lvtu.dto.LawyerDTO">
+        SELECT
+            l.lawyer_id,
+            l.user_id,
+            l.license_no,
+            l.law_firm,
+            l.bio,
+            l.practice_years,
+            l.rating,
+            l.status,
+            l.create_time,
+            u.username,
+            u.avatar_url,
+            GROUP_CONCAT(s.name) AS specialties
+        FROM lawyer l
+                 LEFT JOIN users u ON l.user_id = u.user_id
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        GROUP BY l.lawyer_id
+        ORDER BY l.rating DESC
+            LIMIT #{limit}
+    </select>
+
+    <!-- 按擅长领域筛选律师 -->
+    <select id="selectBySpecialty" resultType="com.bitzh.lvtu.dto.LawyerDTO">
+        SELECT
+            l.lawyer_id,
+            l.user_id,
+            l.license_no,
+            l.law_firm,
+            l.bio,
+            l.practice_years,
+            l.rating,
+            l.status,
+            l.create_time,
+            u.username,
+            u.avatar_url,
+            GROUP_CONCAT(s.name) AS specialties
+        FROM lawyer l
+                 LEFT JOIN users u ON l.user_id = u.user_id
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE s.name = #{specialty}
+        GROUP BY l.lawyer_id
+        ORDER BY l.create_time DESC
+    </select>
+
+    <update id="updateLawyer">
+        UPDATE lawyer
+        SET license_no = #{licenseNo},
+            law_firm = #{lawFirm},
+            practice_years = #{practiceYears},
+            bio = #{bio},
+            status = 1
+        WHERE user_id = #{userId}
+    </update>
+</mapper>
