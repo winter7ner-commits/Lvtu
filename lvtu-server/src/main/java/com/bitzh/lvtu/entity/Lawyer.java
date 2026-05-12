@@ -11,20 +11,22 @@ import java.time.LocalDateTime;
 public class Lawyer {
 
     private Long lawyerId;
-    private String name;
-    private String phone;
+    private Long userId;
+    private String licenseNo;
     private String lawFirm;
+    private String bio;
+    private Integer status;
     private Integer practiceYears;
     private Double rating;
 
-    private Integer status;       // 1正常 0禁用
     private Integer auditStatus;  // 0待审核 1通过 2拒绝
     private String auditRemark;
 
-    private String description;
 
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+
+    private User user;
 
     // getter / setter
 

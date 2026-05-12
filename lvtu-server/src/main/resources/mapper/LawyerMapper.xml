@@ -8,8 +8,8 @@
     <!-- 通用映射 -->
     <resultMap id="lawyerMap" type="com.bitzh.lvtu.dto.LawyerDTO">
         <id property="lawyerId" column="lawyer_id"/>
-        <result property="name" column="name"/>
-        <result property="avatar" column="avatar"/>
+        <result property="name" column="real_name"/>
+        <result property="avatar" column="avatar_url"/>
         <result property="phone" column="phone"/>
         <result property="lawFirm" column="law_firm"/>
         <result property="practiceYears" column="practice_years"/>
@@ -29,23 +29,16 @@
     <!-- 查询已审核律师 -->
     <select id="selectLawyerList" resultMap="lawyerMap">
         SELECT
-            l.lawyer_id,
-            l.name,
-            l.avatar,
-            l.phone,
-            l.law_firm,
-            l.practice_years,
-            l.rating,
-            l.status,
-            l.audit_status,
-            l.audit_remark,
-            l.description,
-            l.create_time,
-            l.update_time,
-            l.license_no,
+            l.*,
+            u.avatar_url,
+            u.phone,
+            u.auth_status AS audit_status,
+            v.real_name,
             GROUP_CONCAT(DISTINCT s.name) AS specialty,
             COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
         FROM lawyer l
+                 INNER JOIN user u ON l.user_id = u.user_id
+                 LEFT JOIN users_verfication v ON l.user_id = v.user_id
                  LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
                  LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
         WHERE l.audit_status = 1

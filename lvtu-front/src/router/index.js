@@ -7,6 +7,10 @@ import Register from '../views/auth/Register.vue'
 import ForgotPassword from '../views/auth/ForgotPassword.vue'
 import AdminLogin from '../views/auth/AdminLogin.vue'
 import AdminRegister from '../views/auth/AdminRegister.vue'
+
+// import UserProfile from '../views/user/UserProfile.vue'
+// import Settings from '../views/Settings.vue'
+
 import { useAuthStore } from '../store/auth'
 
 const router = createRouter({
@@ -20,25 +24,29 @@ const router = createRouter({
     { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },
     { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
     { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
+
+    // { path: '/user-profile', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
+    // { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
   ]
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   const authStore = useAuthStore()
   const isLoggedIn = authStore.isAuthenticated
   const user = authStore.user
 
   if (to.meta.requiresAdmin) {
     if (!isLoggedIn) {
-      next('/admin/login')
-    } else if (user?.userType !== 3) {
-      next('/')
-    } else {
-      next()
+      return '/admin/login' // 直接返回字符串
+    } 
+    if (user?.userType !== 3) {
+      return '/' // 非管理员重定向到首页
     }
-  } else {
-    next()
+  }
+
+  if (to.meta.requiresAuth && !isLoggedIn) {
+    return '/login' // 未登录重定向到登录页
   }
 })
 

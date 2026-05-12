@@ -255,6 +255,8 @@ const handleLogout = (e) => {
   padding: 8px 0;
   margin-top: 8px;
   z-index: 200;
+  border-top: 8px solid transparent;
+  background-clip: padding-box;
 }
 
 .dropdown-item {

@@ -6,11 +6,6 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
-/**
- * 按现在定下的律师表进行修改
- * 2026/4/28
- * 修改完删除这一段
- */
 
 public interface LawyerMapper {
 
