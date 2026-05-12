@@ -25,7 +25,7 @@
           </el-form-item>
 
           <el-form-item label="所属律所" prop="lawFirm">
-            <el-input v-model="form.lawFirm" placeholder="请输入律所名称" style="width: 100px" />
+            <el-input v-model="form.lawFirm" placeholder="请输入律所名称" style="width: 280px" />
           </el-form-item>
 
           <el-form-item label="执业开始年份" prop="practiceStartYear">
@@ -34,7 +34,7 @@
                 :min="1980"
                 :max="currentYear"
                 controls-position="right"
-                style="width: 100px"
+                style="width: 280px"
             />
           </el-form-item>
 
@@ -129,6 +129,16 @@ const rules = {
   licenseUrl: [{ required: true, message: '请上传证件照片', trigger: 'change' }]
 }
 
+// 重置表单为初始空白状态
+const resetFormToDefault = () => {
+  form.licenseNo = ''
+  form.lawFirm = ''
+  form.practiceStartYear = currentYear - 5
+  form.licenseUrl = ''
+  displayImageUrl.value = ''
+  formRef.value?.clearValidate()
+}
+
 // 检查是否有审核中的申请（禁止提交）
 const checkPending = async () => {
   if (!form.userId) return
@@ -138,31 +148,58 @@ const checkPending = async () => {
     if (data && data.status === 0) {
       isPending.value = true
       ElMessage.warning('您已有审核中的申请，请等待结果')
+      return true
+    } else {
+      isPending.value = false
+      return false
     }
-  } catch {}
+  } catch {
+    isPending.value = false
+    return false
+  }
 }
 
-// 加载已有申请记录（用于资料变更 或 重新申请）
-const loadExisting = async () => {
+// 根据场景加载已有数据（资料变更 或 驳回后重新申请）
+const loadExistingIfNeeded = async () => {
   if (!form.userId) return
   try {
     const res = await getMyApplication(form.userId)
     const data = res?.data?.data || res?.data
-    if (data && data.licenseNo) {
-      // 如果有历史申请记录（无论是驳回、通过、还是审核中），都填充进来供修改
-      form.licenseNo = data.licenseNo || ''
-      form.lawFirm = data.lawFirm || ''
-      form.practiceStartYear = data.practiceStartYear || currentYear - 5
-      if (data.licenseUrl) {
-        form.licenseUrl = data.licenseUrl
-        displayImageUrl.value = data.licenseUrl.startsWith('http') ? data.licenseUrl : BASE_URL + data.licenseUrl
+    if (!data || !data.licenseNo) return
+
+    // 资料变更（applyType=1）：只有状态为“已通过”时才填充已认证信息
+    if (applyType === 1) {
+      if (data.status === 1) {
+        fillFormData(data)
+        ElMessage.info('已加载您当前的律师认证信息，修改后需重新审核')
+      } else if (data.status === 0) {
+        // 如果正在审核中，不允许变更，已经在 isPending 中提示
+        isPending.value = true
+      } else {
+        ElMessage.warning('暂无有效的律师认证信息，请先完成首次认证')
       }
-      // 如果是重新申请（applyType=0 且有历史记录），可提示
-      if (applyType === 0 && data.status === 2) {
+    }
+    // 首次申请（applyType=0）：若上次申请被驳回，则自动填充上次驳回的信息
+    else if (applyType === 0) {
+      if (data.status === 2) {
+        fillFormData(data)
         ElMessage.info('已自动填充上次被驳回的申请信息，请修改后重新提交')
       }
     }
-  } catch {}
+  } catch (err) {
+    console.error('加载已有申请失败', err)
+  }
+}
+
+// 填充表单数据（复用函数）
+const fillFormData = (data) => {
+  form.licenseNo = data.licenseNo || ''
+  form.lawFirm = data.lawFirm || ''
+  form.practiceStartYear = data.practiceStartYear || currentYear - 5
+  if (data.licenseUrl) {
+    form.licenseUrl = data.licenseUrl
+    displayImageUrl.value = data.licenseUrl.startsWith('http') ? data.licenseUrl : BASE_URL + data.licenseUrl
+  }
 }
 
 const triggerUpload = () => fileInputRef.value?.click()
@@ -230,17 +267,19 @@ const goBack = () => {
 }
 
 onMounted(async () => {
+  // 1. 获取当前登录用户ID
   form.userId = getCurrentUserId()
+  // 2. 先重置表单（清除上一个用户的残留数据）
+  resetFormToDefault()
+  // 3. 检查是否有审核中的申请（会设置 isPending）
   await checkPending()
-  // 无论是资料变更（applyType=1）还是重新申请（applyType=0 且无审核中），都尝试加载历史记录
-  if (applyType === 1 || (applyType === 0 && !isPending.value)) {
-    await loadExisting()
-  }
+  // 4. 根据场景填充数据（资料变更 或 驳回后重新申请）
+  await loadExistingIfNeeded()
 })
 </script>
 
 <style scoped>
-/* 整体留白与白色卡片 */
+
 .page {
   min-height: 100vh;
   padding: 32px 80px;
@@ -301,7 +340,6 @@ h1 {
 .full {
   grid-column: span 2;
 }
-
 
 .upload-area {
   border-radius: 16px;
@@ -418,7 +456,6 @@ h1 {
   background: #e4e9ef;
 }
 
-/* 修改 el-form-item 内的输入框短一些 */
 :deep(.el-form-item) {
   margin-bottom: 20px;
 }
@@ -437,5 +474,4 @@ h1 {
   color: #5a6e7c;
   font-weight: 500;
 }
-
 </style>

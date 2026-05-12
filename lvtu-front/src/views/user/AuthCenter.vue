@@ -3,7 +3,6 @@
     <div class="bg-glow glow1"></div>
     <div class="bg-glow glow2"></div>
 
-
     <div class="content-container">
 
       <div class="back-header">
@@ -171,20 +170,18 @@ const goToSettings = () => router.push('/settings')
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(125,148,172,0.3);
-  padding: 6px 14px;
+  background: #5F748B;
+  color: white;
+  border: none;
+  padding: 8px 20px;
   border-radius: 30px;
-  color: #5a6e7c;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
 .back-btn:hover {
-  background: #ffffff;
-  border-color: #1a73e8;
-  color: #1a73e8;
+  background: #42566E;      /* 悬停加深 */
+  transform: translateY(-1px);
 }
 
 .hero-card {
@@ -300,35 +297,4 @@ button:disabled {
   color: #d48806;
 }
 
-@media (max-width: 1000px) {
-  .page {
-    padding: 32px 40px;
-  }
-  .content-container {
-    max-width: 900px;
-  }
-}
-@media (max-width: 768px) {
-  .page {
-    padding: 20px;
-  }
-  .grid-area {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  .hero-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-  }
-  h1 {
-    font-size: 24px;
-  }
-  .feature-card {
-    padding: 22px;
-  }
-  .back-header {
-    margin-bottom: 12px;
-  }
-}
 </style>
