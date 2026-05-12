@@ -10,6 +10,14 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: (state) => !!state.token && !!state.user,
   },
   actions: {
+    setUser(user) {
+      this.user = user
+      localStorage.setItem('currentUser', JSON.stringify(user))
+      localStorage.setItem('userInfo', JSON.stringify({
+        name: user?.username || '',
+        avatar: user?.avatarUrl || ''
+      }))
+    },
     setAuth(token, user) {
       this.token = token
       this.user = user
@@ -36,12 +44,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await me()
         if (response?.code === 200) {
-          this.user = response.data
-          localStorage.setItem('currentUser', JSON.stringify(response.data))
-          localStorage.setItem('userInfo', JSON.stringify({
-            name: response.data.username || '',
-            avatar: response.data.avatarUrl || ''
-          }))
+          this.setUser(response.data)
         } else {
           this.logout()
         }

@@ -56,4 +56,16 @@
         WHERE user_id = #{userId}
     </update>
 
+    <update id="updateAuthStatus">
+        UPDATE users
+        SET auth_status = #{authStatus}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateUserType">
+        UPDATE users
+        SET user_type = #{userType}
+        WHERE user_id = #{userId}
+    </update>
+
 </mapper>

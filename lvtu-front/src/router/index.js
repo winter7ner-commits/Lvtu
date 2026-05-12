@@ -6,6 +6,10 @@ import LawArticleList from '../views/lawyer/LawArticleList.vue'
 import Login from '../views/auth/Login.vue'
 import Register from '../views/auth/Register.vue'
 import ForgotPassword from '../views/auth/ForgotPassword.vue'
+import Settings from '../views/Settings.vue'
+import AuthCenter from '../views/user/AuthCenter.vue'
+import ApplicationForm from '../views/user/ApplicationForm.vue'
+import ApplicationStatus from '../views/user/ApplicationStatus.vue'
 // import AdminLogin from '../views/auth/AdminLogin.vue'
 // import AdminRegister from '../views/auth/AdminRegister.vue'
 
@@ -24,6 +28,10 @@ const router = createRouter({
     { path: '/login', component: Login, name: 'Login' },
     { path: '/register', component: Register, name: 'Register' },
     { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },
+    { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
+    { path: '/auth-center', component: AuthCenter, name: 'AuthCenter', meta: { requiresAuth: true } },
+    { path: '/apply', component: ApplicationForm, name: 'ApplicationForm', meta: { requiresAuth: true } },
+    { path: '/application-status', component: ApplicationStatus, name: 'ApplicationStatus', meta: { requiresAuth: true } },
     // { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
     // { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
 

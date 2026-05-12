@@ -4,8 +4,8 @@ spring:
 
 #    修改为自己的数据库名字和密码
 #    冒号和信息中间要加个空格
-    username: root
-    password: 12345678
+    username: yy
+    password: wu1123
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -17,3 +17,6 @@ mybatis:
 
 server:
   port: 8080
+
+file:
+  upload-dir: ${user.home}/lvtu_uploads

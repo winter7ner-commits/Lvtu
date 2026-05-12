@@ -9,6 +9,7 @@ import AdminLawBrowse from '../views/law/AdminLawBrowse.vue'
 import UserManagement from '../views/admin/UserManagement.vue'
 import AuthAudit from '../views/admin/AuthAudit.vue'
 import OrderQuery from '../views/admin/OrderQuery.vue'
+
 import { useAuthStore } from '../store/auth'
 
 const router = createRouter({

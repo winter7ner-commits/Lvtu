@@ -5,6 +5,19 @@
 
 <mapper namespace="com.bitzh.lvtu.mapper.LawyerMapper">
 
+    <insert id="insertLawyer" useGeneratedKeys="true" keyProperty="lawyerId">
+        INSERT INTO lawyer (user_id, license_no, law_firm, bio, status, practice_years, rating, create_time)
+        VALUES (#{userId}, #{licenseNo}, #{lawFirm}, #{bio}, #{status}, #{practiceYears}, #{rating}, NOW())
+    </insert>
+
+    <update id="updateLawyer">
+        UPDATE lawyer
+        SET license_no = #{licenseNo},
+            law_firm = #{lawFirm},
+            practice_years = #{practiceYears}
+        WHERE user_id = #{userId}
+    </update>
+
     <!-- 通用映射 -->
     <resultMap id="lawyerMap" type="com.bitzh.lvtu.dto.LawyerDTO">
         <id property="lawyerId" column="lawyer_id"/>

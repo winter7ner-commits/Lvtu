@@ -9,6 +9,10 @@ import java.util.List;
 
 public interface LawyerMapper {
 
+    int insertLawyer(Lawyer lawyer);
+
+    int updateLawyer(Lawyer lawyer);
+
     // 查询全部律师（已审核）
     List<LawyerDTO> selectLawyerList();
 
