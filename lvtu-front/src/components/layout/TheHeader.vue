@@ -61,7 +61,9 @@
           <button class="signup-btn" @click="handleSignup">注册</button>
         </template>
 
-        <div v-else class="user-menu-dropdown">
+        <template v-else>
+          <button v-if="isAdmin" class="admin-btn" @click="goToAdmin">管理后台</button>
+          <div class="user-menu-dropdown">
           <button class="user-menu-btn">
             <img :src="userAvatar" :alt="userName" class="user-avatar" />
             <span>{{ userName }}</span>
@@ -74,6 +76,7 @@
             <a href="#" class="dropdown-item logout" @click="handleLogout">退出登录</a>
           </div>
         </div>
+        </template>
       </div>
     </div>
 
@@ -100,6 +103,7 @@ const searchQuery = ref('')
 const isLoggedIn = ref(false)
 const userName = ref('我的')
 const userAvatar = ref('https://via.placeholder.com/32')
+const isAdmin = ref(false)
 
 onMounted(() => {
   const loginStatus = localStorage.getItem('isLoggedIn')
@@ -110,6 +114,7 @@ onMounted(() => {
     const user = JSON.parse(userInfo)
     userName.value = user.username || '我的'
     userAvatar.value = user.avatarUrl || 'https://via.placeholder.com/32'
+    isAdmin.value = user.userType === 3
   }
 })
 
@@ -153,6 +158,10 @@ const goToLawArticle = (categoryId) => {
     name: 'LawArticleList',
     query: { category: categoryId }
   })
+}
+
+const goToAdmin = () => {
+  window.location.href = 'http://localhost:5180'
 }
 </script>
 
@@ -358,6 +367,23 @@ const goToLawArticle = (categoryId) => {
 .signup-btn:hover {
   background: #f3f4f6;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.admin-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border: none;
+  color: #ffffff;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.admin-btn:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .user-menu-dropdown {

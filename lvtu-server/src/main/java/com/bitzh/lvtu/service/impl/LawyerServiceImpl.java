@@ -3,7 +3,7 @@ package com.bitzh.lvtu.service.impl;
 import com.bitzh.lvtu.dto.LawyerDTO;
 import com.bitzh.lvtu.mapper.LawyerMapper;
 import com.bitzh.lvtu.service.LawyerService;
-import jakarta.annotation.Resource;
+import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

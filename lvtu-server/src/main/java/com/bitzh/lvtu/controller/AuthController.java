@@ -7,7 +7,7 @@ import com.bitzh.lvtu.dto.UserDTO;
 import com.bitzh.lvtu.entity.User;
 import com.bitzh.lvtu.service.UserService;
 import com.bitzh.lvtu.util.JwtUtil;
-import jakarta.annotation.Resource;
+import javax.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;

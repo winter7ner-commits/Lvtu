@@ -3,7 +3,7 @@ package com.bitzh.lvtu.controller;
 import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.dto.LawyerDTO;
 import com.bitzh.lvtu.service.LawyerService;
-import jakarta.annotation.Resource;
+import javax.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 /**

@@ -48,7 +48,7 @@ const handleLogin = async () => {
       localStorage.setItem('isLoggedIn', 'true')
       
       if (data.data.user.userType === 3) {
-        router.push('/admin-articles')
+        window.location.href = 'http://localhost:5180'
       } else {
         router.push('/')
       }
@@ -244,7 +244,7 @@ const handleRegister = async () => {
   position: absolute;
   bottom: -1px;
   left: 0;
-  right: 0;
+  right: 00;
   height: 2px;
   background: #1e88e5;
 }
