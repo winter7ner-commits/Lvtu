@@ -3,7 +3,7 @@ package com.bitzh.lvtu.controller;
 import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.dto.ApplicationDTO;
 import com.bitzh.lvtu.service.ApplicationService;
-import jakarta.annotation.Resource;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

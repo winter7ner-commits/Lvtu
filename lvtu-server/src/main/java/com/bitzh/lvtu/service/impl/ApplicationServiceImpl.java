@@ -8,7 +8,7 @@ import com.bitzh.lvtu.mapper.ApplicationMapper;
 import com.bitzh.lvtu.mapper.LawyerMapper;
 import com.bitzh.lvtu.mapper.UserMapper;
 import com.bitzh.lvtu.service.ApplicationService;
-import jakarta.annotation.Resource;
+import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
