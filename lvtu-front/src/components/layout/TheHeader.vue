@@ -64,7 +64,7 @@
         <template v-if="!isLoggedIn">
           <router-link to="/login" class="login-btn auth-action">登录</router-link>
           <router-link to="/register" class="signup-btn auth-action">注册</router-link>
-          <router-link to="/admin/login" class="admin-login-btn auth-action">管理员登录</router-link>
+          <!-- <router-link to="/admin/login" class="admin-login-btn auth-action">管理员登录</router-link> -->
         </template>
 
         <!-- Logged In - User Menu -->

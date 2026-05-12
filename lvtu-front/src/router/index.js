@@ -5,8 +5,8 @@ import LawyerDetail from '../views/lawyer/LawyerDetail.vue'
 import Login from '../views/auth/Login.vue'
 import Register from '../views/auth/Register.vue'
 import ForgotPassword from '../views/auth/ForgotPassword.vue'
-import AdminLogin from '../views/auth/AdminLogin.vue'
-import AdminRegister from '../views/auth/AdminRegister.vue'
+// import AdminLogin from '../views/auth/AdminLogin.vue'
+// import AdminRegister from '../views/auth/AdminRegister.vue'
 
 // import UserProfile from '../views/user/UserProfile.vue'
 // import Settings from '../views/Settings.vue'
@@ -22,8 +22,8 @@ const router = createRouter({
     { path: '/login', component: Login, name: 'Login' },
     { path: '/register', component: Register, name: 'Register' },
     { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },
-    { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
-    { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
+    // { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
+    // { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
 
     // { path: '/user-profile', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
     // { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
