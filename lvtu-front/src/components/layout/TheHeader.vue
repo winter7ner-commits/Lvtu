@@ -18,13 +18,14 @@
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <a href="#" class="dropdown-item">第一编 总则</a>
-            <a href="#" class="dropdown-item">第二编 物权</a>
-            <a href="#" class="dropdown-item">第三编 合同</a>
-            <a href="#" class="dropdown-item">第四编 人格权</a>
-            <a href="#" class="dropdown-item">第五编 婚姻家庭</a>
-            <a href="#" class="dropdown-item">第六编 继承</a>
-            <a href="#" class="dropdown-item">第七编 侵权责任</a>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(1)">宪法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(2)">民法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(3)">刑法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(4)">行政法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(5)">商法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(6)">诉讼法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(7)">经济法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(8)">社会法</router-link>
           </div>
         </div>
 
@@ -138,6 +139,13 @@ const handleLogout = (e) => {
   e.preventDefault()
   authStore.logout()
   router.push('/')
+}
+
+const goToLawArticle = (categoryId) => {
+  router.push({
+    name: 'LawArticleList',
+    query: { category: categoryId }
+  })
 }
 </script>
 

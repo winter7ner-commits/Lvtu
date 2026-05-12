@@ -5,7 +5,7 @@ spring:
 #    修改为自己的数据库名字和密码
 #    冒号和信息中间要加个空格
     username: root
-    password: abc456
+    password: 12345678
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

@@ -33,7 +33,7 @@ const authStore = useAuthStore()
 const loading = ref(false)
 const form = ref({ username: '', password: '' })
 
-const redirectPath = route.query.redirect ? String(route.query.redirect) : '/admin' // 假设管理员面板在 /admin
+const redirectPath = route.query.redirect ? String(route.query.redirect) : '/law-management'
 
 const handleSubmit = async () => {
   if (!form.value.username || !form.value.password) {
