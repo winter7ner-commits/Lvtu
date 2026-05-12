@@ -1,25 +1,27 @@
 <template>
-  <div class="order-create">
-    <div class="header">
-      <h2>创建订单</h2>
-      
-      <!-- 业务选择器 -->
-      <div class="service-selector">
-        <label for="service-type">选择服务类型：</label>
-        <select id="service-type" v-model="selectedServiceType">
-          <option value="ONLINE_CONSULT">在线法律咨询</option>
-          <option value="PHONE_CONSULT">电话法律咨询</option>
-          <option value="DOCUMENT_WRITING">文书代写</option>
-          <option value="CONTRACT_REVIEW">合同审核</option>
-          <option value="MARRIAGE_FAMILY">婚姻家事</option>
-          <option value="LITIGATION_AGENT">诉讼代理</option>
-        </select>
+  <div class="page">
+    <div class="order-create">
+      <div class="header">
+        <h2>创建订单</h2>
+        
+        <!-- 业务选择器 -->
+        <div class="service-selector">
+          <label for="service-type">选择服务类型：</label>
+          <select id="service-type" v-model="selectedServiceType">
+            <option value="ONLINE_CONSULT">在线法律咨询</option>
+            <option value="PHONE_CONSULT">电话法律咨询</option>
+            <option value="DOCUMENT_WRITING">文书代写</option>
+            <option value="CONTRACT_REVIEW">合同审核</option>
+            <option value="MARRIAGE_FAMILY">婚姻家事</option>
+            <option value="LITIGATION_AGENT">诉讼代理</option>
+          </select>
+        </div>
       </div>
-    </div>
 
-    <!-- 动态表单组件 -->
-    <div class="form-container">
-      <component :is="currentForm" />
+      <!-- 动态表单组件 -->
+      <div class="form-container">
+        <component :is="currentForm" />
+      </div>
     </div>
   </div>
 </template>
@@ -77,6 +79,14 @@ const currentForm = computed(() => {
 </script>
 
 <style scoped>
+.page {
+  min-height: 100vh;
+  padding: 32px 80px;
+  background: radial-gradient(circle at top left, rgba(168,183,201,0.25), transparent 40%),
+  radial-gradient(circle at bottom right, rgba(125,148,172,0.18), transparent 45%),
+  linear-gradient(180deg, #F5F8FB 0%, #EEF3F7 100%);
+  position: relative;
+}
 .order-create {
   max-width: 800px;
   margin: 40px auto;

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="form-container">
     <el-form :model="formData" :rules="rules" ref="formRef" label-width="120px">
       
@@ -189,7 +189,7 @@
           :auto-upload="false"
           multiple
         >
-          <el-button type="primary">点击上传文件</el-button>
+          <el-button class="custom-action-btn">点击上传文件</el-button>
           <template #tip>
             <div>支持上传：结婚证、离婚协议、财产证明、聊天记录、转账记录、证据照片等</div>
             <div style="color: #F56C6C; margin-top: 8px;">注意：身份证不再重复上传（已实名认证）</div>
@@ -223,7 +223,7 @@
       />
 
       <div class="form-actions">
-        <el-button type="primary" size="large" @click="submitForm">提交申请</el-button>
+        <el-button class="custom-action-btn" size="large" @click="submitForm">提交申请</el-button>
         <el-button size="large">重置</el-button>
       </div>
 
@@ -234,7 +234,10 @@
 <script setup>
 import { reactive, ref } from 'vue'
 
+import { useRegionOptions } from './useRegionOptions'
+
 const formRef = ref(null)
+const { regionOptions } = useRegionOptions()
 
 // 自动带出的信息及表单数据
 const formData = reactive({
@@ -270,7 +273,6 @@ const formData = reactive({
   agreeTerms: []
 })
 
-const regionOptions = [] // 应接入省市级联数据
 
 const rules = {
   region: [{ required: true, message: '请选择所在地区', trigger: 'change' }],
@@ -326,5 +328,24 @@ const submitForm = async () => {
 .form-actions {
   text-align: center;
   margin-top: 20px;
+}
+.custom-action-btn {
+  background: #1a73e8 !important;
+  color: white !important;
+  border-radius: 30px !important;
+  padding: 10px 24px !important;
+  border: none !important;
+  transition: all 0.2s !important;
+}
+
+.custom-action-btn:hover {
+  background: #1557b0 !important;
+  transform: translateY(-1px);
+}
+
+.custom-action-btn:disabled,
+.custom-action-btn.is-disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
 }
 </style>
