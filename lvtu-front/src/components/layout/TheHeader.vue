@@ -1,42 +1,39 @@
 <template>
   <header class="header">
     <div class="header-container">
-      <!-- Logo -->
-      <div class="logo">
-        <img src="/public/icons/logo.png" alt="LVTU" class="logo-img" />
+      <div class="logo" @click="goToHome">
+        <img src="/icons/sign.png" alt="LVTU" class="logo-img" />
         <span class="logo-text">律途</span>
       </div>
 
-      <!-- Navigation Menu -->
       <nav class="nav-menu">
         <router-link to="/" class="nav-item">首页</router-link>
-        
-        <!-- Laws & Regulations Dropdown -->
+
         <div class="nav-item-dropdown">
           <button class="nav-item dropdown-toggle">
             法律法规
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <a href="#" class="dropdown-item">第一编 总则</a>
-            <a href="#" class="dropdown-item">第二编 物权</a>
-            <a href="#" class="dropdown-item">第三编 合同</a>
-            <a href="#" class="dropdown-item">第四编 人格权</a>
-            <a href="#" class="dropdown-item">第五编 婚姻家庭</a>
-            <a href="#" class="dropdown-item">第六编 继承</a>
-            <a href="#" class="dropdown-item">第七编 侵权责任</a>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(1)">宪法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(2)">民法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(3)">刑法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(4)">行政法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(5)">商法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(6)">民事诉讼法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(7)">刑事诉讼法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(8)">行政诉讼法</router-link>
           </div>
         </div>
 
-        <!-- Services Dropdown -->
         <div class="nav-item-dropdown">
           <button class="nav-item dropdown-toggle">
             服务
           </button>
         </div>
+
         <router-link to="/lawyer-list" class="nav-item">律师</router-link>
-        
-        <!-- Orders Dropdown -->
+
         <div class="nav-item-dropdown">
           <button class="nav-item dropdown-toggle">
             订单
@@ -54,41 +51,39 @@
         <router-link to="/about" class="nav-item">关于我们</router-link>
       </nav>
 
-      <!-- Right Actions -->
       <div class="header-right">
         <button class="search-btn" @click="toggleSearch">
           <i class="icon-search">🔍</i>
         </button>
-        
-        <!-- Not Logged In -->
+
         <template v-if="!isLoggedIn">
-          <router-link to="/login" class="login-btn auth-action">登录</router-link>
-          <router-link to="/register" class="signup-btn auth-action">注册</router-link>
-          <router-link to="/admin/login" class="admin-login-btn auth-action">管理员登录</router-link>
+          <button class="login-btn" @click="handleLogin">登录</button>
+          <button class="signup-btn" @click="handleSignup">注册</button>
         </template>
 
-        <!-- Logged In - User Menu -->
-        <div v-else class="user-menu-dropdown">
+        <template v-else>
+          <button v-if="isAdmin" class="admin-btn" @click="goToAdmin">管理后台</button>
+          <div class="user-menu-dropdown">
           <button class="user-menu-btn">
             <img :src="userAvatar" :alt="userName" class="user-avatar" />
             <span>{{ userName }}</span>
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu user-dropdown">
-            <router-link to="/user-profile" class="dropdown-item">个人资料</router-link>
-            <router-link to="/settings" class="dropdown-item">设置</router-link>
+            <a href="/user-profile" class="dropdown-item">个人资料</a>
+            <a href="/settings" class="dropdown-item">设置</a>
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item logout" @click="handleLogout">退出登录</a>
           </div>
         </div>
+        </template>
       </div>
     </div>
 
-    <!-- Search Bar (Hidden by default) -->
     <div v-if="showSearch" class="search-bar">
-      <input 
-        type="text" 
-        placeholder="搜索律师..." 
+      <input
+        type="text"
+        placeholder="搜索律师..."
         class="search-input"
         v-model="searchQuery"
         @keyup.enter="handleSearch"
@@ -99,18 +94,29 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../store/auth'
 
 const router = useRouter()
-const authStore = useAuthStore()
 const showSearch = ref(false)
 const searchQuery = ref('')
+const isLoggedIn = ref(false)
+const userName = ref('我的')
+const userAvatar = ref('https://via.placeholder.com/32')
+const isAdmin = ref(false)
 
-const isLoggedIn = computed(() => authStore.isAuthenticated)
-const userName = computed(() => authStore.user?.username || '我的')
-const userAvatar = computed(() => authStore.user?.avatarUrl || 'https://via.placeholder.com/32')
+onMounted(() => {
+  const loginStatus = localStorage.getItem('isLoggedIn')
+  const userInfo = localStorage.getItem('currentUser')
+
+  if (loginStatus === 'true' && userInfo) {
+    isLoggedIn.value = true
+    const user = JSON.parse(userInfo)
+    userName.value = user.username || '我的'
+    userAvatar.value = user.avatarUrl || 'https://via.placeholder.com/32'
+    isAdmin.value = user.userType === 3
+  }
+})
 
 const toggleSearch = () => {
   showSearch.value = !showSearch.value
@@ -131,13 +137,31 @@ const handleLogin = () => {
 }
 
 const handleSignup = () => {
-  router.push('/register')
+  router.push('/login')
 }
 
 const handleLogout = (e) => {
   e.preventDefault()
-  authStore.logout()
+  localStorage.removeItem('isLoggedIn')
+  localStorage.removeItem('currentUser')
+  localStorage.removeItem('authToken')
+  isLoggedIn.value = false
   router.push('/')
+}
+
+const goToHome = () => {
+  router.push('/')
+}
+
+const goToLawArticle = (categoryId) => {
+  router.push({
+    name: 'LawArticleList',
+    query: { category: categoryId }
+  })
+}
+
+const goToAdmin = () => {
+  window.location.href = 'http://localhost:5180'
 }
 </script>
 
@@ -160,7 +184,6 @@ const handleLogout = (e) => {
   justify-content: space-between;
 }
 
-/* Logo */
 .logo {
   display: flex;
   align-items: center;
@@ -182,7 +205,6 @@ const handleLogout = (e) => {
   letter-spacing: 2px;
 }
 
-/* Navigation Menu */
 .nav-menu {
   display: flex;
   gap: 5px;
@@ -217,7 +239,6 @@ const handleLogout = (e) => {
   font-weight: 600;
 }
 
-/* Dropdown Menu */
 .nav-item-dropdown {
   position: relative;
 }
@@ -290,7 +311,6 @@ const handleLogout = (e) => {
   }
 }
 
-/* Header Right */
 .header-right {
   display: flex;
   align-items: center;
@@ -349,8 +369,8 @@ const handleLogout = (e) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.admin-login-btn {
-  background: #ff6b35;
+.admin-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   border: none;
   color: #ffffff;
   padding: 8px 20px;
@@ -361,12 +381,11 @@ const handleLogout = (e) => {
   transition: all 0.3s ease;
 }
 
-.admin-login-btn:hover {
-  background: #e55a2b;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+.admin-btn:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
-/* User Menu */
 .user-menu-dropdown {
   position: relative;
 }
@@ -418,7 +437,6 @@ const handleLogout = (e) => {
   background-color: #fee2e2;
 }
 
-/* Search Bar */
 .search-bar {
   background: rgba(255, 255, 255, 0.95);
   padding: 15px 20px;
@@ -460,7 +478,6 @@ const handleLogout = (e) => {
   box-shadow: 0 2px 8px rgba(30, 64, 175, 0.2);
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
   .nav-menu {
     gap: 0;

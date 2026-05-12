@@ -3,10 +3,12 @@ package com.bitzh.lvtu.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
@@ -15,13 +17,14 @@ public class SecurityConfig {
             .csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .anyRequest().permitAll()
-            )
+            .authorizeHttpRequests()
+            .antMatchers("/api/**").permitAll()
+            .antMatchers("/h2-console/**").permitAll()
+            .anyRequest().permitAll()
+            .and()
+            .formLogin().disable()
             .httpBasic().disable()
-            .formLogin().disable();
-
+            .headers().frameOptions().sameOrigin();
         return http.build();
     }
 }

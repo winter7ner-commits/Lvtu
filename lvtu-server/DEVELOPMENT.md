@@ -153,7 +153,11 @@ src/main/java/com/bitzh/lvtu/
 
 ### 1. Controller 层（控制层）
 
+<<<<<<< HEAD
+**文件命名**: `[业务模块名]Controller.java`
+=======
 **文件命名**: `[业务模块名]Controller.java` 
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 
 **示例**: `LawyerController.java`
 
@@ -206,7 +210,11 @@ public class LawyerController {
 
 ### 2. Service 层（业务逻辑层）
 
+<<<<<<< HEAD
+**文件命名**:
+=======
 **文件命名**: 
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 - 接口: `[业务模块名]Service.java`
 - 实现类: `[业务模块名]ServiceImpl.java`
 
@@ -236,7 +244,10 @@ public class LawyerController {
 
 
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 ---
 
 ### 4. Entity 层（数据模型）
@@ -279,7 +290,10 @@ public class LawyerController {
 **示例**: `BusinessException.java`, `ResourceNotFoundException.java`
 
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 ---
 
 ### 7. Config 层（配置）
@@ -289,7 +303,10 @@ public class LawyerController {
 **示例**: `WebConfig.java`, `MybatisConfig.java`
 
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 ---
 
 ### `/src/main/resources` - 资源文件目录
@@ -338,7 +355,10 @@ test/java/com/bitzh/lvtu/
 **命名规范**: `[被测试类名]Test.java`
 
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b
 ---
 
 ## 文件命名规范总结
@@ -494,4 +514,8 @@ java -jar target/lvtu-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev
 - [MyBatis 官方文档](https://mybatis.org/)
 - [Spring 官方文档](https://docs.spring.io/spring-framework/reference/)
 - [MySQL 官方文档](https://dev.mysql.com/doc/)
+<<<<<<< HEAD
 - [Maven 官方文档](https://maven.apache.org/)
+=======
+- [Maven 官方文档](https://maven.apache.org/)
+>>>>>>> 2c7bb808696ce5aba4b1bc1a4e70731964c3986b

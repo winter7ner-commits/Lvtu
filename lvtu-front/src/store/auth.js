@@ -29,14 +29,6 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('isLoggedIn')
       localStorage.removeItem('userInfo')
     },
-    setUser(user) {
-      this.user = user
-      localStorage.setItem('currentUser', JSON.stringify(user))
-      localStorage.setItem('userInfo', JSON.stringify({
-        name: user.username || '',
-        avatar: user.avatarUrl || ''
-      }))
-    },
     async initAuth() {
       if (!this.token) {
         return

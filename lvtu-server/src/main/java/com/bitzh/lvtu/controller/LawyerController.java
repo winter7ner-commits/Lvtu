@@ -3,7 +3,7 @@ package com.bitzh.lvtu.controller;
 import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.dto.LawyerDTO;
 import com.bitzh.lvtu.service.LawyerService;
-import jakarta.annotation.Resource;
+import javax.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -39,5 +39,24 @@ public class LawyerController {
         return ApiResponse.success(lawyers);
     }
 
+    // 待审核列表（管理员）
+    @GetMapping("/audit/list")
+    public List<LawyerDTO> pending() {
+        return service.pendingList();
+    }
 
+    // 审核通过
+    @PostMapping("/audit/pass")
+    public String pass(@RequestParam Long lawyerId) {
+        service.approve(lawyerId);
+        return "审核通过";
+    }
+
+    // 审核拒绝
+    @PostMapping("/audit/reject")
+    public String reject(@RequestParam Long lawyerId,
+                         @RequestParam String remark) {
+        service.reject(lawyerId, remark);
+        return "已拒绝";
+    }
 }

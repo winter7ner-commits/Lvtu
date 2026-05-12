@@ -3,7 +3,7 @@ package com.bitzh.lvtu.service.impl;
 import com.bitzh.lvtu.dto.LawyerDTO;
 import com.bitzh.lvtu.mapper.LawyerMapper;
 import com.bitzh.lvtu.service.LawyerService;
-import jakarta.annotation.Resource;
+import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,4 +34,18 @@ public class LawyerServiceImpl implements LawyerService {
         return mapper.selectByTopRating(safeLimit);
     }
 
+    @Override
+    public List<LawyerDTO> pendingList() {
+        return mapper.selectPendingList();
+    }
+
+    @Override
+    public void approve(Long lawyerId) {
+        mapper.approve(lawyerId);
+    }
+
+    @Override
+    public void reject(Long lawyerId, String remark) {
+        mapper.reject(lawyerId, remark);
+    }
 }
