@@ -1,17 +1,18 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getLawyerProfileByUserId, getMyLawyerOrders } from '@/api/lawyerOrder'
 
 const router = useRouter()
 const loading = ref(false)
-const orders = ref([])
-const activeStatus = ref('')
+const allOrders = ref([])
+const activeStatus = ref('all')
 const currentLawyerId = ref(null)
+const refreshTimer = ref(null)
 
 const statusOptions = [
-  { label: '全部', value: '' },
+  { label: '全部', value: 'all' },
   { label: '处理中', value: '处理中' },
   { label: '待客户确认', value: '待客户确认' },
   { label: '待评价', value: '待评价' },
@@ -28,13 +29,20 @@ const serviceTypeMap = {
 }
 
 const statusCount = computed(() => {
-  return orders.value.reduce((acc, item) => {
-    acc[item.status] = (acc[item.status] || 0) + 1
+  return allOrders.value.reduce((acc, item) => {
+    const status = normalizeStatus(item.status)
+    acc[status] = (acc[status] || 0) + 1
     return acc
   }, {})
 })
 
+const filteredOrders = computed(() => {
+  if (activeStatus.value === 'all') return allOrders.value
+  return allOrders.value.filter((item) => normalizeStatus(item.status) === activeStatus.value)
+})
+
 const unwrap = (res) => res?.data?.data ?? res?.data ?? []
+const normalizeStatus = (status) => String(status || '').trim()
 const formatServiceType = (id) => serviceTypeMap[id] || `服务类型 ${id || '-'}`
 const formatMoney = (value) => `¥${Number(value || 0).toFixed(2)}`
 const formatTime = (value) => (value ? String(value).replace('T', ' ').slice(0, 16) : '-')
@@ -65,13 +73,11 @@ const loadOrders = async () => {
   try {
     const lawyerId = await loadCurrentLawyer()
     if (!lawyerId) {
-      orders.value = []
+      allOrders.value = []
       return
     }
-    const params = { lawyerId }
-    if (activeStatus.value) params.status = activeStatus.value
-    const res = await getMyLawyerOrders(params)
-    orders.value = unwrap(res)
+    const res = await getMyLawyerOrders({ lawyerId })
+    allOrders.value = unwrap(res)
   } catch (error) {
     ElMessage.error(error?.response?.data?.message || '我的订单加载失败')
   } finally {
@@ -83,11 +89,28 @@ const handleTabChange = () => {
   loadOrders()
 }
 
+const handleVisibilityRefresh = () => {
+  if (document.visibilityState === 'visible') {
+    loadOrders()
+  }
+}
+
 const goDetail = (orderId) => {
   router.push(`/lawyer/orders/${orderId}`)
 }
 
-onMounted(loadOrders)
+onMounted(() => {
+  loadOrders()
+  refreshTimer.value = window.setInterval(loadOrders, 5000)
+  document.addEventListener('visibilitychange', handleVisibilityRefresh)
+})
+
+onBeforeUnmount(() => {
+  if (refreshTimer.value) {
+    window.clearInterval(refreshTimer.value)
+  }
+  document.removeEventListener('visibilitychange', handleVisibilityRefresh)
+})
 </script>
 
 <template>
@@ -133,8 +156,14 @@ onMounted(loadOrders)
       </el-tabs>
 
       <div class="order-table" v-loading="loading">
-        <el-empty v-if="!loading && orders.length === 0" description="暂无订单" />
-        <el-table v-else :data="orders" style="width: 100%">
+        <el-empty v-if="!loading && filteredOrders.length === 0" description="暂无订单" />
+        <el-table
+          v-else
+          :key="activeStatus"
+          :data="filteredOrders"
+          row-key="orderId"
+          style="width: 100%"
+        >
           <el-table-column prop="orderId" label="订单编号" min-width="120" />
           <el-table-column label="服务类型" min-width="130">
             <template #default="{ row }">{{ formatServiceType(row.serviceTypeId) }}</template>
