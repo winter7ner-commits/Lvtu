@@ -56,6 +56,39 @@
         WHERE user_id = #{userId}
     </update>
 
+    <update id="updateUser">
+        UPDATE users
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="passwordHash != null">password_hash = #{passwordHash},</if>
+            
+            <!-- 使用 choose/when/otherwise 确保 null 值也能被正确更新为 NULL -->
+            <choose>
+                <when test="phone != null">phone = #{phone},</when>
+                <otherwise>phone = NULL,</otherwise>
+            </choose>
+            
+            <choose>
+                <when test="email != null">email = #{email},</when>
+                <otherwise>email = NULL,</otherwise>
+            </choose>
+            
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            
+            <choose>
+                <when test="region != null">region = #{region},</when>
+                <otherwise>region = NULL,</otherwise>
+            </choose>
+            
+            <if test="userType != null">user_type = #{userType},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isVerified != null">is_verified = #{isVerified},</if>
+            <if test="authStatus != null">auth_status = #{authStatus},</if>
+            updated_time = NOW()
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
     <update id="updateAuthStatus">
         UPDATE users
         SET auth_status = #{authStatus}
@@ -67,5 +100,23 @@
         SET user_type = #{userType}
         WHERE user_id = #{userId}
     </update>
+
+    
+    <update id="updateUserProfile">
+        UPDATE users
+        <set>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="region != null">region = #{region},</if>
+            updated_time = NOW()  <!-- 新增此行，确保 <set> 永不为空，且自动维护更新时间 -->
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+
+    <delete id="deleteUser">
+        DELETE FROM users WHERE user_id = #{userId}
+    </delete>
+
 
 </mapper>

@@ -2,6 +2,8 @@ package com.bitzh.lvtu.dto;
 
 import com.bitzh.lvtu.entity.User;
 
+import java.time.LocalDateTime;
+
 public class UserDTO {
 
     private Long userId;
@@ -14,6 +16,7 @@ public class UserDTO {
     private Boolean isVerified;
     private Integer authStatus;
     private String region;
+    private LocalDateTime createdTime;
 
     public static UserDTO from(User user) {
         if (user == null) {
@@ -30,6 +33,7 @@ public class UserDTO {
         dto.setIsVerified(user.getIsVerified());
         dto.setAuthStatus(user.getAuthStatus());
         dto.setRegion(user.getRegion());
+        dto.setCreatedTime(user.getCreatedTime());
         return dto;
     }
 
@@ -111,5 +115,13 @@ public class UserDTO {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public LocalDateTime getCreatedTime() {
+        return createdTime;
+    }
+
+    public void setCreatedTime(LocalDateTime createdTime) {
+        this.createdTime = createdTime;
     }
 }

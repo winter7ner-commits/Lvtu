@@ -99,6 +99,23 @@ public class AuthController {
         return ApiResponse.success("退出成功", null);
     }
 
+    @PostMapping("/change-password")
+    public ApiResponse<String> changePassword(@RequestBody Map<String, String> params) {
+        try {
+            String username = params.get("username");
+            String oldPassword = params.get("oldPassword");
+            String newPassword = params.get("newPassword");
+            userService.changePassword(username, oldPassword, newPassword);
+            return ApiResponse.success("密码修改成功", null);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.fail(400, e.getMessage());
+        } catch (Exception e) {
+            return ApiResponse.fail(500, "修改失败");
+        }
+    }
+
+
+
     @PostMapping("/forgot-password")
     public ApiResponse<String> forgotPassword(@RequestBody RegisterRequest request) {
         try {

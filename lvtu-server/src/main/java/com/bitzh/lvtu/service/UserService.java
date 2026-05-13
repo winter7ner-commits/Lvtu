@@ -21,4 +21,12 @@ public interface UserService {
     User findByUsername(String username);
 
     User findById(Long userId);
+
+    void changePassword(String username, String oldPassword, String newPassword);
+
+    User updateUserProfile(Long userId, String phone, String email, String region);
+
+    void updateUser(User user);
+
+    void deactivateUser(Long userId);
 }

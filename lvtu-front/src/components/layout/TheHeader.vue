@@ -3,7 +3,7 @@
     <div class="header-container">
       <!-- Logo -->
       <div class="logo">
-        <img src="/public/icons/logo.png" alt="LVTU" class="logo-img" />
+        <img src="/icons/logo.png" alt="LVTU" class="logo-img" />
         <span class="logo-text">律途</span>
       </div>
 
@@ -56,6 +56,8 @@
           </div>
         </div>
         
+        <router-link to="/lawyer-list" class="nav-item">律师</router-link>
+        
         <!-- Orders Dropdown -->
         <div class="nav-item-dropdown">
           <button class="nav-item dropdown-toggle">
@@ -83,21 +85,20 @@
         <template v-if="!isLoggedIn">
           <router-link to="/login" class="login-btn auth-action">登录</router-link>
           <router-link to="/register" class="signup-btn auth-action">注册</router-link>
-          <!-- <router-link to="/admin/login" class="admin-login-btn auth-action">管理员登录</router-link> -->
         </template>
 
-        <!-- Logged In - User Menu -->
-        <div v-else class="user-menu-dropdown">
-          <button class="user-menu-btn">
+        <!-- Logged In - User Menu (Modified for Click Trigger) -->
+        <div v-else class="user-menu-dropdown" :class="{ 'is-active': showUserMenu }">
+          <button class="user-menu-btn" @click="toggleUserMenu">
             <img :src="userAvatar" :alt="userName" class="user-avatar" />
             <span>{{ userName }}</span>
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu user-dropdown">
-            <router-link to="/user-profile" class="dropdown-item">个人资料</router-link>
-            <router-link to="/settings" class="dropdown-item">设置</router-link>
+            <router-link to="/user-profile" class="dropdown-item" @click="showUserMenu = false">个人资料</router-link>
+            <!-- <router-link to="/settings" class="dropdown-item" @click="showUserMenu = false">设置</router-link> -->
             <div class="dropdown-divider"></div>
-            <a href="#" class="dropdown-item logout" @click="handleLogout">退出登录</a>
+            <a href="#" class="dropdown-item logout" @click.prevent="handleLogout">退出登录</a>
           </div>
         </div>
       </div>
@@ -126,13 +127,23 @@ const router = useRouter()
 const authStore = useAuthStore()
 const showSearch = ref(false)
 const searchQuery = ref('')
+// [新增] 控制用户菜单显示的状态
+const showUserMenu = ref(false)
 
 const isLoggedIn = computed(() => authStore.isAuthenticated)
 const userName = computed(() => authStore.user?.username || '我的')
-const userAvatar = computed(() => authStore.user?.avatarUrl || 'https://via.placeholder.com/32')
+
+// 关键修复：将外链占位图替换为本地默认头像，与 UserProfile.vue 保持一致
+const defaultAvatar = '/icons/default-avatar.png'
+const userAvatar = computed(() => authStore.user?.avatarUrl || defaultAvatar)
 
 const toggleSearch = () => {
   showSearch.value = !showSearch.value
+}
+
+// [新增] 切换用户菜单显示/隐藏
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
 }
 
 const handleSearch = () => {
@@ -145,17 +156,10 @@ const handleSearch = () => {
   }
 }
 
-const handleLogin = () => {
-  router.push('/login')
-}
-
-const handleSignup = () => {
-  router.push('/register')
-}
-
-const handleLogout = (e) => {
-  e.preventDefault()
+const handleLogout = () => {
+  // [修改] 移除事件对象 e，直接执行逻辑
   authStore.logout()
+  showUserMenu.value = false // 退出后关闭菜单
   router.push('/')
 }
 
@@ -260,6 +264,7 @@ const goToLawArticle = (categoryId) => {
   transition: transform 0.3s ease;
 }
 
+/* [修改] 导航栏其他下拉菜单保持悬停效果 */
 .nav-item-dropdown:hover .dropdown-menu {
   display: block;
   animation: slideDown 0.3s ease-out;
@@ -377,24 +382,7 @@ const goToLawArticle = (categoryId) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.admin-login-btn {
-  background: #ff6b35;
-  border: none;
-  color: #ffffff;
-  padding: 8px 20px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.admin-login-btn:hover {
-  background: #e55a2b;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* User Menu */
+/* User Menu - Modified for Click Interaction */
 .user-menu-dropdown {
   position: relative;
 }
@@ -425,11 +413,13 @@ const goToLawArticle = (categoryId) => {
   object-fit: cover;
 }
 
-.user-menu-dropdown:hover .dropdown-menu {
+/* [修改] 使用 is-active 类来控制显示，替代 hover */
+.user-menu-dropdown.is-active .dropdown-menu {
   display: block;
+  animation: slideDown 0.3s ease-out;
 }
 
-.user-menu-dropdown:hover .dropdown-toggle .dropdown-icon {
+.user-menu-dropdown.is-active .dropdown-icon {
   transform: rotate(180deg);
 }
 
