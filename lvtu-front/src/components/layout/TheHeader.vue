@@ -2,86 +2,76 @@
   <header class="header">
     <div class="header-container">
       <!-- Logo -->
-      <div class="logo" @click="goHome">
+      <div class="logo">
         <img src="/public/icons/logo.png" alt="LVTU" class="logo-img" />
         <span class="logo-text">律途</span>
       </div>
 
       <!-- Navigation Menu -->
       <nav class="nav-menu">
-        <router-link to="/" class="nav-item" @click="closeDropdowns">首页</router-link>
+        <router-link to="/" class="nav-item">首页</router-link>
         
         <!-- Laws & Regulations Dropdown -->
-        <div
-          class="nav-item-dropdown"
-          :class="{ 'is-open': activeDropdown === 'laws' }"
-          @mouseenter="openDropdown('laws')"
-          @mouseleave="scheduleCloseDropdown"
-          @focusin="openDropdown('laws')"
-          @focusout="scheduleCloseDropdown"
-        >
-          <button class="nav-item dropdown-toggle" type="button">
+        <div class="nav-item-dropdown">
+          <button class="nav-item dropdown-toggle">
             法律法规
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第一编 总则</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第二编 物权</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第三编 合同</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第四编 人格权</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第五编 婚姻家庭</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第六编 继承</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">第七编 侵权责任</a>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(1)">宪法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(2)">民法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(3)">刑法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(4)">行政法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(5)">商法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(6)">诉讼法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(7)">经济法</router-link>
+            <router-link to="/law-article-list" class="dropdown-item" @click="goToLawArticle(8)">社会法</router-link>
           </div>
         </div>
 
         <!-- Services Dropdown -->
-        <div
-          class="nav-item-dropdown"
-          :class="{ 'is-open': activeDropdown === 'services' }"
-          @mouseenter="openDropdown('services')"
-          @mouseleave="scheduleCloseDropdown"
-          @focusin="openDropdown('services')"
-          @focusout="scheduleCloseDropdown"
-        >
-          <button class="nav-item dropdown-toggle" type="button">
+        <div class="nav-item-dropdown">
+          <button class="nav-item dropdown-toggle">
             服务
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('ONLINE_CONSULT')">在线法律咨询</a>
-            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('PHONE_CONSULT')">电话法律咨询</a>
-            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('DOCUMENT_WRITING')">文书代写</a>
-            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('CONTRACT_REVIEW')">合同审核</a>
-            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('MARRIAGE_FAMILY')">婚姻家事</a>
-            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('LITIGATION_AGENT')">诉讼代理</a>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'ONLINE_CONSULT' } }" class="dropdown-item">在线法律咨询</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'PHONE_CONSULT' } }" class="dropdown-item">电话法律咨询</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'DOCUMENT_WRITING' } }" class="dropdown-item">文书代写</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'CONTRACT_REVIEW' } }" class="dropdown-item">合同审核</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'MARRIAGE_FAMILY' } }" class="dropdown-item">婚姻家事</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'LITIGATION_AGENT' } }" class="dropdown-item">诉讼代理</router-link>
           </div>
         </div>
-        <router-link to="/lawyer-list" class="nav-item" @click="closeDropdowns">律师</router-link>
+        <div class="nav-item-dropdown">
+          <button class="nav-item dropdown-toggle">
+            律师
+            <i class="dropdown-icon">▼</i>
+          </button>
+          <div class="dropdown-menu">
+            <router-link to="/lawyer-list" class="dropdown-item">律师查询</router-link>
+            <router-link v-if="canAccessLawyerOrders" to="/lawyer/orders/available" class="dropdown-item">接单大厅</router-link>
+            <router-link v-if="canAccessLawyerOrders" to="/lawyer/orders/my" class="dropdown-item">我的接单</router-link>
+          </div>
+        </div>
         
         <!-- Orders Dropdown -->
-        <div
-          class="nav-item-dropdown"
-          :class="{ 'is-open': activeDropdown === 'orders' }"
-          @mouseenter="openDropdown('orders')"
-          @mouseleave="scheduleCloseDropdown"
-          @focusin="openDropdown('orders')"
-          @focusout="scheduleCloseDropdown"
-        >
-          <button class="nav-item dropdown-toggle" type="button">
+        <div class="nav-item-dropdown">
+          <button class="nav-item dropdown-toggle">
             订单
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('all')">全部</a>
-            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('pending_payment')">待支付</a>
-            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('processing')">待回复</a>
-            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('pending_review')">待评价</a>
-            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('completed')">已完成</a>
+            <router-link :to="{ name: 'ClientOrderList' }" class="dropdown-item">全部订单</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'pending_payment' } }" class="dropdown-item">待支付</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'processing' } }" class="dropdown-item">处理中</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'pending_customer_confirmation' } }" class="dropdown-item">待确认</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'pending_review' } }" class="dropdown-item">待评价</router-link>
           </div>
         </div>
 
-        <router-link to="/about" class="nav-item" @click="closeDropdowns">关于我们</router-link>
+        <router-link to="/about" class="nav-item">关于我们</router-link>
       </nav>
 
       <!-- Right Actions -->
@@ -92,28 +82,21 @@
         
         <!-- Not Logged In -->
         <template v-if="!isLoggedIn">
-          <button class="login-btn" type="button" @click="handleLogin">登录</button>
-          <button class="signup-btn" type="button" @click="handleSignup">注册</button>
+          <router-link to="/login" class="login-btn auth-action">登录</router-link>
+          <router-link to="/register" class="signup-btn auth-action">注册</router-link>
+          <!-- <router-link to="/admin/login" class="admin-login-btn auth-action">管理员登录</router-link> -->
         </template>
 
         <!-- Logged In - User Menu -->
-        <div
-          v-else
-          class="user-menu-dropdown"
-          :class="{ 'is-open': activeDropdown === 'user' }"
-          @mouseenter="openDropdown('user')"
-          @mouseleave="scheduleCloseDropdown"
-          @focusin="openDropdown('user')"
-          @focusout="scheduleCloseDropdown"
-        >
-          <button class="user-menu-btn" type="button">
+        <div v-else class="user-menu-dropdown">
+          <button class="user-menu-btn">
             <img :src="userAvatar" :alt="userName" class="user-avatar" />
             <span>{{ userName }}</span>
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu user-dropdown">
-            <router-link to="/user-profile" class="dropdown-item" @click="closeDropdowns">个人资料</router-link>
-            <router-link to="/settings" class="dropdown-item" @click="closeDropdowns">设置</router-link>
+            <router-link to="/user-profile" class="dropdown-item">个人资料</router-link>
+            <router-link to="/settings" class="dropdown-item">设置</router-link>
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item logout" @click="handleLogout">退出登录</a>
           </div>
@@ -136,54 +119,45 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../../store/auth'
-import { storeToRefs } from 'pinia'
+import { getLawyerProfileByUserId } from '@/api/lawyerOrder'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { isLoggedIn, userName, userAvatar } = storeToRefs(authStore)
 const showSearch = ref(false)
 const searchQuery = ref('')
-const activeDropdown = ref(null)
-let closeDropdownTimer = null
+const lawyerProfileStatus = ref(null)
 
-const openDropdown = (name) => {
-  if (closeDropdownTimer) {
-    clearTimeout(closeDropdownTimer)
-    closeDropdownTimer = null
+const isLoggedIn = computed(() => authStore.isAuthenticated)
+const userName = computed(() => authStore.user?.username || '我的')
+const userAvatar = computed(() => authStore.user?.avatarUrl || 'https://via.placeholder.com/32')
+const currentUserId = computed(() => authStore.user?.userId || Number(localStorage.getItem('userId')) || null)
+const isLawyerApproved = computed(() => Number(authStore.user?.authStatus) === 2)
+const canAccessLawyerOrders = computed(() => isLawyerApproved.value && Number(lawyerProfileStatus.value) === 1)
+
+const loadLawyerProfileStatus = async () => {
+  lawyerProfileStatus.value = null
+  if (!currentUserId.value || !isLawyerApproved.value) return
+
+  try {
+    const response = await getLawyerProfileByUserId(currentUserId.value)
+    const profile = response?.data?.data ?? response?.data ?? null
+    lawyerProfileStatus.value = profile?.status ?? null
+  } catch {
+    lawyerProfileStatus.value = null
   }
-  activeDropdown.value = name
 }
 
-const scheduleCloseDropdown = () => {
-  if (closeDropdownTimer) {
-    clearTimeout(closeDropdownTimer)
-  }
-  closeDropdownTimer = setTimeout(() => {
-    activeDropdown.value = null
-    closeDropdownTimer = null
-  }, 120)
-}
-
-const closeDropdowns = () => {
-  if (closeDropdownTimer) {
-    clearTimeout(closeDropdownTimer)
-    closeDropdownTimer = null
-  }
-  activeDropdown.value = null
-}
+watch([currentUserId, isLawyerApproved], loadLawyerProfileStatus, { immediate: true })
 
 const toggleSearch = () => {
-  closeDropdowns()
   showSearch.value = !showSearch.value
 }
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    closeDropdowns()
     router.push({
       name: 'LawyerList',
       query: { keyword: searchQuery.value }
@@ -192,72 +166,24 @@ const handleSearch = () => {
   }
 }
 
-const goHome = () => {
-  closeDropdowns()
-  router.push({ name: 'Home' })
-}
-
 const handleLogin = () => {
-  closeDropdowns()
   router.push('/login')
 }
 
 const handleSignup = () => {
-  closeDropdowns()
-  router.push('/signup')
+  router.push('/register')
 }
 
 const handleLogout = (e) => {
   e.preventDefault()
-  closeDropdowns()
   authStore.logout()
-  ElMessage.success('已退出登录')
   router.push('/')
 }
 
-const handleServiceClick = (serviceType) => {
-  closeDropdowns()
-  
-  // 检查是否已登录（从localStorage和store双重检查）
-  const isLoggedInLocalStorage = localStorage.getItem('isLoggedIn') === 'true'
-  
-  if (!isLoggedInLocalStorage && !authStore.isLoggedIn) {
-    // 显示需要登录的提示
-    ElMessage.warning('请先登录')
-    // 自动跳转到登录界面
-    setTimeout(() => {
-      router.push('/login')
-    }, 500)
-    return
-  }
-  
-  // 已登录，跳转到订单创建页面
+const goToLawArticle = (categoryId) => {
   router.push({
-    name: 'OrderCreate',
-    query: { type: serviceType }
-  })
-}
-
-const handleOrderClick = (status) => {
-  closeDropdowns()
-  
-  // 检查是否已登录（从localStorage和store双重检查）
-  const isLoggedInLocalStorage = localStorage.getItem('isLoggedIn') === 'true'
-  
-  if (!isLoggedInLocalStorage && !authStore.isLoggedIn) {
-    // 显示需要登录的提示
-    ElMessage.warning('请先登录')
-    // 自动跳转到登录界面
-    setTimeout(() => {
-      router.push('/login')
-    }, 500)
-    return
-  }
-  
-  // 已登录，跳转到订单列表页面
-  router.push({
-    name: 'ClientOrderList',
-    query: status !== 'all' ? { status } : {}
+    name: 'LawArticleList',
+    query: { category: categoryId }
   })
 }
 </script>
@@ -347,10 +273,10 @@ const handleOrderClick = (status) => {
 .user-menu-dropdown::after {
   content: '';
   position: absolute;
-  top: 100%;
   left: 0;
   right: 0;
-  height: 8px;
+  top: 100%;
+  height: 12px;
 }
 
 .dropdown-toggle {
@@ -365,8 +291,9 @@ const handleOrderClick = (status) => {
   transition: transform 0.3s ease;
 }
 
-.nav-item-dropdown.is-open .dropdown-menu,
-.user-menu-dropdown.is-open .dropdown-menu {
+.nav-item-dropdown:hover .dropdown-menu,
+.user-menu-dropdown:hover .dropdown-menu,
+.dropdown-menu:hover {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -374,21 +301,23 @@ const handleOrderClick = (status) => {
   transition-delay: 0s;
 }
 
-.nav-item-dropdown.is-open .dropdown-toggle .dropdown-icon,
-.user-menu-dropdown.is-open .dropdown-icon {
+.nav-item-dropdown:hover .dropdown-toggle .dropdown-icon {
   transform: rotate(180deg);
 }
 
 .dropdown-menu {
+  display: block;
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
   background: #ffffff;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 180px;
   padding: 8px 0;
+  margin-top: 0;
   z-index: 200;
+  background-clip: padding-box;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -396,7 +325,7 @@ const handleOrderClick = (status) => {
   transition:
     opacity 0.18s ease,
     transform 0.18s ease,
-    visibility 0s linear 0.18s;
+    visibility 0s linear 0.28s;
 }
 
 .dropdown-item {
@@ -410,23 +339,6 @@ const handleOrderClick = (status) => {
 }
 
 .dropdown-item:hover {
-  background-color: #f3f4f6;
-  color: #1e40af;
-  padding-left: 20px;
-}
-
-/* 确保 router-link 在 dropdown 中正确显示 */
-.dropdown-menu .router-link {
-  display: block;
-  padding: 10px 16px;
-  color: #333333;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.dropdown-menu .router-link:hover {
   background-color: #f3f4f6;
   color: #1e40af;
   padding-left: 20px;
@@ -508,6 +420,23 @@ const handleOrderClick = (status) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.admin-login-btn {
+  background: #ff6b35;
+  border: none;
+  color: #ffffff;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.admin-login-btn:hover {
+  background: #e55a2b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 /* User Menu */
 .user-menu-dropdown {
   position: relative;
@@ -537,6 +466,10 @@ const handleOrderClick = (status) => {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.user-menu-dropdown:hover .dropdown-icon {
+  transform: rotate(180deg);
 }
 
 .user-dropdown {

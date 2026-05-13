@@ -1,7 +1,26 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+<template>
+  <div class="admin-app">
+    <AdminHeader />
+    <RouterView />
+  </div>
+</template>
+
+<script setup>
+import AdminHeader from './components/AdminHeader.vue'
 </script>
 
-<template>
-  <HelloWorld />
-</template>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background: #f6f7fb;
+}
+
+.admin-app {
+  min-height: 100vh;
+}
+</style>

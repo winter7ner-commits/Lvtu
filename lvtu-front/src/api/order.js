@@ -1,59 +1,23 @@
-// src/api/order.js
+import request from './request'
 
-import request from '@/utils/request'
-
-/**
- * 创建订单
- * 对应后端：
- * POST /api/orders
- */
 export const createOrder = (data) => {
-  return request({
-    method: 'POST',
-    url: '/orders',
-    data
-  })
+  return request.post('/api/orders', data).then((res) => res.data)
 }
 
-/**
- * 获取订单详情
- * 对应后端：
- * GET /api/orders/{id}
- */
-export const getOrderDetail = (orderId) => {
-  return request({
-    method: 'GET',
-    url: `/orders/${orderId}`
-  })
+export const getOrderById = (id) => {
+  return request.get(`/api/orders/${id}`).then((res) => res.data)
 }
 
-/**
- * 获取用户订单列表
- * 对应后端：
- * GET /api/orders/user/{userId}
- */
-export const getUserOrders = (userId) => {
-  return request({
-    method: 'GET',
-    url: `/orders/user/${userId}`
-  })
+export const getOrderDetail = getOrderById
+
+export const getOrdersByUserId = (userId) => {
+  return request.get(`/api/orders/user/${userId}`).then((res) => res.data)
 }
 
-/**
- * 修改订单状态
- * 对应后端：
- * PUT /api/orders/{id}/status?status=xxx
- *
- * 示例：
- * updateOrderStatus(1, '已支付')
- * updateOrderStatus(1, '已取消')
- */
-export const updateOrderStatus = (orderId, status) => {
-  return request({
-    method: 'PUT',
-    url: `/orders/${orderId}/status`,
-    params: {
-      status
-    }
-  })
+export const getUserOrders = getOrdersByUserId
+
+export const updateOrderStatus = (id, status) => {
+  return request.put(`/api/orders/${id}/status`, null, {
+    params: { status }
+  }).then((res) => res.data)
 }

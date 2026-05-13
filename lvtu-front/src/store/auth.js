@@ -1,54 +1,63 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { me } from '../api/auth'
 
-export const useAuthStore = defineStore('auth', () => {
-  // State
-  const userInfo = ref(null)
-  const isLoggedIn = ref(false)
-
-  // Getters
-  const userName = computed(() => userInfo.value?.name || '我的')
-  const userAvatar = computed(() => userInfo.value?.avatar || 'https://via.placeholder.com/32')
-
-  // Actions
-  const login = (user) => {
-    userInfo.value = user
-    isLoggedIn.value = true
-    // 保存到 localStorage
-    localStorage.setItem('isLoggedIn', 'true')
-    localStorage.setItem('userInfo', JSON.stringify(user))
-  }
-
-  const logout = () => {
-    userInfo.value = null
-    isLoggedIn.value = false
-    // 清除 localStorage
-    localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('userInfo')
-  }
-
-  const restoreFromStorage = () => {
-    const storedLoginStatus = localStorage.getItem('isLoggedIn')
-    const storedUserInfo = localStorage.getItem('userInfo')
-    
-    if (storedLoginStatus === 'true' && storedUserInfo) {
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    token: localStorage.getItem('authToken') || '',
+    user: JSON.parse(localStorage.getItem('currentUser') || 'null'),
+  }),
+  getters: {
+    isAuthenticated: (state) => !!state.token && !!state.user,
+  },
+  actions: {
+    setUser(user) {
+      this.user = user
+      localStorage.setItem('currentUser', JSON.stringify(user))
+      if (user?.userId) {
+        localStorage.setItem('userId', String(user.userId))
+      }
+      localStorage.setItem('userInfo', JSON.stringify({
+        name: user?.username || '',
+        avatar: user?.avatarUrl || ''
+      }))
+    },
+    setAuth(token, user) {
+      this.token = token
+      this.user = user
+      localStorage.setItem('authToken', token)
+      localStorage.setItem('currentUser', JSON.stringify(user))
+      if (user?.userId) {
+        localStorage.setItem('userId', String(user.userId))
+      }
+      localStorage.setItem('isLoggedIn', 'true')
+      localStorage.setItem('userInfo', JSON.stringify({
+        name: user.username || '',
+        avatar: user.avatarUrl || ''
+      }))
+    },
+    logout() {
+      this.token = ''
+      this.user = null
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('currentUser')
+      localStorage.removeItem('userId')
+      localStorage.removeItem('isLoggedIn')
+      localStorage.removeItem('userInfo')
+    },
+    async initAuth() {
+      if (!this.token) {
+        return
+      }
       try {
-        userInfo.value = JSON.parse(storedUserInfo)
-        isLoggedIn.value = true
+        const response = await me()
+        if (response?.code === 200) {
+          this.setUser(response.data)
+        } else {
+          this.logout()
+        }
       } catch (error) {
-        console.error('Failed to restore auth state from storage:', error)
-        logout()
+        this.logout()
       }
     }
-  }
-
-  return {
-    userInfo,
-    isLoggedIn,
-    userName,
-    userAvatar,
-    login,
-    logout,
-    restoreFromStorage
-  }
+  },
 })

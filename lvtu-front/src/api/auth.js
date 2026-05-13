@@ -1,54 +1,27 @@
-import request from '@/utils/request'
+import request from './request'
 
-/**
- * 用户登录 - 从数据库验证用户名和密码
- * 对应后端：
- * POST /api/users/login
- */
-export const login = (username, password) => {
-  return request({
-    method: 'POST',
-    url: '/users/login',
-    data: {
-      username,
-      password
-    }
-  })
+export const login = (data) => {
+  return request.post('/api/auth/login', data).then((res) => res.data)
 }
 
-/**
- * 获取当前用户信息
- * 对应后端：
- * GET /api/users/me
- */
-export const getCurrentUser = () => {
-  return request({
-    method: 'GET',
-    url: '/users/me'
-  })
-}
+// export const adminLogin = (data) => {
+//   return request.post('/api/auth/admin/login', data).then((res) => res.data)
+// }
 
-/**
- * 用户注册
- * 对应后端：
- * POST /api/users/register
- */
-export const register = (userData) => {
-  return request({
-    method: 'POST',
-    url: '/users/register',
-    data: userData
-  })
+export const register = (data) => {
+  return request.post('/api/auth/register', data).then((res) => res.data)
 }
-
-/**
- * 用户退出登录
- * 对应后端：
- * POST /api/users/logout
- */
+// export const adminRegister = (data) => {
+//   return request.post('/api/auth/admin/register', data).then((res) => res.data)
+// }
 export const logout = () => {
-  return request({
-    method: 'POST',
-    url: '/users/logout'
-  })
+  return request.post('/api/auth/logout').then((res) => res.data)
+}
+
+export const forgotPassword = (data) => {
+  return request.post('/api/auth/forgot-password', data).then((res) => res.data)
+}
+
+export const me = () => {
+  return request.get('/api/auth/me').then((res) => res.data)
 }

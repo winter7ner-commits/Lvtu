@@ -12,6 +12,8 @@ public interface OrderMapper {
 
     // 基础 CRUD 操作
     int insert(Order order);
+
+    int insertDetail(Order order);
     
     int update(Order order);
     
@@ -30,15 +32,9 @@ public interface OrderMapper {
     
     //按订单id查询订单详情
     Order selectDetailByOrderId(@Param("orderId") Long orderId);
+
+    Order selectById(@Param("orderId") Long orderId);
     
     // 按订单id搜索支付订单 并计算总金额
     BigDecimal calculateTotalAmountByOrderId(@Param("orderId") Long orderId);
-
-    List<Order> selectOrdersWithLawyer(
-            @Param("status") String status,
-            @Param("businessTypes") List<Long> businessTypes,
-            @Param("keyword") String keyword,
-            @Param("pageSize") Integer pageSize,
-            @Param("offset") Integer offset
-    );
 }

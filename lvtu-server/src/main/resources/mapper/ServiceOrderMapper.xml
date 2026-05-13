@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitzh.lvtu.mapper.ServiceOrderMapper">
+
+    <resultMap id="serviceOrderMap" type="com.bitzh.lvtu.entity.ServiceOrder">
+        <id property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="lawyerId" column="lawyer_id"/>
+        <result property="serviceTypeId" column="service_type_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="status" column="status"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="updatedTime" column="updated_time"/>
+    </resultMap>
+
+    <select id="selectAvailableOrders" resultMap="serviceOrderMap">
+        SELECT order_id, user_id, lawyer_id, service_type_id, total_amount, status, created_time, updated_time
+        FROM `order`
+        WHERE status = '待接单'
+          AND lawyer_id IS NULL
+        <if test="serviceTypeId != null">
+            AND service_type_id = #{serviceTypeId}
+        </if>
+        ORDER BY created_time DESC
+    </select>
+
+    <select id="selectByOrderId" resultMap="serviceOrderMap">
+        SELECT order_id, user_id, lawyer_id, service_type_id, total_amount, status, created_time, updated_time
+        FROM `order`
+        WHERE order_id = #{orderId}
+    </select>
+
+    <update id="acceptOrder">
+        UPDATE `order`
+        SET lawyer_id = #{lawyerId},
+            status = '处理中'
+        WHERE order_id = #{orderId}
+          AND status = '待接单'
+          AND lawyer_id IS NULL
+    </update>
+
+    <select id="selectMyOrders" resultMap="serviceOrderMap">
+        SELECT order_id, user_id, lawyer_id, service_type_id, total_amount, status, created_time, updated_time
+        FROM `order`
+        WHERE lawyer_id = #{lawyerId}
+          AND status IN ('处理中', '待客户确认', '待评价', '已完成')
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY updated_time DESC, created_time DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE `order`
+        SET status = #{status}
+        WHERE order_id = #{orderId}
+    </update>
+
+    <update id="updateStatusWithCurrent">
+        UPDATE `order`
+        SET status = #{newStatus}
+        WHERE order_id = #{orderId}
+          AND status = #{currentStatus}
+    </update>
+
+</mapper>

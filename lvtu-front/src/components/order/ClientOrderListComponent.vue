@@ -41,6 +41,13 @@
           >
             支付
           </button>
+          <button
+            v-if="order.status === 'pending_review'"
+            class="action-btn review-btn"
+            @click="handleReview(order)"
+          >
+            评价
+          </button>
         </div>
       </div>
     </div>
@@ -80,7 +87,8 @@
 
 <script>
 import { getUserOrders } from '@/api/order'
-import { ElMessage } from 'element-plus'
+import { getPaymentByOrderId, updatePaymentStatus } from '@/api/payment'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 export default {
   name: 'ClientOrderListComponent',
@@ -116,6 +124,8 @@ export default {
         pending_payment: '待支付',
         paid: '已支付',
         processing: '处理中',
+        pending_customer_confirmation: '待客户确认',
+        pending_review: '待评价',
         completed: '已完成',
         cancelled: '已取消'
       }
@@ -144,8 +154,8 @@ export default {
       if (this.keyword) {
         const keyword = this.keyword.toLowerCase()
         filtered = filtered.filter(order =>
-          order.orderId.toLowerCase().includes(keyword) ||
-          order.lawyerName.toLowerCase().includes(keyword)
+          String(order.orderId || '').toLowerCase().includes(keyword) ||
+          String(order.lawyerName || '').toLowerCase().includes(keyword)
         )
       }
 
@@ -175,49 +185,62 @@ export default {
     }
   },
   methods: {
-    // 从API获取订单列表
-async fetchOrders() {
-  this.loading = true
+    async fetchOrders() {
+      this.loading = true
 
-  try {
-    /**
-     * 从本地获取登录用户信息
-     */
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"))
+      try {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null')
+        const userId = currentUser?.userId || currentUser?.id || userInfo?.id || Number(localStorage.getItem('userId'))
 
-    if (!userInfo || !userInfo.name) {
-      ElMessage.error("请先登录")
-      this.orders = []
-      return
-    }
+        if (!userId) {
+          ElMessage.error('请先登录')
+          this.orders = []
+          return
+        }
 
-    // 使用用户名作为userId，或使用实际的userId
-    const userId = userInfo.id || userInfo.name
-    const response = await getUserOrders(userId)
+        const response = await getUserOrders(userId)
+        const rows = response?.code === 200 ? response.data || [] : response?.data || []
+        this.orders = rows.map(this.normalizeOrder)
+      } catch (error) {
+        console.error('获取订单列表出错:', error)
+        ElMessage.error('网络连接失败，请检查后端服务是否正常')
+        this.orders = []
+      } finally {
+        this.loading = false
+      }
+    },
+    normalizeOrder(order) {
+      const businessTypeMap = {
+        101: 'online_consult',
+        102: 'phone_consult',
+        103: 'doc_writing',
+        104: 'contract_review',
+        105: 'marriage_family',
+        106: 'litigation'
+      }
+      const statusMap = {
+        待支付: 'pending_payment',
+        已支付: 'paid',
+        待接单: 'paid',
+        处理中: 'processing',
+        待顾客确认: 'pending_customer_confirmation',
+        待客户确认: 'pending_customer_confirmation',
+        待评价: 'pending_review',
+        已完成: 'completed',
+        已取消: 'cancelled'
+      }
 
-    /**
-     * 假设后端返回：
-     * {
-     *   code: 0,
-     *   message: "成功",
-     *   data: [...]
-     * }
-     */
-    if (response.data.code === 0) {
-      this.orders = response.data.data || []
-    } else {
-      ElMessage.error(response.data.message || "获取订单列表失败")
-      this.orders = []
-    }
-
-  } catch (error) {
-    console.error("获取订单列表出错:", error)
-    ElMessage.error("网络连接失败，请检查后端服务是否正常")
-    this.orders = []
-  } finally {
-    this.loading = false
-  }
-},
+      return {
+        ...order,
+        id: order.orderId || order.id,
+        businessType: order.businessType || businessTypeMap[order.serviceTypeId] || order.serviceTypeId,
+        lawyerName: order.lawyerName || (order.lawyerId ? `律师${order.lawyerId}` : '-'),
+        status: statusMap[order.status] || order.status || '',
+        amount: order.amount || order.totalAmount || 0,
+        createTime: order.createTime || order.createdTime
+      }
+    },
     getBusinessTypeName(type) {
       return this.businessTypeMap[type] || type
     },
@@ -225,18 +248,51 @@ async fetchOrders() {
       return this.statusMap[status] || status
     },
     formatDate(date) {
-      return new Date(date).toLocaleDateString('zh-CN')
+      return date ? new Date(date).toLocaleDateString('zh-CN') : '-'
     },
     handleView(orderId) {
       console.log('查看订单:', orderId)
       this.$router.push({
         name: 'ClientOrderDetail',
-        params: { id: orderId }
+        params: { orderId }
       })
     },
-    handlePay(orderId) {
-      console.log('支付订单:', orderId)
-      // 支付逻辑
+    handleReview(order) {
+      this.$router.push({
+        name: 'EvaluationDashboard',
+        query: {
+          orderId: order.id,
+          lawyerId: order.lawyerId || ''
+        }
+      })
+    },
+    async handlePay(orderId) {
+      try {
+        await ElMessageBox.confirm('确认支付该订单吗？支付后订单将进入待接单状态。', '确认支付', {
+          confirmButtonText: '确认支付',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+
+        const paymentResponse = await getPaymentByOrderId(orderId)
+        const payment = paymentResponse?.code === 200 ? paymentResponse.data : paymentResponse?.data
+        if (!payment?.paymentId) {
+          ElMessage.error('未找到该订单的支付记录')
+          return
+        }
+
+        const response = await updatePaymentStatus(payment.paymentId, '已支付')
+        if (response?.code === 200) {
+          ElMessage.success('支付成功，订单已进入待接单')
+          await this.fetchOrders()
+        } else {
+          ElMessage.error(response?.message || '支付失败')
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error(error?.response?.data?.message || '支付失败')
+        }
+      }
     }
   }
 }
@@ -253,11 +309,13 @@ async fetchOrders() {
   grid-template-columns: 1fr 1.2fr 1fr 1fr 0.8fr 1.2fr 1fr;
   gap: 15px;
   padding: 15px 20px;
-  background-color: #f5f5f5;
-  border-bottom: 2px solid #d9d9d9;
+  background-color: #f6f8fb;
+  border: 1px solid #e8edf5;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
   color: #333;
+  margin-bottom: 10px;
 }
 
 /* 列宽定义 */
@@ -303,13 +361,17 @@ async fetchOrders() {
   grid-template-columns: 1fr 1.2fr 1fr 1fr 0.8fr 1.2fr 1fr;
   gap: 15px;
   padding: 15px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border: 1px solid #edf1f7;
+  border-radius: 10px;
   align-items: center;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
 }
 
 .order-item:hover {
-  background-color: #fafafa;
+  background-color: #fafcff;
+  border-color: #d6e4ff;
+  box-shadow: 0 6px 18px rgba(24, 144, 255, 0.08);
 }
 
 /* 业务类型标签 */
@@ -318,7 +380,7 @@ async fetchOrders() {
   padding: 4px 8px;
   background-color: #e6f7ff;
   color: #0050b3;
-  border-radius: 3px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
 }
@@ -327,9 +389,10 @@ async fetchOrders() {
 .status-badge {
   display: inline-block;
   padding: 4px 8px;
-  border-radius: 3px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .status-pending_payment {
@@ -338,23 +401,33 @@ async fetchOrders() {
 }
 
 .status-paid {
-  background-color: #f0f5ff;
-  color: #003eb3;
+  background-color: #e6f4ff;
+  color: #0958d9;
 }
 
 .status-processing {
-  background-color: #f6f8fb;
-  color: #0050b3;
+  background-color: #eef4ff;
+  color: #1d4ed8;
+}
+
+.status-pending_customer_confirmation {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+}
+
+.status-pending_review {
+  background-color: #fff1f3;
+  color: #c01048;
 }
 
 .status-completed {
-  background-color: #f6ffed;
-  color: #274916;
+  background-color: #f0fdf4;
+  color: #15803d;
 }
 
 .status-cancelled {
   background-color: #fff1f0;
-  color: #820014;
+  color: #b42318;
 }
 
 /* 操作按钮 */
@@ -363,7 +436,7 @@ async fetchOrders() {
   margin-right: 8px;
   border: 1px solid #d9d9d9;
   background-color: white;
-  border-radius: 3px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
   transition: all 0.3s ease;
@@ -394,6 +467,18 @@ async fetchOrders() {
   border-color: #0050b3;
 }
 
+.review-btn {
+  background-color: #c01048;
+  border-color: #c01048;
+  color: white;
+}
+
+.review-btn:hover {
+  background-color: #a11043;
+  border-color: #a11043;
+  color: white;
+}
+
 /* 空状态 */
 .empty-state {
   display: flex;
@@ -401,6 +486,9 @@ async fetchOrders() {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
+  background-color: #fafcff;
+  border: 1px dashed #dbe4f0;
+  border-radius: 10px;
 }
 
 .empty-icon {
@@ -421,6 +509,9 @@ async fetchOrders() {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
+  background-color: #fafcff;
+  border: 1px dashed #dbe4f0;
+  border-radius: 10px;
 }
 
 .loading-spinner {
@@ -463,7 +554,7 @@ async fetchOrders() {
   padding: 6px 16px;
   border: 1px solid #d9d9d9;
   background-color: white;
-  border-radius: 3px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.3s ease;

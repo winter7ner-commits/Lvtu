@@ -5,10 +5,24 @@
 
 <mapper namespace="com.bitzh.lvtu.mapper.LawyerMapper">
 
+    <insert id="insertLawyer" useGeneratedKeys="true" keyProperty="lawyerId">
+        INSERT INTO lawyer (user_id, license_no, law_firm, bio, status, practice_years, rating, create_time)
+        VALUES (#{userId}, #{licenseNo}, #{lawFirm}, #{bio}, #{status}, #{practiceYears}, #{rating}, NOW())
+    </insert>
+
+    <update id="updateLawyer">
+        UPDATE lawyer
+        SET license_no = #{licenseNo},
+            law_firm = #{lawFirm},
+            practice_years = #{practiceYears}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 通用映射 -->
     <resultMap id="lawyerMap" type="com.bitzh.lvtu.dto.LawyerDTO">
         <id property="lawyerId" column="lawyer_id"/>
-        <result property="name" column="name"/>
-        <result property="avatar" column="avatar"/>
+        <result property="name" column="real_name"/>
+        <result property="avatar" column="avatar_url"/>
         <result property="phone" column="phone"/>
         <result property="lawFirm" column="law_firm"/>
         <result property="practiceYears" column="practice_years"/>
@@ -21,108 +35,143 @@
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
         <result property="licenseNo" column="license_no"/>
+        <!-- 使用自定义TypeHandler处理JSON字符串到List<SpecialtyDTO>的转换 -->
         <result property="specialties" column="specialties" typeHandler="com.bitzh.lvtu.config.SpecialtiesJsonTypeHandler"/>
     </resultMap>
 
-    <sql id="lawyerColumns">
-        l.lawyer_id,
-        COALESCE(v.real_name, u.username) AS name,
-        u.avatar_url AS avatar,
-        u.phone,
-        l.law_firm,
-        l.practice_years,
-        l.rating,
-        l.status,
-        l.status AS audit_status,
-        NULL AS audit_remark,
-        l.bio AS description,
-        l.create_time,
-        l.create_time AS update_time,
-        l.license_no,
-        GROUP_CONCAT(DISTINCT s.name) AS specialty,
-        COALESCE(
-            JSON_ARRAYAGG(
-                CASE
-                    WHEN s.specialty_id IS NULL THEN NULL
-                    ELSE JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)
-                END
-            ),
-            JSON_ARRAY()
-        ) AS specialties
-    </sql>
-
-    <sql id="lawyerJoins">
+    <!-- 查询已审核律师 -->
+    <select id="selectLawyerList" resultMap="lawyerMap">
+        SELECT
+            l.lawyer_id,
+            l.law_firm,
+            l.practice_years,
+            l.rating,
+            l.status,
+            l.bio AS description,
+            l.create_time,
+            NULL AS update_time,
+            l.license_no,
+            u.avatar_url,
+            u.phone,
+            u.auth_status AS audit_status,
+            NULL AS audit_remark,
+            v.real_name,
+            GROUP_CONCAT(DISTINCT s.name) AS specialty,
+            COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
         FROM lawyer l
-            LEFT JOIN users u ON l.user_id = u.user_id
-            LEFT JOIN users_verfications v ON l.user_id = v.user_id
-            LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
-            LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
-    </sql>
+                 INNER JOIN users u ON l.user_id = u.user_id
+                 LEFT JOIN users_verfications v ON l.user_id = v.user_id
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE u.auth_status = 2
+          AND l.status = 1
+        GROUP BY l.lawyer_id, l.law_firm, l.practice_years, l.rating, l.status, l.bio,
+                 l.create_time, l.license_no, u.avatar_url, u.phone, u.auth_status, v.real_name
+    </select>
 
-    <sql id="lawyerGroupBy">
-        GROUP BY
+    <!-- 评分最高律师 -->
+    <select id="selectByTopRating" resultMap="lawyerMap">
+        SELECT
             l.lawyer_id,
             v.real_name,
-            u.username,
             u.avatar_url,
             u.phone,
             l.law_firm,
             l.practice_years,
             l.rating,
             l.status,
-            l.bio,
+            u.auth_status AS audit_status,
+            NULL AS audit_remark,
+            l.bio AS description,
             l.create_time,
-            l.license_no
-    </sql>
-
-    <select id="selectLawyerList" resultMap="lawyerMap">
-        SELECT
-            <include refid="lawyerColumns"/>
-        <include refid="lawyerJoins"/>
-        WHERE l.status = 1
-          AND u.status = 1
-        <include refid="lawyerGroupBy"/>
-    </select>
-
-    <select id="selectByTopRating" resultMap="lawyerMap">
-        SELECT
-            <include refid="lawyerColumns"/>
-        <include refid="lawyerJoins"/>
-        WHERE l.status = 1
-          AND u.status = 1
-        <include refid="lawyerGroupBy"/>
+            NULL AS update_time,
+            l.license_no,
+            GROUP_CONCAT(DISTINCT s.name) AS specialty,
+            COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
+        FROM lawyer l
+                 INNER JOIN users u ON l.user_id = u.user_id
+                 LEFT JOIN users_verfications v ON l.user_id = v.user_id
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE u.auth_status = 2
+          AND l.status = 1
+        GROUP BY l.lawyer_id, v.real_name, u.avatar_url, u.phone, l.law_firm, l.practice_years, l.rating,
+                 l.status, u.auth_status, l.bio, l.create_time, l.license_no
         ORDER BY l.rating DESC, l.practice_years DESC
         LIMIT #{limit}
     </select>
 
+    <!-- 按领域筛选 -->
     <select id="selectBySpecialty" resultMap="lawyerMap">
-        SELECT
-            <include refid="lawyerColumns"/>
-        <include refid="lawyerJoins"/>
-        WHERE l.status = 1
-          AND u.status = 1
+        SELECT DISTINCT
+            l.lawyer_id,
+            v.real_name,
+            u.avatar_url,
+            u.phone,
+            l.law_firm,
+            l.practice_years,
+            l.rating,
+            l.status,
+            u.auth_status AS audit_status,
+            NULL AS audit_remark,
+            l.bio AS description,
+            l.create_time,
+            NULL AS update_time,
+            l.license_no,
+            GROUP_CONCAT(DISTINCT s.name) AS specialty,
+            COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
+        FROM lawyer l
+                 INNER JOIN users u ON l.user_id = u.user_id
+                 LEFT JOIN users_verfications v ON l.user_id = v.user_id
+                 JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE u.auth_status = 2 AND l.status = 1
           AND s.name LIKE CONCAT('%', #{specialty}, '%')
-        <include refid="lawyerGroupBy"/>
+        GROUP BY l.lawyer_id, v.real_name, u.avatar_url, u.phone, l.law_firm, l.practice_years, l.rating,
+                 l.status, u.auth_status, l.bio, l.create_time, l.license_no
     </select>
 
+    <!-- 待审核 -->
     <select id="selectPendingList" resultMap="lawyerMap">
         SELECT
-            <include refid="lawyerColumns"/>
-        <include refid="lawyerJoins"/>
-        WHERE l.status = 2
-        <include refid="lawyerGroupBy"/>
+            l.lawyer_id,
+            v.real_name,
+            u.avatar_url,
+            u.phone,
+            l.law_firm,
+            l.practice_years,
+            l.rating,
+            l.status,
+            u.auth_status AS audit_status,
+            NULL AS audit_remark,
+            l.bio AS description,
+            l.create_time,
+            NULL AS update_time,
+            l.license_no,
+            GROUP_CONCAT(DISTINCT s.name) AS specialty,
+            COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
+        FROM lawyer l
+                 INNER JOIN users u ON l.user_id = u.user_id
+                 LEFT JOIN users_verfications v ON l.user_id = v.user_id
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE u.auth_status = 1
+        GROUP BY l.lawyer_id, v.real_name, u.avatar_url, u.phone, l.law_firm, l.practice_years, l.rating,
+                 l.status, u.auth_status, l.bio, l.create_time, l.license_no
     </select>
 
+    <!-- 审核通过 -->
     <update id="approve">
-        UPDATE lawyer
-        SET status = 1
-        WHERE lawyer_id = #{lawyerId}
+        UPDATE users
+        SET auth_status = 2
+        WHERE user_id = (SELECT user_id FROM lawyer WHERE lawyer_id = #{lawyerId})
     </update>
 
+    <!-- 审核拒绝 -->
     <update id="reject">
-        UPDATE lawyer
-        SET status = 0
-        WHERE lawyer_id = #{lawyerId}
+        UPDATE users
+        SET auth_status = 3
+        WHERE user_id = (SELECT user_id FROM lawyer WHERE lawyer_id = #{lawyerId})
     </update>
 
 </mapper>

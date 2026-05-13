@@ -46,10 +46,25 @@ const loading = ref(false)
 
 
 
+const loadHotLawyers = async () => {
+  loading.value = true
+  try {
+    const res = await getTopRatedLawyers()
+    if (res?.code === 200) {
+      hotLawyers.value = res.data || []
+    }
+  } catch (error) {
+    console.error('加载热门律师失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
     router.push({
-      name: 'LawyerList',
+      path: '/lawyer-list',
       query: { keyword: searchKeyword.value }
     })
   }
@@ -57,30 +72,17 @@ const handleSearch = () => {
 
 const searchByKeyword = (keyword) => {
   router.push({
-    name: 'LawyerList',
+    path: '/lawyer-list',
     query: { keyword }
   })
 }
 
 const goToLawyerDetail = (id) => {
-  router.push({ name: 'LawyerDetail', params: { id } })
+  router.push(`/lawyer/${id}`)
 }
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-const loadHotLawyers = async () => {
-  loading.value = true
-  try {
-    const res = await getTopRatedLawyers()
-    hotLawyers.value = res.data || []
-  } catch (error) {
-    console.error('加载热门律师失败:', error)
-    hotLawyers.value = []
-  } finally {
-    loading.value = false
-  }
 }
 
 onMounted(() => {
@@ -104,6 +106,10 @@ onMounted(() => {
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
+
+  position: relative; 
+  z-index: 1;
+  margin-top: 0;
 }
 
 .hero-content {

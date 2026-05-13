@@ -10,5 +10,6 @@ public class Payment {
     private Long orderId;
     private BigDecimal amount;
     private String status;
+    private LocalDateTime createTime;
     private LocalDateTime paymentTime;
 }

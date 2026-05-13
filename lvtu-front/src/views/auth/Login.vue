@@ -2,52 +2,46 @@
   <div class="login-page">
     <div class="login-container">
       <div class="login-box">
-        <!-- Logo -->
         <div class="login-header">
-          <img src="/public/icons/logo.png" alt="LVTU" class="logo" />
+          <img src="/icons/logo.png" alt="LVTU" class="logo" />
           <h1>律途</h1>
           <p>您的法律智能助手</p>
         </div>
 
-        <!-- Login Form -->
         <el-form
           ref="loginFormRef"
           :model="loginForm"
           :rules="loginRules"
-          @submit.prevent="handleLogin"
           class="login-form"
+          @submit.prevent="handleLogin"
         >
-          <!-- Username/Email -->
           <el-form-item prop="username">
             <el-input
               v-model="loginForm.username"
-              placeholder="请输入用户名或邮箱"
-              prefix-icon="User"
+              placeholder="请输入用户名"
+              :prefix-icon="User"
               clearable
               @keyup.enter="handleLogin"
             />
           </el-form-item>
 
-          <!-- Password -->
           <el-form-item prop="password">
             <el-input
               v-model="loginForm.password"
               type="password"
               placeholder="请输入密码"
-              prefix-icon="Lock"
+              :prefix-icon="Lock"
               clearable
               show-password
               @keyup.enter="handleLogin"
             />
           </el-form-item>
 
-          <!-- Remember Me & Forgot Password -->
           <div class="login-options">
             <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-            <el-link type="primary" href="#" @click.prevent="handleForgotPassword">忘记密码？</el-link>
+            <el-link type="primary" @click.prevent="handleForgotPassword">忘记密码？</el-link>
           </div>
 
-          <!-- Login Button -->
           <el-form-item>
             <el-button
               type="primary"
@@ -59,26 +53,20 @@
             </el-button>
           </el-form-item>
 
-          <!-- Sign Up Link -->
           <div class="signup-link">
             没有账户？<el-link type="primary" @click="goToSignup">立即注册</el-link>
           </div>
         </el-form>
-
-        <!-- Demo Credentials
-        <div class="demo-info">
-          <p>演示账户：</p>
-          <p>用户名：demo | 密码：123456</p>
-        </div> -->
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Lock, User } from '@element-plus/icons-vue'
 import { useAuthStore } from '../../store/auth'
 import { login as loginAPI } from '../../api/auth'
 
@@ -89,13 +77,11 @@ const loginFormRef = ref(null)
 const isLoading = ref(false)
 const rememberMe = ref(true)
 
-// Login form data
 const loginForm = reactive({
-  username: 'demo',
-  password: '123456'
+  username: '',
+  password: ''
 })
 
-// Validation rules
 const loginRules = {
   username: [
     { required: true, message: '请输入用户名或邮箱', trigger: 'blur' },
@@ -107,7 +93,6 @@ const loginRules = {
   ]
 }
 
-// Handle login
 const handleLogin = async () => {
   if (!loginFormRef.value) return
 
@@ -115,47 +100,53 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     isLoading.value = true
 
-    // Call backend API to validate user credentials
-    try {
-      const response = await loginAPI(loginForm.username, loginForm.password)
-      
-      // Check if login was successful
-      if (response.data && response.data.data) {
-        const userData = response.data.data
-        authStore.login(userData)
-        ElMessage.success('登录成功！')
-        
-        // Redirect to previous page or home
-        const redirectPath = route.query.redirect || '/'
-        setTimeout(() => {
-          router.push(redirectPath)
-        }, 500)
-      } else {
-        ElMessage.error('登录失败，请检查用户名和密码')
+    const response = await loginAPI({
+      username: loginForm.username,
+      password: loginForm.password
+    })
+
+    if (response?.code === 200 && response.data?.token && response.data?.user) {
+      const { token, user } = response.data
+
+      if (user.userType === 3) {
+        ElMessage.warning('管理员请使用管理员专用入口')
+        return
       }
-    } catch (error) {
-      console.error('登录错误:', error)
-      if (error.response?.status === 401) {
-        ElMessage.error('用户名或密码错误')
-      } else if (error.response?.data?.message) {
-        ElMessage.error(error.response.data.message)
+
+      authStore.setAuth(token, user)
+      if (rememberMe.value) {
+        localStorage.setItem('rememberMe', 'true')
       } else {
-        ElMessage.error('登录失败，请检查网络连接')
+        localStorage.removeItem('rememberMe')
       }
+
+      ElMessage.success('登录成功！')
+      const redirectPath = route.query.redirect ? String(route.query.redirect) : '/'
+      setTimeout(() => {
+        router.push(redirectPath)
+      }, 300)
+    } else {
+      ElMessage.error(response?.message || '登录失败，请检查用户名和密码')
     }
   } catch (error) {
-    ElMessage.error('请检查输入')
+    if (error?.response?.status === 401) {
+      ElMessage.error('用户名或密码错误')
+    } else if (error?.response?.data?.message) {
+      ElMessage.error(error.response.data.message)
+    } else if (error?.fields) {
+      ElMessage.error('请检查输入')
+    } else {
+      ElMessage.error('登录失败，请检查网络连接')
+    }
   } finally {
     isLoading.value = false
   }
 }
 
-// Handle forgot password
 const handleForgotPassword = () => {
-  ElMessage.info('忘记密码功能开发中...')
+  router.push('/forgot-password')
 }
 
-// Navigate to signup
 const goToSignup = () => {
   router.push('/register')
 }
@@ -183,7 +174,6 @@ const goToSignup = () => {
   padding: 40px 30px;
 }
 
-/* Header */
 .login-header {
   text-align: center;
   margin-bottom: 30px;
@@ -194,6 +184,7 @@ const goToSignup = () => {
   height: 60px;
   border-radius: 50%;
   margin-bottom: 15px;
+  object-fit: cover;
 }
 
 .login-header h1 {
@@ -209,7 +200,6 @@ const goToSignup = () => {
   margin: 0;
 }
 
-/* Form */
 .login-form {
   margin-top: 30px;
 }
@@ -234,7 +224,6 @@ const goToSignup = () => {
   box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);
 }
 
-/* Login Options */
 .login-options {
   display: flex;
   justify-content: space-between;
@@ -247,7 +236,6 @@ const goToSignup = () => {
   margin: 0;
 }
 
-/* Login Button */
 .login-btn {
   width: 100%;
   height: 40px;
@@ -261,7 +249,6 @@ const goToSignup = () => {
   background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
 }
 
-/* Signup Link */
 .signup-link {
   text-align: center;
   font-size: 14px;
@@ -269,21 +256,10 @@ const goToSignup = () => {
   margin-top: 15px;
 }
 
-/* Demo Info */
-.demo-info {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #f0f0f0;
-  text-align: center;
-  font-size: 12px;
-  color: #999;
+.signup-link :deep(.el-link) {
+  vertical-align: baseline;
 }
 
-.demo-info p {
-  margin: 4px 0;
-}
-
-/* Responsive */
 @media (max-width: 480px) {
   .login-box {
     padding: 30px 20px;

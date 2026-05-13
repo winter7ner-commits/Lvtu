@@ -52,6 +52,16 @@ CREATE TABLE IF NOT EXISTS `evaluation` (
   KEY idx_eval_featured (is_featured)
 ) COMMENT '服务评价表';
 
+INSERT INTO `evaluation` (
+  `evaluation_id`, `order_id`, `user_id`, `lawyer_id`,
+  `professional_score`, `responsiveness_score`, `attitude_score`, `total_score`,
+  `content`, `is_anonymous`, `status`, `report_count`, `is_featured`,
+  `created_time`, `updated_time`
+) VALUES
+  (880001, 800006, 500002, 700002, 5, 5, 4, 4.7,
+   '律师对技术服务合同的风险点说明清楚，修改建议很实用。',
+   FALSE, 'normal', 0, TRUE, '2026-05-06 15:45:00', '2026-05-06 15:45:00');
+
 -- ------------------------------
 -- 2. 评价举报表
 -- ------------------------------

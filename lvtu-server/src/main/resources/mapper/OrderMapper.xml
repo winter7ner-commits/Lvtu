@@ -1,136 +1,136 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bitzh.lvtu.mapper.OrderMapper">
 
-    <!-- 基础 CRUD 操作 -->
-    <insert id="insert" parameterType="com.bitzh.lvtu.entity.Order" useGeneratedKeys="true" keyProperty="orderId">
+    <resultMap id="OrderResultMap" type="com.bitzh.lvtu.entity.Order">
+        <id property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="lawyerId" column="lawyer_id"/>
+        <result property="serviceTypeId" column="service_type_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="status" column="status"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="updatedTime" column="updated_time"/>
+        <result property="detailId" column="detail_id"/>
+        <result property="formData" column="form_data"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.bitzh.lvtu.entity.Order"
+            useGeneratedKeys="true" keyProperty="orderId" keyColumn="order_id">
         INSERT INTO `order` (
-            user_id, lawyer_id, service_type_id, total_amount, status, created_time, updated_time, form_data
+            user_id,
+            lawyer_id,
+            service_type_id,
+            total_amount,
+            status
         ) VALUES (
-            #{userId}, #{lawyerId}, #{serviceTypeId}, #{totalAmount}, #{status}, NOW(), NOW(), #{formData}
+            #{userId},
+            #{lawyerId},
+            #{serviceTypeId},
+            #{totalAmount},
+            #{status}
+        )
+    </insert>
+
+    <insert id="insertDetail" parameterType="com.bitzh.lvtu.entity.Order"
+            useGeneratedKeys="true" keyProperty="detailId" keyColumn="detail_id">
+        INSERT INTO order_service_detail (
+            order_id,
+            form_data
+        ) VALUES (
+            #{orderId},
+            #{formData}
         )
     </insert>
 
     <update id="update" parameterType="com.bitzh.lvtu.entity.Order">
         UPDATE `order`
         <set>
-            <if test="userId != null">user_id = #{userId},</if>
             <if test="lawyerId != null">lawyer_id = #{lawyerId},</if>
             <if test="serviceTypeId != null">service_type_id = #{serviceTypeId},</if>
             <if test="totalAmount != null">total_amount = #{totalAmount},</if>
-            <if test="status != null and status != ''">status = #{status},</if>
-            <if test="formData != null and formData != ''">form_data = #{formData},</if>
-            updated_time = NOW()
+            <if test="status != null">status = #{status},</if>
         </set>
         WHERE order_id = #{orderId}
     </update>
 
     <delete id="deleteById">
-        DELETE FROM `order` WHERE order_id = #{orderId}
+        DELETE FROM `order`
+        WHERE order_id = #{orderId}
     </delete>
 
-    <!-- 按用户id查询所有订单 -->
-    <select id="selectByUserId" resultType="com.bitzh.lvtu.entity.Order">
+    <select id="selectById" resultMap="OrderResultMap">
         SELECT
-            order_id AS orderId,
-            user_id AS userId,
-            lawyer_id AS lawyerId,
-            service_type_id AS serviceTypeId,
-            total_amount AS totalAmount,
+            order_id,
+            user_id,
+            lawyer_id,
+            service_type_id,
+            total_amount,
             status,
-            created_time AS createdTime,
-            updated_time AS updatedTime,
-            form_data AS formData
+            created_time,
+            updated_time
         FROM `order`
-        WHERE user_id = #{userId}
-        ORDER BY created_time DESC
+        WHERE order_id = #{orderId}
     </select>
 
-    <!-- 按订单状态筛选订单 -->
-    <select id="selectByStatus" resultType="com.bitzh.lvtu.entity.Order">
+    <select id="selectByUserId" resultMap="OrderResultMap">
         SELECT
-            order_id AS orderId,
-            user_id AS userId,
-            lawyer_id AS lawyerId,
-            service_type_id AS serviceTypeId,
-            total_amount AS totalAmount,
-            status,
-            created_time AS createdTime,
-            updated_time AS updatedTime,
-            form_data AS formData
-        FROM `order`
-        WHERE status = #{status}
-        ORDER BY created_time DESC
-    </select>
-
-    <!-- 按订单id查询订单详情 -->
-    <select id="selectDetailByOrderId" resultType="com.bitzh.lvtu.entity.Order">
-        SELECT
-            o.order_id AS orderId,
-            o.user_id AS userId,
-            o.lawyer_id AS lawyerId,
-            o.service_type_id AS serviceTypeId,
-            o.total_amount AS totalAmount,
+            o.order_id,
+            o.user_id,
+            o.lawyer_id,
+            o.service_type_id,
+            o.total_amount,
             o.status,
-            o.created_time AS createdTime,
-            o.updated_time AS updatedTime,
-            o.form_data AS formData,
-            v.real_name AS lawyerName
+            o.created_time,
+            o.updated_time,
+            d.detail_id,
+            CAST(d.form_data AS CHAR) AS form_data
         FROM `order` o
-        LEFT JOIN lawyer l ON o.lawyer_id = l.lawyer_id
-        LEFT JOIN users_verfications v ON l.user_id = v.user_id
+        LEFT JOIN order_service_detail d ON d.order_id = o.order_id
+        WHERE o.user_id = #{userId}
+        ORDER BY o.created_time DESC
+    </select>
+
+    <select id="selectByStatus" resultMap="OrderResultMap">
+        SELECT
+            o.order_id,
+            o.user_id,
+            o.lawyer_id,
+            o.service_type_id,
+            o.total_amount,
+            o.status,
+            o.created_time,
+            o.updated_time,
+            d.detail_id,
+            CAST(d.form_data AS CHAR) AS form_data
+        FROM `order` o
+        LEFT JOIN order_service_detail d ON d.order_id = o.order_id
+        WHERE o.status = #{status}
+        ORDER BY o.created_time DESC
+    </select>
+
+    <select id="selectDetailByOrderId" resultMap="OrderResultMap">
+        SELECT
+            o.order_id,
+            o.user_id,
+            o.lawyer_id,
+            o.service_type_id,
+            o.total_amount,
+            o.status,
+            o.created_time,
+            o.updated_time,
+            d.detail_id,
+            CAST(d.form_data AS CHAR) AS form_data
+        FROM `order` o
+        LEFT JOIN order_service_detail d ON d.order_id = o.order_id
         WHERE o.order_id = #{orderId}
     </select>
 
-    <!-- 按订单id搜索支付订单 并计算总金额 -->
     <select id="calculateTotalAmountByOrderId" resultType="java.math.BigDecimal">
         SELECT total_amount
         FROM `order`
         WHERE order_id = #{orderId}
     </select>
-
-    <select id="selectOrdersWithLawyer" resultType="com.bitzh.lvtu.entity.Order">
-        SELECT
-        o.order_id AS orderId,
-        o.user_id AS userId,
-        o.lawyer_id AS lawyerId,
-        o.service_type_id AS serviceTypeId,
-        o.total_amount AS totalAmount,
-        o.status AS status,
-        o.created_time AS createdTime,
-        o.updated_time AS updatedTime,
-        o.form_data AS formData,
-        v.real_name AS lawyerName
-        FROM `order` o
-        LEFT JOIN lawyer l ON o.lawyer_id = l.lawyer_id
-        LEFT JOIN users u ON l.user_id = u.user_id
-        LEFT JOIN users_verfications v ON l.user_id = v.user_id
-
-        <where>
-            <if test="status != null and status != ''">
-                AND o.status = #{status}
-            </if>
-
-            <if test="businessTypes != null and businessTypes.size() > 0">
-                AND o.service_type_id IN
-                <foreach collection="businessTypes" item="item" open="(" separator="," close=")">
-                    #{item}
-                </foreach>
-            </if>
-
-            <if test="keyword != null and keyword != ''">
-                AND (
-                o.order_id LIKE CONCAT('%', #{keyword}, '%')
-                OR v.real_name LIKE CONCAT('%', #{keyword}, '%')
-                )
-            </if>
-        </where>
-
-        ORDER BY o.created_time DESC
-        LIMIT #{pageSize} OFFSET #{offset}
-    </select>
-
 </mapper>

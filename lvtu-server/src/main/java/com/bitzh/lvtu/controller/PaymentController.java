@@ -3,7 +3,7 @@ package com.bitzh.lvtu.controller;
 import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.entity.Payment;
 import com.bitzh.lvtu.service.PaymentService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/payments")
 public class PaymentController {
 
-    @Autowired(required = false)
+    @Resource
     private PaymentService paymentService;
 
     /**

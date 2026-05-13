@@ -1,58 +1,83 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import Home from '../views/Home.vue'
 import LawyerList from '../views/lawyer/LawyerList.vue'
 import LawyerDetail from '../views/lawyer/LawyerDetail.vue'
-import OrderCreate from '../views/order/OrderCreate.vue'
-import ClientOrderList from '../views/order/ClientOrderList.vue'
-import UserProfile from '../views/user/UserProfile.vue'
+import LawArticleList from '../views/lawyer/LawArticleList.vue'
 import Login from '../views/auth/Login.vue'
 import Register from '../views/auth/Register.vue'
+import ForgotPassword from '../views/auth/ForgotPassword.vue'
 import Settings from '../views/Settings.vue'
-import About from '../views/About.vue'
-import Order from '../views/order/ClientOrderList.vue'
+import AuthCenter from '../views/user/AuthCenter.vue'
+import ApplicationForm from '../views/user/ApplicationForm.vue'
+import ApplicationStatus from '../views/user/ApplicationStatus.vue'
+import OrderCreate from '../views/order/OrderCreate.vue'
+import ClientOrderList from '../views/order/ClientOrderList.vue'
+import ClientOrderDetail from '../views/order/ClientOrderDetail.vue'
+import LawyerOrderHall from '../views/lawyerOrder/LawyerOrderHall.vue'
+import LawyerMyOrders from '../views/lawyerOrder/LawyerMyOrders.vue'
+import LawyerOrderDetail from '../views/lawyerOrder/LawyerOrderDetail.vue'
+import EvaluationDashboard from '../views/evaluation/EvaluationDashboard.vue'
+// import AdminLogin from '../views/auth/AdminLogin.vue'
+// import AdminRegister from '../views/auth/AdminRegister.vue'
 
-import TheHeader from '../components/layout/TheHeader.vue'
-import TheFooter from '../components/layout/TheFooter.vue'
-//import TheSidebar from '../components/layout/TheSidebar.vue'
+// import UserProfile from '../views/user/UserProfile.vue'
+// import Settings from '../views/Settings.vue'
 
+import { useAuthStore } from '../store/auth'
 
 const router = createRouter({
   history: createWebHistory(),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    }
+
+    return { left: 0, top: 0 }
+  },
   routes: [
     { path: '/', component: Home, name: 'Home' },
+    { path: '/law-article-list', component: LawArticleList, name: 'LawArticleList' },
     { path: '/lawyer-list', component: LawyerList, name: 'LawyerList' },
     { path: '/lawyer/:id', component: LawyerDetail, name: 'LawyerDetail' },
-    { path: '/order-create', component: OrderCreate, name: 'OrderCreate', meta: { requiresAuth: true } },
-    { path: '/order-list', component: ClientOrderList, name: 'ClientOrderList', meta: { requiresAuth: true } },
-    { path: '/user-profile', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
     { path: '/login', component: Login, name: 'Login' },
-    { path: '/signup', component: Register, name: 'Signup' },
     { path: '/register', component: Register, name: 'Register' },
+    { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },
     { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
-    { path: '/about', component: About, name: 'About' },
-    { path: '/orders', component: Order, name: 'Orders', meta: { requiresAuth: true } }
+    { path: '/auth-center', component: AuthCenter, name: 'AuthCenter', meta: { requiresAuth: true } },
+    { path: '/apply', component: ApplicationForm, name: 'ApplicationForm', meta: { requiresAuth: true } },
+    { path: '/application-status', component: ApplicationStatus, name: 'ApplicationStatus', meta: { requiresAuth: true } },
+    { path: '/order-create', component: OrderCreate, name: 'OrderCreate', meta: { requiresAuth: true } },
+    { path: '/orders', component: ClientOrderList, name: 'ClientOrderList', meta: { requiresAuth: true } },
+    { path: '/orders/:orderId', component: ClientOrderDetail, name: 'ClientOrderDetail', meta: { requiresAuth: true } },
+    { path: '/lawyer/orders/available', component: LawyerOrderHall, name: 'LawyerOrderHall', meta: { requiresAuth: true } },
+    { path: '/lawyer/orders/my', component: LawyerMyOrders, name: 'LawyerMyOrders', meta: { requiresAuth: true } },
+    { path: '/lawyer/orders/:orderId', component: LawyerOrderDetail, name: 'LawyerOrderDetail', meta: { requiresAuth: true } },
+    { path: '/evaluations', component: EvaluationDashboard, name: 'EvaluationDashboard' },
+    // { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
+    // { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
+
+    // { path: '/user-profile', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
+    // { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
   ]
 })
 
-// 全局导航守卫 - 检查登录状态
-router.beforeEach((to, from, next) => {
-  // 检查路由是否需要登录
-  if (to.meta.requiresAuth) {
-    // 从本地存储检查登录状态
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-    
+// 路由守卫
+router.beforeEach((to) => {
+  const authStore = useAuthStore()
+  const isLoggedIn = authStore.isAuthenticated
+  const user = authStore.user
+
+  if (to.meta.requiresAdmin) {
     if (!isLoggedIn) {
-      // 未登录，显示提示并跳转到登录页
-      ElMessage.warning('请先登录')
-      next('/login')
-    } else {
-      // 已登录，正常导航
-      next()
+      return '/admin/login' // 直接返回字符串
+    } 
+    if (user?.userType !== 3) {
+      return '/' // 非管理员重定向到首页
     }
-  } else {
-    // 不需要登录的页面，正常导航
-    next()
+  }
+
+  if (to.meta.requiresAuth && !isLoggedIn) {
+    return '/login' // 未登录重定向到登录页
   }
 })
 
