@@ -10,12 +10,13 @@ public class Order {
     private Long orderId;
     private Long userId;
     private Long lawyerId;
-    private Integer serviceTypeId;
+    private Long serviceTypeId;
     private BigDecimal totalAmount;
     private String status;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
-
-    private Long detailId;
     private String formData;
+
+    // 关联的律师名称（用于 JOIN 查询，不映射到数据库）
+    private String lawyerName;
 }

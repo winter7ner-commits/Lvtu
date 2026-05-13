@@ -33,4 +33,12 @@ public interface OrderMapper {
     
     // 按订单id搜索支付订单 并计算总金额
     BigDecimal calculateTotalAmountByOrderId(@Param("orderId") Long orderId);
+
+    List<Order> selectOrdersWithLawyer(
+            @Param("status") String status,
+            @Param("businessTypes") List<Long> businessTypes,
+            @Param("keyword") String keyword,
+            @Param("pageSize") Integer pageSize,
+            @Param("offset") Integer offset
+    );
 }

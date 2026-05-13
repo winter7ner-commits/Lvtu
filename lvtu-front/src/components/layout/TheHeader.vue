@@ -49,12 +49,12 @@
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <router-link :to="{ name: 'OrderCreate', query: { type: 'ONLINE_CONSULT' } }" class="dropdown-item" @click="closeDropdowns">在线法律咨询</router-link>
-            <router-link :to="{ name: 'OrderCreate', query: { type: 'PHONE_CONSULT' } }" class="dropdown-item" @click="closeDropdowns">电话法律咨询</router-link>
-            <router-link :to="{ name: 'OrderCreate', query: { type: 'DOCUMENT_WRITING' } }" class="dropdown-item" @click="closeDropdowns">文书代写</router-link>
-            <router-link :to="{ name: 'OrderCreate', query: { type: 'CONTRACT_REVIEW' } }" class="dropdown-item" @click="closeDropdowns">合同审核</router-link>
-            <router-link :to="{ name: 'OrderCreate', query: { type: 'MARRIAGE_FAMILY' } }" class="dropdown-item" @click="closeDropdowns">婚姻家事</router-link>
-            <router-link :to="{ name: 'OrderCreate', query: { type: 'LITIGATION_AGENT' } }" class="dropdown-item" @click="closeDropdowns">诉讼代理</router-link>
+            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('ONLINE_CONSULT')">在线法律咨询</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('PHONE_CONSULT')">电话法律咨询</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('DOCUMENT_WRITING')">文书代写</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('CONTRACT_REVIEW')">合同审核</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('MARRIAGE_FAMILY')">婚姻家事</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleServiceClick('LITIGATION_AGENT')">诉讼代理</a>
           </div>
         </div>
         <router-link to="/lawyer-list" class="nav-item" @click="closeDropdowns">律师</router-link>
@@ -73,11 +73,11 @@
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">全部</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">待支付</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">待回复</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">待评价</a>
-            <a href="#" class="dropdown-item" @click.prevent="closeDropdowns">已完成</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('all')">全部</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('pending_payment')">待支付</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('processing')">待回复</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('pending_review')">待评价</a>
+            <a href="#" class="dropdown-item" @click.prevent="handleOrderClick('completed')">已完成</a>
           </div>
         </div>
 
@@ -136,15 +136,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { useAuthStore } from '../../store/auth'
+import { storeToRefs } from 'pinia'
 
 const router = useRouter()
+const authStore = useAuthStore()
+const { isLoggedIn, userName, userAvatar } = storeToRefs(authStore)
 const showSearch = ref(false)
 const searchQuery = ref('')
-const isLoggedIn = ref(false)
-const userName = ref('我的')
-const userAvatar = ref('https://via.placeholder.com/32')
 const activeDropdown = ref(null)
 let closeDropdownTimer = null
 
@@ -173,19 +175,6 @@ const closeDropdowns = () => {
   }
   activeDropdown.value = null
 }
-
-onMounted(() => {
-  // 从本地存储检查登录状态
-  const loginStatus = localStorage.getItem('isLoggedIn')
-  const userInfo = localStorage.getItem('userInfo')
-  
-  if (loginStatus === 'true' && userInfo) {
-    isLoggedIn.value = true
-    const user = JSON.parse(userInfo)
-    userName.value = user.name || '我的'
-    userAvatar.value = user.avatar || 'https://via.placeholder.com/32'
-  }
-})
 
 const toggleSearch = () => {
   closeDropdowns()
@@ -221,10 +210,55 @@ const handleSignup = () => {
 const handleLogout = (e) => {
   e.preventDefault()
   closeDropdowns()
-  localStorage.removeItem('isLoggedIn')
-  localStorage.removeItem('userInfo')
-  isLoggedIn.value = false
+  authStore.logout()
+  ElMessage.success('已退出登录')
   router.push('/')
+}
+
+const handleServiceClick = (serviceType) => {
+  closeDropdowns()
+  
+  // 检查是否已登录（从localStorage和store双重检查）
+  const isLoggedInLocalStorage = localStorage.getItem('isLoggedIn') === 'true'
+  
+  if (!isLoggedInLocalStorage && !authStore.isLoggedIn) {
+    // 显示需要登录的提示
+    ElMessage.warning('请先登录')
+    // 自动跳转到登录界面
+    setTimeout(() => {
+      router.push('/login')
+    }, 500)
+    return
+  }
+  
+  // 已登录，跳转到订单创建页面
+  router.push({
+    name: 'OrderCreate',
+    query: { type: serviceType }
+  })
+}
+
+const handleOrderClick = (status) => {
+  closeDropdowns()
+  
+  // 检查是否已登录（从localStorage和store双重检查）
+  const isLoggedInLocalStorage = localStorage.getItem('isLoggedIn') === 'true'
+  
+  if (!isLoggedInLocalStorage && !authStore.isLoggedIn) {
+    // 显示需要登录的提示
+    ElMessage.warning('请先登录')
+    // 自动跳转到登录界面
+    setTimeout(() => {
+      router.push('/login')
+    }, 500)
+    return
+  }
+  
+  // 已登录，跳转到订单列表页面
+  router.push({
+    name: 'ClientOrderList',
+    query: status !== 'all' ? { status } : {}
+  })
 }
 </script>
 

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/lawyer")
+@RequestMapping("/api/lawyer")
 public class LawyerController {
 
     @Resource
