@@ -8,9 +8,13 @@ export const getOrderById = (id) => {
   return request.get(`/api/orders/${id}`).then((res) => res.data)
 }
 
+export const getOrderDetail = getOrderById
+
 export const getOrdersByUserId = (userId) => {
   return request.get(`/api/orders/user/${userId}`).then((res) => res.data)
 }
+
+export const getUserOrders = getOrdersByUserId
 
 export const updateOrderStatus = (id, status) => {
   return request.put(`/api/orders/${id}/status`, null, {
