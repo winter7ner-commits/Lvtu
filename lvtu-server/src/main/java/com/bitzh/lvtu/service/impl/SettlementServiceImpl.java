@@ -42,7 +42,7 @@ public class SettlementServiceImpl implements SettlementService {
         if (!userId.equals(order.getUserId())) {
             throw new BusinessException("只有下单用户可以确认订单完成");
         }
-        if (!"待评价".equals(order.getStatus())) {
+        if (!"待客户确认".equals(order.getStatus())) {
             throw new BusinessException("当前订单状态不允许确认完成");
         }
         if (order.getLawyerId() == null) {
@@ -62,7 +62,7 @@ public class SettlementServiceImpl implements SettlementService {
             throw new BusinessException("该订单的结算记录已存在");
         }
 
-        int updated = serviceOrderMapper.updateStatusWithCurrent(orderId, "待评价", "已完成");
+        int updated = serviceOrderMapper.updateStatusWithCurrent(orderId, "待客户确认", "待评价");
         if (updated == 0) {
             throw new BusinessException("订单确认失败");
         }

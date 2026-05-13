@@ -13,6 +13,7 @@ const currentLawyerId = ref(null)
 const statusOptions = [
   { label: '全部', value: '' },
   { label: '处理中', value: '处理中' },
+  { label: '待客户确认', value: '待客户确认' },
   { label: '待评价', value: '待评价' },
   { label: '已完成', value: '已完成' }
 ]
@@ -40,6 +41,7 @@ const formatTime = (value) => (value ? String(value).replace('T', ' ').slice(0, 
 
 const getStatusType = (status) => {
   if (status === '处理中') return 'primary'
+  if (status === '待客户确认') return 'warning'
   if (status === '待评价') return 'warning'
   if (status === '已完成') return 'success'
   return 'info'
@@ -110,6 +112,10 @@ onMounted(loadOrders)
       <div class="status-item">
         <span>处理中</span>
         <strong>{{ statusCount['处理中'] || 0 }}</strong>
+      </div>
+      <div class="status-item">
+        <span>待客户确认</span>
+        <strong>{{ statusCount['待客户确认'] || 0 }}</strong>
       </div>
       <div class="status-item">
         <span>待评价</span>
@@ -206,7 +212,7 @@ h1 {
 
 .status-strip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 14px;
   margin-bottom: 18px;
 }

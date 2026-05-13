@@ -63,10 +63,11 @@
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <router-link to="/orders" class="dropdown-item">全部订单</router-link>
-            <router-link to="/orders" class="dropdown-item">处理进度</router-link>
-            <router-link to="/orders" class="dropdown-item">待评价</router-link>
-            <router-link to="/orders" class="dropdown-item">已完成</router-link>
+            <router-link :to="{ name: 'ClientOrderList' }" class="dropdown-item">全部订单</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'pending_payment' } }" class="dropdown-item">待支付</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'processing' } }" class="dropdown-item">处理中</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'pending_customer_confirmation' } }" class="dropdown-item">待确认</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'pending_review' } }" class="dropdown-item">待评价</router-link>
           </div>
         </div>
 

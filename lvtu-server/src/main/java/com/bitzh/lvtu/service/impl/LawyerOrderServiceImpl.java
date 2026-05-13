@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 public class LawyerOrderServiceImpl implements LawyerOrderService {
 
-    private static final List<String> MY_ORDER_STATUSES = Arrays.asList("处理中", "待评价", "已完成");
+    private static final List<String> MY_ORDER_STATUSES = Arrays.asList("处理中", "待客户确认", "待评价", "已完成");
 
     @Resource
     private ServiceOrderMapper serviceOrderMapper;

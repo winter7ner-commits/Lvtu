@@ -46,7 +46,7 @@
         SELECT order_id, user_id, lawyer_id, service_type_id, total_amount, status, created_time, updated_time
         FROM `order`
         WHERE lawyer_id = #{lawyerId}
-          AND status IN ('处理中', '待评价', '已完成')
+          AND status IN ('处理中', '待客户确认', '待评价', '已完成')
         <if test="status != null and status != ''">
             AND status = #{status}
         </if>

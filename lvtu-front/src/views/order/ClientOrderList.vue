@@ -7,8 +7,8 @@
         <button
           v-for="status in statusOptions"
           :key="status.value"
-          :class="['status-btn', { active: selectedStatus === status.value }]"
-          @click="selectedStatus = status.value"
+          :class="['status-btn', `status-btn-${status.value || 'all'}`, { active: selectedStatus === status.value }]"
+          @click="selectStatus(status.value)"
         >
           {{ status.label }}
         </button>
@@ -79,6 +79,8 @@ export default {
         { label: '待支付', value: 'pending_payment' },
         { label: '已支付', value: 'paid' },
         { label: '处理中', value: 'processing' },
+        { label: '待客户确认', value: 'pending_customer_confirmation' },
+        { label: '待评价', value: 'pending_review' },
         { label: '已完成', value: 'completed' },
         { label: '已取消', value: 'cancelled' }
       ],
@@ -92,7 +94,31 @@ export default {
       ]
     }
   },
+  watch: {
+    '$route.query.status': {
+      immediate: true,
+      handler(status) {
+        const normalizedStatus = Array.isArray(status) ? status[0] : status
+        const validStatuses = this.statusOptions.map((item) => item.value)
+        this.selectedStatus = validStatuses.includes(normalizedStatus) ? normalizedStatus : ''
+      }
+    }
+  },
   methods: {
+    selectStatus(status) {
+      const query = { ...this.$route.query }
+
+      if (status) {
+        query.status = status
+      } else {
+        delete query.status
+      }
+
+      this.$router.replace({
+        name: 'ClientOrderList',
+        query
+      })
+    },
     toggleBusiness(businessValue) {
       const index = this.selectedBusinesses.indexOf(businessValue)
       if (index > -1) {
@@ -155,17 +181,75 @@ export default {
   color: #666;
 }
 
-.status-btn:hover,
+.status-btn {
+  border-color: var(--status-border);
+  color: var(--status-color);
+}
+
 .business-btn:hover {
   border-color: #1890ff;
   color: #1890ff;
 }
 
-.status-btn.active,
 .business-btn.active {
   background-color: #1890ff;
   border-color: #1890ff;
   color: white;
+}
+
+.status-btn.active,
+.status-btn:hover {
+  background-color: var(--status-bg);
+  border-color: var(--status-border);
+  color: var(--status-color);
+}
+
+.status-btn-all {
+  --status-bg: #f6f8fb;
+  --status-border: #cfd8e3;
+  --status-color: #344054;
+}
+
+.status-btn-pending_payment {
+  --status-bg: #fff7e6;
+  --status-border: #ffd591;
+  --status-color: #ad6800;
+}
+
+.status-btn-paid {
+  --status-bg: #e6f4ff;
+  --status-border: #91caff;
+  --status-color: #0958d9;
+}
+
+.status-btn-processing {
+  --status-bg: #eef4ff;
+  --status-border: #a4bcfd;
+  --status-color: #1d4ed8;
+}
+
+.status-btn-pending_customer_confirmation {
+  --status-bg: #f3e8ff;
+  --status-border: #d8b4fe;
+  --status-color: #7e22ce;
+}
+
+.status-btn-pending_review {
+  --status-bg: #fff1f3;
+  --status-border: #fecdd6;
+  --status-color: #c01048;
+}
+
+.status-btn-completed {
+  --status-bg: #f0fdf4;
+  --status-border: #bbf7d0;
+  --status-color: #15803d;
+}
+
+.status-btn-cancelled {
+  --status-bg: #fff1f0;
+  --status-border: #ffa39e;
+  --status-color: #b42318;
 }
 
 /* 第二行：业务筛选和搜索 */

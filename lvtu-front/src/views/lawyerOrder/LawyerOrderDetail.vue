@@ -46,7 +46,7 @@ const canSubmitResult = computed(() => {
   return order.value?.status === '处理中' && Number(order.value?.lawyerId) === Number(currentLawyerId.value)
 })
 const canViewResult = computed(() => {
-  return ['待评价', '已完成'].includes(order.value?.status) && Number(order.value?.lawyerId) === Number(currentLawyerId.value)
+  return ['待客户确认', '待评价', '已完成'].includes(order.value?.status) && Number(order.value?.lawyerId) === Number(currentLawyerId.value)
 })
 
 const unwrap = (res) => res?.data?.data ?? res?.data ?? null
@@ -79,6 +79,7 @@ const labelize = (key) => {
 
 const getStatusType = (status) => {
   if (status === '处理中') return 'primary'
+  if (status === '待客户确认') return 'warning'
   if (status === '待评价') return 'warning'
   if (status === '已完成') return 'success'
   if (status === '待接单') return 'info'

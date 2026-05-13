@@ -41,6 +41,13 @@
           >
             支付
           </button>
+          <button
+            v-if="order.status === 'pending_review'"
+            class="action-btn review-btn"
+            @click="handleReview(order)"
+          >
+            评价
+          </button>
         </div>
       </div>
     </div>
@@ -80,7 +87,8 @@
 
 <script>
 import { getUserOrders } from '@/api/order'
-import { ElMessage } from 'element-plus'
+import { getPaymentByOrderId, updatePaymentStatus } from '@/api/payment'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 export default {
   name: 'ClientOrderListComponent',
@@ -116,6 +124,8 @@ export default {
         pending_payment: '待支付',
         paid: '已支付',
         processing: '处理中',
+        pending_customer_confirmation: '待客户确认',
+        pending_review: '待评价',
         completed: '已完成',
         cancelled: '已取消'
       }
@@ -210,9 +220,13 @@ export default {
         106: 'litigation'
       }
       const statusMap = {
+        待支付: 'pending_payment',
+        已支付: 'paid',
         待接单: 'paid',
         处理中: 'processing',
-        待评价: 'completed',
+        待顾客确认: 'pending_customer_confirmation',
+        待客户确认: 'pending_customer_confirmation',
+        待评价: 'pending_review',
         已完成: 'completed',
         已取消: 'cancelled'
       }
@@ -243,9 +257,42 @@ export default {
         params: { orderId }
       })
     },
-    handlePay(orderId) {
-      console.log('支付订单:', orderId)
-      // 支付逻辑
+    handleReview(order) {
+      this.$router.push({
+        name: 'EvaluationDashboard',
+        query: {
+          orderId: order.id,
+          lawyerId: order.lawyerId || ''
+        }
+      })
+    },
+    async handlePay(orderId) {
+      try {
+        await ElMessageBox.confirm('确认支付该订单吗？支付后订单将进入待接单状态。', '确认支付', {
+          confirmButtonText: '确认支付',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+
+        const paymentResponse = await getPaymentByOrderId(orderId)
+        const payment = paymentResponse?.code === 200 ? paymentResponse.data : paymentResponse?.data
+        if (!payment?.paymentId) {
+          ElMessage.error('未找到该订单的支付记录')
+          return
+        }
+
+        const response = await updatePaymentStatus(payment.paymentId, '已支付')
+        if (response?.code === 200) {
+          ElMessage.success('支付成功，订单已进入待接单')
+          await this.fetchOrders()
+        } else {
+          ElMessage.error(response?.message || '支付失败')
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error(error?.response?.data?.message || '支付失败')
+        }
+      }
     }
   }
 }
@@ -345,6 +392,7 @@ export default {
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .status-pending_payment {
@@ -353,23 +401,33 @@ export default {
 }
 
 .status-paid {
-  background-color: #f0f5ff;
-  color: #003eb3;
+  background-color: #e6f4ff;
+  color: #0958d9;
 }
 
 .status-processing {
-  background-color: #f6f8fb;
-  color: #0050b3;
+  background-color: #eef4ff;
+  color: #1d4ed8;
+}
+
+.status-pending_customer_confirmation {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+}
+
+.status-pending_review {
+  background-color: #fff1f3;
+  color: #c01048;
 }
 
 .status-completed {
-  background-color: #f6ffed;
-  color: #274916;
+  background-color: #f0fdf4;
+  color: #15803d;
 }
 
 .status-cancelled {
   background-color: #fff1f0;
-  color: #820014;
+  color: #b42318;
 }
 
 /* 操作按钮 */
@@ -407,6 +465,18 @@ export default {
 .pay-btn:hover {
   background-color: #0050b3;
   border-color: #0050b3;
+}
+
+.review-btn {
+  background-color: #c01048;
+  border-color: #c01048;
+  color: white;
+}
+
+.review-btn:hover {
+  background-color: #a11043;
+  border-color: #a11043;
+  color: white;
 }
 
 /* 空状态 */

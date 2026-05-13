@@ -16,6 +16,7 @@ import ClientOrderDetail from '../views/order/ClientOrderDetail.vue'
 import LawyerOrderHall from '../views/lawyerOrder/LawyerOrderHall.vue'
 import LawyerMyOrders from '../views/lawyerOrder/LawyerMyOrders.vue'
 import LawyerOrderDetail from '../views/lawyerOrder/LawyerOrderDetail.vue'
+import EvaluationDashboard from '../views/evaluation/EvaluationDashboard.vue'
 // import AdminLogin from '../views/auth/AdminLogin.vue'
 // import AdminRegister from '../views/auth/AdminRegister.vue'
 
@@ -26,11 +27,18 @@ import { useAuthStore } from '../store/auth'
 
 const router = createRouter({
   history: createWebHistory(),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    }
+
+    return { left: 0, top: 0 }
+  },
   routes: [
     { path: '/', component: Home, name: 'Home' },
     { path: '/law-article-list', component: LawArticleList, name: 'LawArticleList' },
     { path: '/lawyer-list', component: LawyerList, name: 'LawyerList' },
-    { path: '/lawyer', component: LawyerDetail, name: 'LawyerDetail' },
+    { path: '/lawyer/:id', component: LawyerDetail, name: 'LawyerDetail' },
     { path: '/login', component: Login, name: 'Login' },
     { path: '/register', component: Register, name: 'Register' },
     { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },
@@ -44,6 +52,7 @@ const router = createRouter({
     { path: '/lawyer/orders/available', component: LawyerOrderHall, name: 'LawyerOrderHall', meta: { requiresAuth: true } },
     { path: '/lawyer/orders/my', component: LawyerMyOrders, name: 'LawyerMyOrders', meta: { requiresAuth: true } },
     { path: '/lawyer/orders/:orderId', component: LawyerOrderDetail, name: 'LawyerOrderDetail', meta: { requiresAuth: true } },
+    { path: '/evaluations', component: EvaluationDashboard, name: 'EvaluationDashboard' },
     // { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
     // { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
 

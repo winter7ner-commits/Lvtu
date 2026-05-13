@@ -10,6 +10,7 @@ import UserManagement from '../views/admin/UserManagement.vue'
 import AuthAudit from '../views/admin/AuthAudit.vue'
 import OrderQuery from '../views/admin/OrderQuery.vue'
 import SettlementManage from '../views/admin/SettlementManage.vue'
+import EvaluationManage from '../views/admin/EvaluationManage.vue'
 
 import { useAuthStore } from '../store/auth'
 
@@ -26,6 +27,7 @@ const router = createRouter({
     { path: '/auth-audit', component: AuthAudit, name: 'AuthAudit', meta: { requiresAdmin: true } },
     { path: '/orders', component: OrderQuery, name: 'OrderQuery', meta: { requiresAdmin: true } },
     { path: '/settlements', component: SettlementManage, name: 'SettlementManage', meta: { requiresAdmin: true } },
+    { path: '/evaluations', component: EvaluationManage, name: 'EvaluationManage', meta: { requiresAdmin: true } },
     { path: '/categories', component: LawCategory, name: 'LawCategory', meta: { requiresAdmin: true } },
     { path: '/documents', component: LawDocument, name: 'LawDocument', meta: { requiresAdmin: true } },
     { path: '/articles', component: LawArticle, name: 'LawArticle', meta: { requiresAdmin: true } },

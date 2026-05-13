@@ -183,6 +183,7 @@
       <el-card class="form-section" shadow="never">
         <template #header>5. 证据材料上传 (Word/PDF及其他文件)</template>
         <el-upload
+          v-model:file-list="formData.evidenceFiles"
           action="#"
           list-type="text"
           :auto-upload="false"
@@ -268,6 +269,7 @@ const formData = reactive({
   hasLawyer: false,
   existingMaterials: [],
   expectedService: [],
+  evidenceFiles: [],
   
   agreeTerms: []
 })
