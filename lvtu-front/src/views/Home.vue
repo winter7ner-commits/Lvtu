@@ -44,22 +44,17 @@ const searchKeyword = ref('')
 const hotLawyers = ref([])
 const loading = ref(false)
 
-
-
 const loadHotLawyers = async () => {
   loading.value = true
   try {
     const res = await getTopRatedLawyers()
-    if (res?.code === 200) {
-      hotLawyers.value = res.data || []
-    }
+    hotLawyers.value = res?.data?.data ?? res?.data ?? []
   } catch (error) {
-    console.error('加载热门律师失败:', error)
+    hotLawyers.value = []
   } finally {
     loading.value = false
   }
 }
-
 
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {

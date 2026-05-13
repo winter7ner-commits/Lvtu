@@ -34,7 +34,19 @@
             服务
           </button>
         </div>
-        <router-link to="/lawyer-list" class="nav-item">律师</router-link>
+
+        <!-- Lawyer Dropdown -->
+        <div class="nav-item-dropdown">
+          <button class="nav-item dropdown-toggle">
+            律师
+            <i class="dropdown-icon">▼</i>
+          </button>
+          <div class="dropdown-menu">
+            <router-link to="/lawyer-list" class="dropdown-item">律师查询</router-link>
+            <router-link to="/lawyer/orders/available" class="dropdown-item">接单大厅</router-link>
+            <router-link to="/lawyer/orders/my" class="dropdown-item">我的接单</router-link>
+          </div>
+        </div>
         
         <!-- Orders Dropdown -->
         <div class="nav-item-dropdown">
@@ -253,7 +265,8 @@ const handleLogout = (e) => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 180px;
   padding: 8px 0;
-  margin-top: 8px;
+  border-top: 8px solid transparent;
+  background-clip: padding-box;
   z-index: 200;
 }
 

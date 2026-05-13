@@ -8,6 +8,9 @@ import ForgotPassword from '../views/auth/ForgotPassword.vue'
 import AdminLogin from '../views/auth/AdminLogin.vue'
 import AdminRegister from '../views/auth/AdminRegister.vue'
 import { useAuthStore } from '../store/auth'
+import LawyerOrderHall from '../views/lawyerOrder/LawyerOrderHall.vue'
+import LawyerMyOrders from '../views/lawyerOrder/LawyerMyOrders.vue'
+import LawyerOrderDetail from '../views/lawyerOrder/LawyerOrderDetail.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -20,10 +23,12 @@ const router = createRouter({
     { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },
     { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
     { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
+    { path: '/lawyer/orders/available', component: LawyerOrderHall, name: 'LawyerOrderHall' },
+    { path: '/lawyer/orders/my', component: LawyerMyOrders, name: 'LawyerMyOrders' },
+    { path: '/lawyer/orders/:orderId', component: LawyerOrderDetail, name: 'LawyerOrderDetail' },
   ]
 })
 
-// 路由守卫
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const isLoggedIn = authStore.isAuthenticated
