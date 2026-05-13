@@ -4,7 +4,7 @@
 
     <resultMap id="BaseResultMap" type="com.bitzh.lvtu.entity.LegalDocument">
         <id column="id" property="id"/>
-        <result column="title" property="name"/>
+        <result column="name" property="name"/>
         <result column="category_id" property="categoryId"/>
         <result column="publish_date" property="publishDate"/>
         <result column="sort_order" property="sortOrder"/>
@@ -14,7 +14,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, title, category_id, publish_date, sort_order, status, created_at, updated_at
+        id, name, category_id, publish_date, sort_order, status, created_at, updated_at
     </sql>
 
     <select id="findAll" resultMap="BaseResultMap">
@@ -30,14 +30,14 @@
     </select>
 
     <insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalDocument" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO legal_document (title, category_id, publish_date, sort_order, status, created_at, updated_at)
+        INSERT INTO legal_document (name, category_id, publish_date, sort_order, status, created_at, updated_at)
         VALUES (#{name}, #{categoryId}, #{publishDate}, #{sortOrder}, #{status}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     </insert>
 
     <update id="update" parameterType="com.bitzh.lvtu.entity.LegalDocument">
         UPDATE legal_document
         <set>
-            <if test="name != null">title = #{name},</if>
+            <if test="name != null">name = #{name},</if>
             <if test="categoryId != null">category_id = #{categoryId},</if>
             <if test="publishDate != null">publish_date = #{publishDate},</if>
             <if test="sortOrder != null">sort_order = #{sortOrder},</if>
