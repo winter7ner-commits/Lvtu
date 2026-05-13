@@ -1,100 +1,272 @@
-﻿<template>
-  <div class="auth-page">
-    <div class="auth-card">
-      <h2>登录</h2>
-      <el-form :model="form" label-position="top">
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input type="password" v-model="form.password" placeholder="请输入密码" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSubmit" :loading="loading">登录</el-button>
-          <router-link to="/forgot-password" class="auth-link">忘记密码？</router-link>
-        </el-form-item>
-        <el-form-item class="auth-footer">
-          <span>还没有账号？</span>
-          <router-link to="/register" class="auth-link">立即注册</router-link>
-        </el-form-item>
-      </el-form>
+<template>
+  <div class="login-page">
+    <div class="login-container">
+      <div class="login-box">
+        <div class="login-header">
+          <img src="/icons/logo.png" alt="LVTU" class="logo" />
+          <h1>律途</h1>
+          <p>您的法律智能助手</p>
+        </div>
+
+        <el-form
+          ref="loginFormRef"
+          :model="loginForm"
+          :rules="loginRules"
+          class="login-form"
+          @submit.prevent="handleLogin"
+        >
+          <el-form-item prop="username">
+            <el-input
+              v-model="loginForm.username"
+              placeholder="请输入用户名"
+              :prefix-icon="User"
+              clearable
+              @keyup.enter="handleLogin"
+            />
+          </el-form-item>
+
+          <el-form-item prop="password">
+            <el-input
+              v-model="loginForm.password"
+              type="password"
+              placeholder="请输入密码"
+              :prefix-icon="Lock"
+              clearable
+              show-password
+              @keyup.enter="handleLogin"
+            />
+          </el-form-item>
+
+          <div class="login-options">
+            <el-checkbox v-model="rememberMe">记住我</el-checkbox>
+            <el-link type="primary" @click.prevent="handleForgotPassword">忘记密码？</el-link>
+          </div>
+
+          <el-form-item>
+            <el-button
+              type="primary"
+              class="login-btn"
+              :loading="isLoading"
+              @click="handleLogin"
+            >
+              登录
+            </el-button>
+          </el-form-item>
+
+          <div class="signup-link">
+            没有账户？<el-link type="primary" @click="goToSignup">立即注册</el-link>
+          </div>
+        </el-form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Lock, User } from '@element-plus/icons-vue'
 import { useAuthStore } from '../../store/auth'
-import { login } from '../../api/auth'
+import { login as loginAPI } from '../../api/auth'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
-const loading = ref(false)
-const form = ref({ username: '', password: '' })
+const loginFormRef = ref(null)
+const isLoading = ref(false)
+const rememberMe = ref(true)
 
-const redirectPath = route.query.redirect ? String(route.query.redirect) : '/'
+const loginForm = reactive({
+  username: '',
+  password: ''
+})
 
-const handleSubmit = async () => {
-  if (!form.value.username || !form.value.password) {
-    window.alert('请输入用户名和密码')
-    return
-  }
-  loading.value = true
+const loginRules = {
+  username: [
+    { required: true, message: '请输入用户名或邮箱', trigger: 'blur' },
+    { min: 3, message: '用户名至少3个字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码至少6个字符', trigger: 'blur' }
+  ]
+}
+
+const handleLogin = async () => {
+  if (!loginFormRef.value) return
+
   try {
-    const response = await login(form.value)
-    if (response?.code === 200) {
-      const data = response.data
-      const user = data.user
+    await loginFormRef.value.validate()
+    isLoading.value = true
 
-      if(user.userType === 3) {
-        window.alert('管理员请使用管理员专用入口')
+    const response = await loginAPI({
+      username: loginForm.username,
+      password: loginForm.password
+    })
+
+    if (response?.code === 200 && response.data?.token && response.data?.user) {
+      const { token, user } = response.data
+
+      if (user.userType === 3) {
+        ElMessage.warning('管理员请使用管理员专用入口')
         return
       }
 
-      authStore.setAuth(data.token, data.user)
-      router.push(redirectPath)
+      authStore.setAuth(token, user)
+      if (rememberMe.value) {
+        localStorage.setItem('rememberMe', 'true')
+      } else {
+        localStorage.removeItem('rememberMe')
+      }
+
+      ElMessage.success('登录成功！')
+      const redirectPath = route.query.redirect ? String(route.query.redirect) : '/'
+      setTimeout(() => {
+        router.push(redirectPath)
+      }, 300)
     } else {
-      window.alert(response?.message || '登录失败')
+      ElMessage.error(response?.message || '登录失败，请检查用户名和密码')
     }
   } catch (error) {
-    window.alert('登录失败，请稍后重试')
+    if (error?.response?.status === 401) {
+      ElMessage.error('用户名或密码错误')
+    } else if (error?.response?.data?.message) {
+      ElMessage.error(error.response.data.message)
+    } else if (error?.fields) {
+      ElMessage.error('请检查输入')
+    } else {
+      ElMessage.error('登录失败，请检查网络连接')
+    }
   } finally {
-    loading.value = false
+    isLoading.value = false
   }
+}
+
+const handleForgotPassword = () => {
+  router.push('/forgot-password')
+}
+
+const goToSignup = () => {
+  router.push('/register')
 }
 </script>
 
 <style scoped>
-.auth-page {
-  min-height: calc(100vh - 70px);
+.login-page {
+  min-height: 100vh;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
-  padding: 40px 16px;
-  background: #f5f7fb;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  padding: 20px;
 }
-.auth-card {
-  width: 420px;
-  padding: 32px;
-  border-radius: 20px;
-  background-color: #ffffff;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+
+.login-container {
+  width: 100%;
+  max-width: 400px;
 }
-.auth-card h2 {
-  margin-bottom: 24px;
+
+.login-box {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  padding: 40px 30px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-bottom: 15px;
+  object-fit: cover;
+}
+
+.login-header h1 {
   font-size: 28px;
-  color: #1f2a56;
+  color: #1e40af;
+  margin: 0 0 8px 0;
+  font-weight: 700;
 }
-.auth-link {
-  margin-left: 16px;
-  color: #409eff;
+
+.login-header p {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
 }
-.auth-footer {
+
+.login-form {
+  margin-top: 30px;
+}
+
+.login-form :deep(.el-input) {
+  height: 40px;
+}
+
+.login-form :deep(.el-input__wrapper) {
+  border-color: #d9d9d9;
+  background-color: #fafafa;
+}
+
+.login-form :deep(.el-input__wrapper:hover) {
+  border-color: #40a9ff;
+  background-color: white;
+}
+
+.login-form :deep(.el-input__wrapper.is-focus) {
+  border-color: #1e40af;
+  background-color: white;
+  box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);
+}
+
+.login-options {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.login-options :deep(.el-checkbox) {
+  margin: 0;
+}
+
+.login-btn {
+  width: 100%;
+  height: 40px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  border: none;
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+}
+
+.signup-link {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin-top: 15px;
+}
+
+.signup-link :deep(.el-link) {
+  vertical-align: baseline;
+}
+
+@media (max-width: 480px) {
+  .login-box {
+    padding: 30px 20px;
+  }
+
+  .login-header h1 {
+    font-size: 24px;
+  }
 }
 </style>

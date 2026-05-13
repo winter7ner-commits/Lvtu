@@ -50,12 +50,17 @@ const displayValue = (value) => {
   return value || '-'
 }
 
-const getStatusType = (status) => {
-  if (status === '待接单') return 'info'
-  if (status === '处理中') return 'primary'
-  if (status === '待评价') return 'warning'
-  if (status === '已完成') return 'success'
-  return 'info'
+const getOrderStatusClass = (status) => {
+  const statusMap = {
+    待支付: 'pending_payment',
+    已支付: 'paid',
+    待接单: 'paid',
+    处理中: 'processing',
+    待评价: 'completed',
+    已完成: 'completed',
+    已取消: 'cancelled'
+  }
+  return statusMap[status] || 'paid'
 }
 
 const getResultStatusText = (status) => {
@@ -137,7 +142,10 @@ onMounted(loadOrder)
         <p class="subtext">查看订单需求、律师处理结果，并确认服务完成。</p>
       </div>
       <div class="head-actions">
-        <el-button @click="router.push('/orders')">返回订单</el-button>
+        <el-button class="back-order-btn" @click="router.push('/orders')">
+          <span class="back-icon">‹</span>
+          返回订单
+        </el-button>
         <el-button v-if="canConfirm" type="primary" :loading="confirming" @click="handleConfirm">确认完成</el-button>
       </div>
     </section>
@@ -147,7 +155,7 @@ onMounted(loadOrder)
         <article class="info-panel">
           <div class="panel-title">
             <h2>订单信息</h2>
-            <el-tag :type="getStatusType(order.status)" effect="plain">{{ order.status }}</el-tag>
+            <span :class="['status-badge', `status-${getOrderStatusClass(order.status)}`]">{{ order.status }}</span>
           </div>
           <div class="info-list">
             <div>
@@ -207,10 +215,9 @@ onMounted(loadOrder)
 
 <style scoped>
 .detail-page {
-  max-width: 1180px;
-  min-height: 520px;
-  margin: 0 auto;
+  min-height: 100vh;
   padding: 32px 20px 56px;
+  background-color: #f5f5f5;
   color: #172033;
 }
 
@@ -221,6 +228,15 @@ onMounted(loadOrder)
   gap: 16px;
   align-items: flex-end;
   margin-bottom: 24px;
+}
+
+.page-head,
+.detail-grid,
+.result-panel {
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .panel-title {
@@ -259,6 +275,65 @@ h3 {
   gap: 10px;
 }
 
+.back-order-btn {
+  border-color: #d6e4ff;
+  color: #1d4ed8;
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-weight: 600;
+}
+
+.back-order-btn:hover {
+  color: #ffffff;
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.back-icon {
+  font-size: 20px;
+  line-height: 1;
+  margin-right: 2px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.status-pending_payment {
+  background-color: #fff7e6;
+  color: #ad6800;
+}
+
+.status-paid {
+  background-color: #f0f5ff;
+  color: #003eb3;
+}
+
+.status-processing {
+  background-color: #f6f8fb;
+  color: #0050b3;
+}
+
+.status-completed {
+  background-color: #f6ffed;
+  color: #274916;
+}
+
+.status-cancelled {
+  background-color: #fff1f0;
+  color: #820014;
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -271,8 +346,8 @@ h3 {
   padding: 20px;
   background: #fff;
   border: 1px solid #e5eaf3;
-  border-radius: 8px;
-  box-shadow: 0 8px 22px rgba(30, 64, 175, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .info-list {
@@ -285,7 +360,7 @@ h3 {
 .form-row {
   padding: 14px;
   background: #f6f8fc;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .info-list span,

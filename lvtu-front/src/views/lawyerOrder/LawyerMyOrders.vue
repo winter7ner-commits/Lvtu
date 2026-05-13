@@ -160,10 +160,19 @@ onMounted(loadOrders)
 
 <style scoped>
 .my-orders-page {
-  max-width: 1180px;
-  margin: 0 auto;
+  min-height: 100vh;
   padding: 32px 20px 56px;
+  background-color: #f5f5f5;
   color: #172033;
+}
+
+.page-head,
+.status-strip,
+.orders-shell {
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .page-head {
@@ -206,7 +215,7 @@ h1 {
   padding: 18px;
   background: #f6f8fc;
   border: 1px solid #e5eaf3;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .status-item span {
@@ -225,8 +234,8 @@ h1 {
   padding: 18px;
   background: #ffffff;
   border: 1px solid #e5eaf3;
-  border-radius: 8px;
-  box-shadow: 0 8px 22px rgba(30, 64, 175, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .order-table {

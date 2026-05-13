@@ -21,6 +21,18 @@
         <result property="region" column="region"/>
     </resultMap>
 
+    <resultMap id="userVerificationMap" type="com.bitzh.lvtu.dto.UserVerificationDTO">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="phone" column="phone"/>
+        <result property="userType" column="user_type"/>
+        <result property="authStatus" column="auth_status"/>
+        <result property="isVerified" column="is_verified"/>
+        <result property="realName" column="real_name"/>
+        <result property="idCardNumber" column="id_card_number"/>
+        <result property="verificationStatus" column="verification_status"/>
+    </resultMap>
+
     <select id="selectByUsername" resultMap="userMap">
         SELECT * FROM users WHERE username = #{username} LIMIT 1
     </select>
@@ -35,6 +47,23 @@
 
     <select id="selectById" resultMap="userMap">
         SELECT * FROM users WHERE user_id = #{userId} LIMIT 1
+    </select>
+
+    <select id="selectVerificationByUserId" resultMap="userVerificationMap">
+        SELECT
+            u.user_id,
+            u.username,
+            u.phone,
+            u.user_type,
+            u.auth_status,
+            u.is_verified,
+            uv.real_name,
+            uv.id_card_number,
+            uv.verification_status
+        FROM users u
+                 LEFT JOIN users_verfications uv ON u.user_id = uv.user_id
+        WHERE u.user_id = #{userId}
+        LIMIT 1
     </select>
 
     <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId">

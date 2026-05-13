@@ -29,6 +29,13 @@
             {{ business.label }}
           </button>
         </div>
+        <button
+          class="clear-business-btn"
+          :disabled="selectedBusinesses.length === 0"
+          @click="clearBusinesses"
+        >
+          清空
+        </button>
       </div>
 
       <div class="search-box">
@@ -94,6 +101,9 @@ export default {
         this.selectedBusinesses.push(businessValue)
       }
     },
+    clearBusinesses() {
+      this.selectedBusinesses = []
+    },
     handleSearch() {
       // 搜索逻辑由子组件处理
       console.log('搜索关键词:', this.searchKeyword)
@@ -117,8 +127,8 @@ export default {
   margin-bottom: 20px;
   background-color: white;
   padding: 15px 20px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .filter-label {
@@ -138,7 +148,7 @@ export default {
   padding: 6px 16px;
   border: 1px solid #d9d9d9;
   background-color: white;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 14px;
@@ -167,8 +177,8 @@ export default {
   margin-bottom: 20px;
   background-color: white;
   padding: 15px 20px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
   flex-wrap: wrap;
 }
 
@@ -180,6 +190,30 @@ export default {
   min-width: 300px;
 }
 
+.clear-business-btn {
+  padding: 6px 14px;
+  border: 1px solid #d9d9d9;
+  background-color: #fff;
+  border-radius: 8px;
+  color: #595959;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.clear-business-btn:hover:not(:disabled) {
+  border-color: #1890ff;
+  color: #1890ff;
+  background-color: #e6f7ff;
+}
+
+.clear-business-btn:disabled {
+  color: #bfbfbf;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+}
+
 .search-box {
   display: flex;
   gap: 10px;
@@ -189,7 +223,7 @@ export default {
 .search-input {
   padding: 8px 12px;
   border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  border-radius: 8px;
   width: 200px;
   font-size: 14px;
   transition: border-color 0.3s ease;
@@ -206,7 +240,7 @@ export default {
   background-color: #1890ff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.3s ease;
@@ -219,9 +253,10 @@ export default {
 /* 第三行：订单列表 */
 .order-list-container {
   background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
   padding: 20px;
+  overflow: hidden;
 }
 
 /* 响应式设计 */

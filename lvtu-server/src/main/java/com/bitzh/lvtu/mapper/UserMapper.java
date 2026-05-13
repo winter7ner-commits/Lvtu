@@ -1,6 +1,7 @@
 package com.bitzh.lvtu.mapper;
 
 import com.bitzh.lvtu.entity.User;
+import com.bitzh.lvtu.dto.UserVerificationDTO;
 import org.apache.ibatis.annotations.Param;
 
 public interface UserMapper {
@@ -12,6 +13,8 @@ public interface UserMapper {
     User selectByPhone(@Param("phone") String phone);
 
     User selectById(@Param("userId") Long userId);
+
+    UserVerificationDTO selectVerificationByUserId(@Param("userId") Long userId);
 
     int insertUser(User user);
 

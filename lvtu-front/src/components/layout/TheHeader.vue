@@ -51,8 +51,8 @@
           </button>
           <div class="dropdown-menu">
             <router-link to="/lawyer-list" class="dropdown-item">律师查询</router-link>
-            <router-link to="/lawyer/orders/available" class="dropdown-item">接单大厅</router-link>
-            <router-link to="/lawyer/orders/my" class="dropdown-item">我的接单</router-link>
+            <router-link v-if="canAccessLawyerOrders" to="/lawyer/orders/available" class="dropdown-item">接单大厅</router-link>
+            <router-link v-if="canAccessLawyerOrders" to="/lawyer/orders/my" class="dropdown-item">我的接单</router-link>
           </div>
         </div>
         
@@ -118,18 +118,38 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
+import { getLawyerProfileByUserId } from '@/api/lawyerOrder'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const showSearch = ref(false)
 const searchQuery = ref('')
+const lawyerProfileStatus = ref(null)
 
 const isLoggedIn = computed(() => authStore.isAuthenticated)
 const userName = computed(() => authStore.user?.username || '我的')
 const userAvatar = computed(() => authStore.user?.avatarUrl || 'https://via.placeholder.com/32')
+const currentUserId = computed(() => authStore.user?.userId || Number(localStorage.getItem('userId')) || null)
+const isLawyerApproved = computed(() => Number(authStore.user?.authStatus) === 2)
+const canAccessLawyerOrders = computed(() => isLawyerApproved.value && Number(lawyerProfileStatus.value) === 1)
+
+const loadLawyerProfileStatus = async () => {
+  lawyerProfileStatus.value = null
+  if (!currentUserId.value || !isLawyerApproved.value) return
+
+  try {
+    const response = await getLawyerProfileByUserId(currentUserId.value)
+    const profile = response?.data?.data ?? response?.data ?? null
+    lawyerProfileStatus.value = profile?.status ?? null
+  } catch {
+    lawyerProfileStatus.value = null
+  }
+}
+
+watch([currentUserId, isLawyerApproved], loadLawyerProfileStatus, { immediate: true })
 
 const toggleSearch = () => {
   showSearch.value = !showSearch.value
@@ -248,6 +268,16 @@ const goToLawArticle = (categoryId) => {
   position: relative;
 }
 
+.nav-item-dropdown::after,
+.user-menu-dropdown::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 12px;
+}
+
 .dropdown-toggle {
   display: flex;
   align-items: center;
@@ -260,9 +290,14 @@ const goToLawArticle = (categoryId) => {
   transition: transform 0.3s ease;
 }
 
-.nav-item-dropdown:hover .dropdown-menu {
-  display: block;
-  animation: slideDown 0.3s ease-out;
+.nav-item-dropdown:hover .dropdown-menu,
+.user-menu-dropdown:hover .dropdown-menu,
+.dropdown-menu:hover {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
 }
 
 .nav-item-dropdown:hover .dropdown-toggle .dropdown-icon {
@@ -270,19 +305,26 @@ const goToLawArticle = (categoryId) => {
 }
 
 .dropdown-menu {
-  display: none;
+  display: block;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
   background: #ffffff;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 180px;
   padding: 8px 0;
-  margin-top: 8px;
+  margin-top: 0;
   z-index: 200;
-  border-top: 8px solid transparent;
   background-clip: padding-box;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0s linear 0.28s;
 }
 
 .dropdown-item {
@@ -425,11 +467,7 @@ const goToLawArticle = (categoryId) => {
   object-fit: cover;
 }
 
-.user-menu-dropdown:hover .dropdown-menu {
-  display: block;
-}
-
-.user-menu-dropdown:hover .dropdown-toggle .dropdown-icon {
+.user-menu-dropdown:hover .dropdown-icon {
   transform: rotate(180deg);
 }
 

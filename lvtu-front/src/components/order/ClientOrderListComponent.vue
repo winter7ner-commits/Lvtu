@@ -262,11 +262,13 @@ export default {
   grid-template-columns: 1fr 1.2fr 1fr 1fr 0.8fr 1.2fr 1fr;
   gap: 15px;
   padding: 15px 20px;
-  background-color: #f5f5f5;
-  border-bottom: 2px solid #d9d9d9;
+  background-color: #f6f8fb;
+  border: 1px solid #e8edf5;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
   color: #333;
+  margin-bottom: 10px;
 }
 
 /* 列宽定义 */
@@ -312,13 +314,17 @@ export default {
   grid-template-columns: 1fr 1.2fr 1fr 1fr 0.8fr 1.2fr 1fr;
   gap: 15px;
   padding: 15px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border: 1px solid #edf1f7;
+  border-radius: 10px;
   align-items: center;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
 }
 
 .order-item:hover {
-  background-color: #fafafa;
+  background-color: #fafcff;
+  border-color: #d6e4ff;
+  box-shadow: 0 6px 18px rgba(24, 144, 255, 0.08);
 }
 
 /* 业务类型标签 */
@@ -327,7 +333,7 @@ export default {
   padding: 4px 8px;
   background-color: #e6f7ff;
   color: #0050b3;
-  border-radius: 3px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
 }
@@ -336,7 +342,7 @@ export default {
 .status-badge {
   display: inline-block;
   padding: 4px 8px;
-  border-radius: 3px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
 }
@@ -372,7 +378,7 @@ export default {
   margin-right: 8px;
   border: 1px solid #d9d9d9;
   background-color: white;
-  border-radius: 3px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
   transition: all 0.3s ease;
@@ -410,6 +416,9 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
+  background-color: #fafcff;
+  border: 1px dashed #dbe4f0;
+  border-radius: 10px;
 }
 
 .empty-icon {
@@ -430,6 +439,9 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
+  background-color: #fafcff;
+  border: 1px dashed #dbe4f0;
+  border-radius: 10px;
 }
 
 .loading-spinner {
@@ -472,7 +484,7 @@ export default {
   padding: 6px 16px;
   border: 1px solid #d9d9d9;
   background-color: white;
-  border-radius: 3px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.3s ease;

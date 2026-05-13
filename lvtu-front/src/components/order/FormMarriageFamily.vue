@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="form-container">
     <el-form :model="formData" :rules="rules" ref="formRef" label-width="120px">
       
@@ -23,7 +23,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="认证状态">
-              <el-tag type="success">已认证</el-tag>
+              <el-tag :type="formData.verified ? 'success' : 'info'">{{ formData.verifiedText }}</el-tag>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -224,7 +224,7 @@
 
       <div class="form-actions">
         <el-button class="custom-action-btn" size="large" @click="submitForm">提交申请</el-button>
-        <el-button size="large">重置</el-button>
+        <el-button size="large" @click="resetForm">重置</el-button>
       </div>
 
     </el-form>
@@ -232,20 +232,23 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 
 import { useRegionOptions } from './useRegionOptions'
 import { submitOrderForm } from './submitOrder'
+import { applyCurrentUserInfo } from './useCurrentUserInfo'
 
 const formRef = ref(null)
 const { regionOptions } = useRegionOptions()
 
 // 自动带出的信息及表单数据
 const formData = reactive({
-  realName: '张三',
-  phone: '138****0000',
-  idCard: '370************1234',
+  realName: '',
+  phone: '',
+  idCard: '',
   accountType: '个人用户',
+  verified: false,
+  verifiedText: '未认证',
   businessType: '婚姻家事',
   
   wechat: '',
@@ -297,6 +300,13 @@ const rules = {
     },
     trigger: 'change' 
   }]
+}
+
+onMounted(() => applyCurrentUserInfo(formData))
+
+const resetForm = () => {
+  formRef.value?.resetFields()
+  applyCurrentUserInfo(formData)
 }
 
 const submitForm = () => submitOrderForm({ formRef, formData, serviceTypeId: 105 })
