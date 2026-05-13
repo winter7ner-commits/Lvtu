@@ -10,6 +10,12 @@ import Settings from '../views/Settings.vue'
 import AuthCenter from '../views/user/AuthCenter.vue'
 import ApplicationForm from '../views/user/ApplicationForm.vue'
 import ApplicationStatus from '../views/user/ApplicationStatus.vue'
+import OrderCreate from '../views/order/OrderCreate.vue'
+import ClientOrderList from '../views/order/ClientOrderList.vue'
+import ClientOrderDetail from '../views/order/ClientOrderDetail.vue'
+import LawyerOrderHall from '../views/lawyerOrder/LawyerOrderHall.vue'
+import LawyerMyOrders from '../views/lawyerOrder/LawyerMyOrders.vue'
+import LawyerOrderDetail from '../views/lawyerOrder/LawyerOrderDetail.vue'
 // import AdminLogin from '../views/auth/AdminLogin.vue'
 // import AdminRegister from '../views/auth/AdminRegister.vue'
 
@@ -32,6 +38,12 @@ const router = createRouter({
     { path: '/auth-center', component: AuthCenter, name: 'AuthCenter', meta: { requiresAuth: true } },
     { path: '/apply', component: ApplicationForm, name: 'ApplicationForm', meta: { requiresAuth: true } },
     { path: '/application-status', component: ApplicationStatus, name: 'ApplicationStatus', meta: { requiresAuth: true } },
+    { path: '/order-create', component: OrderCreate, name: 'OrderCreate', meta: { requiresAuth: true } },
+    { path: '/orders', component: ClientOrderList, name: 'ClientOrderList', meta: { requiresAuth: true } },
+    { path: '/orders/:orderId', component: ClientOrderDetail, name: 'ClientOrderDetail', meta: { requiresAuth: true } },
+    { path: '/lawyer/orders/available', component: LawyerOrderHall, name: 'LawyerOrderHall', meta: { requiresAuth: true } },
+    { path: '/lawyer/orders/my', component: LawyerMyOrders, name: 'LawyerMyOrders', meta: { requiresAuth: true } },
+    { path: '/lawyer/orders/:orderId', component: LawyerOrderDetail, name: 'LawyerOrderDetail', meta: { requiresAuth: true } },
     // { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
     // { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
 

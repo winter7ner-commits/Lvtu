@@ -11,6 +11,7 @@
         <router-link to="/users" class="nav-item">用户管理</router-link>
         <router-link to="/auth-audit" class="nav-item">认证审核</router-link>
         <router-link to="/orders" class="nav-item">订单查询</router-link>
+        <router-link to="/settlements" class="nav-item">结算管理</router-link>
       </nav>
 
       <div class="header-right">

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitzh.lvtu.mapper.OrderServiceDetailMapper">
+
+    <resultMap id="orderServiceDetailMap" type="com.bitzh.lvtu.entity.OrderServiceDetail">
+        <id property="detailId" column="detail_id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="formData" column="form_data"/>
+    </resultMap>
+
+    <select id="selectByOrderId" resultMap="orderServiceDetailMap">
+        SELECT detail_id, order_id, CAST(form_data AS CHAR) AS form_data
+        FROM order_service_detail
+        WHERE order_id = #{orderId}
+    </select>
+
+</mapper>

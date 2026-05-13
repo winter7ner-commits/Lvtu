@@ -33,9 +33,28 @@
         <div class="nav-item-dropdown">
           <button class="nav-item dropdown-toggle">
             服务
+            <i class="dropdown-icon">▼</i>
           </button>
+          <div class="dropdown-menu">
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'ONLINE_CONSULT' } }" class="dropdown-item">在线法律咨询</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'PHONE_CONSULT' } }" class="dropdown-item">电话法律咨询</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'DOCUMENT_WRITING' } }" class="dropdown-item">文书代写</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'CONTRACT_REVIEW' } }" class="dropdown-item">合同审核</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'MARRIAGE_FAMILY' } }" class="dropdown-item">婚姻家事</router-link>
+            <router-link :to="{ name: 'OrderCreate', query: { type: 'LITIGATION_AGENT' } }" class="dropdown-item">诉讼代理</router-link>
+          </div>
         </div>
-        <router-link to="/lawyer-list" class="nav-item">律师</router-link>
+        <div class="nav-item-dropdown">
+          <button class="nav-item dropdown-toggle">
+            律师
+            <i class="dropdown-icon">▼</i>
+          </button>
+          <div class="dropdown-menu">
+            <router-link to="/lawyer-list" class="dropdown-item">律师查询</router-link>
+            <router-link to="/lawyer/orders/available" class="dropdown-item">接单大厅</router-link>
+            <router-link to="/lawyer/orders/my" class="dropdown-item">我的接单</router-link>
+          </div>
+        </div>
         
         <!-- Orders Dropdown -->
         <div class="nav-item-dropdown">
@@ -44,11 +63,10 @@
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <a href="#" class="dropdown-item">全部</a>
-            <a href="#" class="dropdown-item">待支付</a>
-            <a href="#" class="dropdown-item">待回复</a>
-            <a href="#" class="dropdown-item">待评价</a>
-            <a href="#" class="dropdown-item">已完成</a>
+            <router-link to="/orders" class="dropdown-item">全部订单</router-link>
+            <router-link to="/orders" class="dropdown-item">处理进度</router-link>
+            <router-link to="/orders" class="dropdown-item">待评价</router-link>
+            <router-link to="/orders" class="dropdown-item">已完成</router-link>
           </div>
         </div>
 

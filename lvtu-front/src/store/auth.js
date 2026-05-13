@@ -13,6 +13,9 @@ export const useAuthStore = defineStore('auth', {
     setUser(user) {
       this.user = user
       localStorage.setItem('currentUser', JSON.stringify(user))
+      if (user?.userId) {
+        localStorage.setItem('userId', String(user.userId))
+      }
       localStorage.setItem('userInfo', JSON.stringify({
         name: user?.username || '',
         avatar: user?.avatarUrl || ''
@@ -23,6 +26,9 @@ export const useAuthStore = defineStore('auth', {
       this.user = user
       localStorage.setItem('authToken', token)
       localStorage.setItem('currentUser', JSON.stringify(user))
+      if (user?.userId) {
+        localStorage.setItem('userId', String(user.userId))
+      }
       localStorage.setItem('isLoggedIn', 'true')
       localStorage.setItem('userInfo', JSON.stringify({
         name: user.username || '',
@@ -34,6 +40,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       localStorage.removeItem('authToken')
       localStorage.removeItem('currentUser')
+      localStorage.removeItem('userId')
       localStorage.removeItem('isLoggedIn')
       localStorage.removeItem('userInfo')
     },
