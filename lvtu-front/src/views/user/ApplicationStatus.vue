@@ -173,7 +173,7 @@ const statusClass = computed(() => {
 const formatTime = (t) => t ? new Date(t).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—'
 
 const goBack = () => {
-  router.push('/auth-center')
+  router.push('/settings')
 }
 const reApply = () => router.push({ path: '/apply', query: { apply_type: 0 } })
 const goToModify = () => router.push({ path: '/apply', query: { apply_type: 1 } })

@@ -17,7 +17,8 @@ INSERT INTO service_result (
     id, order_id, lawyer_id, title, content, status, created_at, updated_at
 ) VALUES
     (900001, 800004, 700001, '劳动争议仲裁代理方案', '已完成仲裁申请书、证据目录和风险提示说明，建议用户按约定时间提交仲裁材料。', 0, '2026-05-05 17:30:00', '2026-05-05 17:30:00'),
-    (900002, 800005, 700001, '合同解除法律意见', '已向用户说明解除通知送达、生效时间以及证据保全要点，用户已确认服务完成。', 1, '2026-04-29 15:30:00', '2026-04-29 16:10:00');
+    (900002, 800005, 700001, '合同解除法律意见', '已向用户说明解除通知送达、生效时间以及证据保全要点，用户已确认服务完成，等待评价。', 1, '2026-04-29 15:30:00', '2026-04-29 16:10:00'),
+    (900003, 800006, 700002, '技术服务合同审核意见', '已完成技术服务合同和保密条款审核，用户已确认并完成评价。', 1, '2026-05-06 14:50:00', '2026-05-06 15:30:00');
 
 CREATE TABLE IF NOT EXISTS service_result_attachment (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '附件ID',
@@ -34,7 +35,8 @@ INSERT INTO service_result_attachment (
 ) VALUES
     (910001, 900001, '仲裁申请书.docx', '/mock/files/arbitration-application.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '2026-05-05 17:31:00'),
     (910002, 900001, '证据目录.pdf', '/mock/files/evidence-list.pdf', 'application/pdf', '2026-05-05 17:32:00'),
-    (910003, 900002, '法律意见书.pdf', '/mock/files/legal-opinion.pdf', 'application/pdf', '2026-04-29 15:40:00');
+    (910003, 900002, '法律意见书.pdf', '/mock/files/legal-opinion.pdf', 'application/pdf', '2026-04-29 15:40:00'),
+    (910004, 900003, '合同审核意见.pdf', '/mock/files/contract-review-opinion.pdf', 'application/pdf', '2026-05-06 14:55:00');
 
 CREATE TABLE IF NOT EXISTS lawyer_settlement (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '结算ID',
@@ -52,4 +54,5 @@ CREATE TABLE IF NOT EXISTS lawyer_settlement (
 INSERT INTO lawyer_settlement (
     id, order_id, lawyer_id, amount, status, settled_at, created_at
 ) VALUES
-    (920001, 800005, 700001, 129.00, 0, NULL, '2026-04-29 16:15:00');
+    (920001, 800005, 700001, 129.00, 0, NULL, '2026-04-29 16:15:00'),
+    (920002, 800006, 700002, 599.00, 1, '2026-05-06 16:00:00', '2026-05-06 15:35:00');

@@ -61,7 +61,7 @@ public class ServiceResultServiceImpl implements ServiceResultService {
 
         insertAttachments(serviceResult.getId(), request.getAttachments());
 
-        int updated = serviceOrderMapper.updateStatusWithCurrent(orderId, "处理中", "待评价");
+        int updated = serviceOrderMapper.updateStatusWithCurrent(orderId, "处理中", "待客户确认");
         if (updated == 0) {
             throw new BusinessException("订单状态更新失败");
         }

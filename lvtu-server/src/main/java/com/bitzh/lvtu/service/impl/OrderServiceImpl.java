@@ -30,9 +30,7 @@ public class OrderServiceImpl implements OrderService {
         if (order.getServiceTypeId() == null) {
             throw new IllegalArgumentException("服务类型不能为空");
         }
-        if (order.getStatus() == null || order.getStatus().isBlank()) {
-            order.setStatus("待接单");
-        }
+        order.setStatus("待支付");
         if (order.getTotalAmount() == null) {
             order.setTotalAmount(BigDecimal.ZERO);
         }

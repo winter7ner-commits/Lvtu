@@ -51,8 +51,8 @@
           </button>
           <div class="dropdown-menu">
             <router-link to="/lawyer-list" class="dropdown-item">律师查询</router-link>
-            <router-link to="/lawyer/orders/available" class="dropdown-item">接单大厅</router-link>
-            <router-link to="/lawyer/orders/my" class="dropdown-item">我的接单</router-link>
+            <router-link v-if="canAccessLawyerOrders" to="/lawyer/orders/available" class="dropdown-item">接单大厅</router-link>
+            <router-link v-if="canAccessLawyerOrders" to="/lawyer/orders/my" class="dropdown-item">我的接单</router-link>
           </div>
         </div>
         
@@ -65,10 +65,11 @@
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu">
-            <router-link to="/orders" class="dropdown-item">全部订单</router-link>
-            <router-link to="/orders" class="dropdown-item">处理进度</router-link>
-            <router-link to="/orders" class="dropdown-item">待评价</router-link>
-            <router-link to="/orders" class="dropdown-item">已完成</router-link>
+            <router-link :to="{ name: 'ClientOrderList' }" class="dropdown-item">全部订单</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'pending_payment' } }" class="dropdown-item">待支付</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'processing' } }" class="dropdown-item">处理中</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'pending_customer_confirmation' } }" class="dropdown-item">待确认</router-link>
+            <router-link :to="{ name: 'ClientOrderList', query: { status: 'pending_review' } }" class="dropdown-item">待评价</router-link>
           </div>
         </div>
 
@@ -87,7 +88,7 @@
           <router-link to="/register" class="signup-btn auth-action">注册</router-link>
         </template>
 
-        <!-- Logged In - User Menu (Modified for Click Trigger) -->
+        <!-- Logged In - User Menu (Click Trigger) -->
         <div v-else class="user-menu-dropdown" :class="{ 'is-active': showUserMenu }">
           <button class="user-menu-btn" @click="toggleUserMenu">
             <img :src="userAvatar" :alt="userName" class="user-avatar" />
@@ -96,7 +97,6 @@
           </button>
           <div class="dropdown-menu user-dropdown">
             <router-link to="/user-profile" class="dropdown-item" @click="showUserMenu = false">个人资料</router-link>
-            <!-- <router-link to="/settings" class="dropdown-item" @click="showUserMenu = false">设置</router-link> -->
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item logout" @click.prevent="handleLogout">退出登录</a>
           </div>
@@ -119,29 +119,47 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
+import { getLawyerProfileByUserId } from '@/api/lawyerOrder'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const showSearch = ref(false)
 const searchQuery = ref('')
-// [新增] 控制用户菜单显示的状态
 const showUserMenu = ref(false)
+const lawyerProfileStatus = ref(null)
 
 const isLoggedIn = computed(() => authStore.isAuthenticated)
 const userName = computed(() => authStore.user?.username || '我的')
+const currentUserId = computed(() => authStore.user?.userId || Number(localStorage.getItem('userId')) || null)
+const isLawyerApproved = computed(() => Number(authStore.user?.authStatus) === 2)
+const canAccessLawyerOrders = computed(() => isLawyerApproved.value && Number(lawyerProfileStatus.value) === 1)
 
-// 关键修复：将外链占位图替换为本地默认头像，与 UserProfile.vue 保持一致
+// 使用本地默认头像，与 UserProfile.vue 保持一致
 const defaultAvatar = '/icons/default-avatar.png'
 const userAvatar = computed(() => authStore.user?.avatarUrl || defaultAvatar)
+
+const loadLawyerProfileStatus = async () => {
+  lawyerProfileStatus.value = null
+  if (!currentUserId.value || !isLawyerApproved.value) return
+
+  try {
+    const response = await getLawyerProfileByUserId(currentUserId.value)
+    const profile = response?.data?.data ?? response?.data ?? null
+    lawyerProfileStatus.value = profile?.status ?? null
+  } catch {
+    lawyerProfileStatus.value = null
+  }
+}
+
+watch([currentUserId, isLawyerApproved], loadLawyerProfileStatus, { immediate: true })
 
 const toggleSearch = () => {
   showSearch.value = !showSearch.value
 }
 
-// [新增] 切换用户菜单显示/隐藏
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
 }
@@ -157,9 +175,8 @@ const handleSearch = () => {
 }
 
 const handleLogout = () => {
-  // [修改] 移除事件对象 e，直接执行逻辑
   authStore.logout()
-  showUserMenu.value = false // 退出后关闭菜单
+  showUserMenu.value = false
   router.push('/')
 }
 
@@ -252,6 +269,16 @@ const goToLawArticle = (categoryId) => {
   position: relative;
 }
 
+.nav-item-dropdown::after,
+.user-menu-dropdown::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 12px;
+}
+
 .dropdown-toggle {
   display: flex;
   align-items: center;
@@ -264,30 +291,40 @@ const goToLawArticle = (categoryId) => {
   transition: transform 0.3s ease;
 }
 
-/* [修改] 导航栏其他下拉菜单保持悬停效果 */
+/* 导航栏下拉菜单 - 悬停显示 */
 .nav-item-dropdown:hover .dropdown-menu {
-  display: block;
-  animation: slideDown 0.3s ease-out;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
 }
 
 .nav-item-dropdown:hover .dropdown-toggle .dropdown-icon {
   transform: rotate(180deg);
 }
 
+/* 下拉菜单基础样式 */
 .dropdown-menu {
-  display: none;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
   background: #ffffff;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 180px;
   padding: 8px 0;
-  margin-top: 8px;
+  margin-top: 0;
   z-index: 200;
-  border-top: 8px solid transparent;
   background-clip: padding-box;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0s linear 0.18s;
 }
 
 .dropdown-item {
@@ -382,7 +419,7 @@ const goToLawArticle = (categoryId) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* User Menu - Modified for Click Interaction */
+/* User Menu - Click Interaction */
 .user-menu-dropdown {
   position: relative;
 }
@@ -413,10 +450,13 @@ const goToLawArticle = (categoryId) => {
   object-fit: cover;
 }
 
-/* [修改] 使用 is-active 类来控制显示，替代 hover */
+/* 用户菜单下拉 - 点击显示 */
 .user-menu-dropdown.is-active .dropdown-menu {
-  display: block;
-  animation: slideDown 0.3s ease-out;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
 }
 
 .user-menu-dropdown.is-active .dropdown-icon {

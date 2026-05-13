@@ -2,7 +2,9 @@ package com.bitzh.lvtu.controller;
 
 import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.dto.UserDTO;
+import com.bitzh.lvtu.dto.UserVerificationDTO;
 import com.bitzh.lvtu.entity.User;
+import com.bitzh.lvtu.mapper.UserMapper;
 import com.bitzh.lvtu.service.UserService;
 import com.bitzh.lvtu.util.JwtUtil;
 import jakarta.annotation.Resource;
@@ -12,20 +14,39 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/user")
+@CrossOrigin(origins = "*")
 public class UserController {
 
     @Resource
     private UserService userService;
 
-    // 从配置文件读取头像存储路径
+    @Resource
+    private UserMapper userMapper;
+
     @Value("${web.upload-path:uploads/avatar/}")
     private String uploadPath;
+
+    /**
+     * 获取用户信息
+     */
+    @GetMapping("/info")
+    public ApiResponse<UserDTO> info(@RequestParam Long userId) {
+        User user = userService.findById(userId);
+        return ApiResponse.success(UserDTO.from(user));
+    }
+
+    /**
+     * 获取用户认证信息
+     */
+    @GetMapping("/verification")
+    public ApiResponse<UserVerificationDTO> verification(@RequestParam Long userId) {
+        return ApiResponse.success(userMapper.selectVerificationByUserId(userId));
+    }
 
     /**
      * 更新用户基本资料（手机号、邮箱、地区）
@@ -83,14 +104,12 @@ public class UserController {
         }
 
         try {
-            // 1. 生成唯一文件名
             String originalFilename = file.getOriginalFilename();
             String ext = originalFilename != null && originalFilename.contains(".") 
                     ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
                     : ".png";
             String newFileName = UUID.randomUUID().toString().replace("-", "") + ext;
 
-            // 2. 确保目录存在 (使用配置的 uploadPath)
             File uploadDir = new File(uploadPath);
             if (!uploadDir.exists()) {
                 boolean created = uploadDir.mkdirs();
@@ -99,26 +118,21 @@ public class UserController {
                 }
             }
 
-            // 3. 保存文件到服务器本地
             File destFile = new File(uploadDir, newFileName);
             file.transferTo(destFile.getAbsoluteFile());
 
-            // 4. 生成可访问的 URL（与 WebMvcConfig 中 /uploads/** 映射一致）
             String avatarUrl = "/uploads/avatars/" + newFileName;
 
-            // 5. 更新数据库中的 avatarUrl
             User user = userService.findById(userId);
             if (user != null) {
                 user.setAvatarUrl(avatarUrl);
-                // 使用 updateUser 保存包含 avatarUrl 的完整用户信息
                 userService.updateUser(user);
             }
 
-            // 6. 返回新的头像 URL 给前端
             return ApiResponse.success(avatarUrl);
 
         } catch (IOException e) {
-            e.printStackTrace(); // 打印详细错误日志
+            e.printStackTrace();
             return ApiResponse.fail(500, "文件上传失败: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,7 +155,6 @@ public class UserController {
                 return ApiResponse.fail(401, "无效token");
             }
 
-            // 调用 Service 层逻辑删除用户
             userService.deactivateUser(userId);
             return ApiResponse.success("账号已注销", null);
         } catch (Exception e) {

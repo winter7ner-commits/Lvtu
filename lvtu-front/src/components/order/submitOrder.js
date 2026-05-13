@@ -28,6 +28,38 @@ const normalizeAmount = (budget, serviceTypeId) => {
   return DEFAULT_AMOUNTS[serviceTypeId] || 0
 }
 
+const normalizeFile = (file) => ({
+  name: file.name,
+  url: file.url || file.response?.url || '',
+  size: file.size,
+  status: file.status,
+  type: file.raw?.type || file.type || ''
+})
+
+const normalizeForStorage = (value) => {
+  if (value instanceof Date) {
+    return value.toISOString()
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(normalizeForStorage)
+  }
+
+  if (value && typeof value === 'object') {
+    if ('raw' in value && 'name' in value) {
+      return normalizeFile(value)
+    }
+
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => !['raw', 'percentage', 'uid'].includes(key))
+        .map(([key, item]) => [key, normalizeForStorage(item)])
+    )
+  }
+
+  return value
+}
+
 export const submitOrderForm = async ({ formRef, formData, serviceTypeId }) => {
   if (!formRef.value) return null
 
@@ -40,13 +72,13 @@ export const submitOrderForm = async ({ formRef, formData, serviceTypeId }) => {
     return null
   }
 
-  const snapshot = JSON.parse(JSON.stringify(formData))
+  const snapshot = normalizeForStorage(formData)
   const response = await createOrder({
     userId,
     serviceTypeId,
     totalAmount: normalizeAmount(snapshot.budget, serviceTypeId),
-    status: '待接单',
-    formData: JSON.stringify(snapshot)
+    status: '待支付',
+    formData: snapshot
   })
 
   if (response?.code === 200) {

@@ -15,6 +15,10 @@ export const deactivateUser = () => {
   return request.delete('/api/user/deactivate').then((res) => res.data)
 }
 
+// 获取用户认证信息
+export const getUserVerification = (userId) => {
+  return request.get(`/api/user/verification/${userId}`).then((res) => res.data)
+}
 
 // 上传头像
 export const uploadAvatar = (file) => {

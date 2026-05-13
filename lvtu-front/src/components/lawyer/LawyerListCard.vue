@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -10,169 +11,284 @@ const props = defineProps({
   }
 })
 
+const rating = computed(() => Number(props.lawyer.rating || 0))
+const practiceYears = computed(() => Number(props.lawyer.practiceYears || 0))
+
+const specialtyNames = computed(() => {
+  return (props.lawyer.specialties || [])
+    .map((item) => item?.name || item?.specialtyName)
+    .filter(Boolean)
+})
+
+const avatarUrl = computed(() => {
+  return props.lawyer.avatarUrl || props.lawyer.avatar || props.lawyer.photoUrl || ''
+})
+
+const initials = computed(() => {
+  const name = props.lawyer.name || '律师'
+  return name.slice(-2)
+})
+
 const goDetail = () => {
-  router.push(`/lawyer/${props.lawyer.lawyerId}`)
+  router.push({
+    name: 'LawyerDetail',
+    params: { id: props.lawyer.lawyerId }
+  })
 }
 </script>
 
 <template>
-  <div class="card" @click="goDetail">
-    <!-- 左侧图片 -->
-    <img src="https://via.placeholder.com/120x120" class="avatar" />
+  <article class="lawyer-card" @click="goDetail">
+    <div class="avatar-wrap">
+      <img v-if="avatarUrl" :src="avatarUrl" class="avatar" :alt="lawyer.name" />
+      <div v-else class="avatar-placeholder">{{ initials }}</div>
+    </div>
 
-    <!-- 右侧信息 -->
     <div class="info">
-      <div class="top">
-        <h3>{{ lawyer.name }}</h3>
-        <el-rate
-          v-model="lawyer.rating"
-          disabled
-          show-score
-          text-color="#1890ff"
-        />
+      <div class="top-line">
+        <div class="name-group">
+          <h3>{{ lawyer.name || '未命名律师' }}</h3>
+          <span class="verified-badge">认证律师</span>
+        </div>
+        <div class="rating-block">
+          <el-rate
+            :model-value="rating"
+            disabled
+            show-score
+            text-color="#1d4ed8"
+          />
+        </div>
       </div>
 
-      <p class="firm">
-        <span class="label">律所：</span>
-        {{ lawyer.lawFirm }}
-      </p>
-      <p class="exp">
-        <span class="label">执业年限：</span>
-        {{ lawyer.practiceYears }} 年
-      </p>
+      <div class="meta-grid">
+        <div>
+          <span>所在律所</span>
+          <strong>{{ lawyer.lawFirm || '暂未填写' }}</strong>
+        </div>
+        <div>
+          <span>执业年限</span>
+          <strong>{{ practiceYears || '-' }} 年</strong>
+        </div>
+        <div>
+          <span>服务评分</span>
+          <strong>{{ rating.toFixed(1) }} 分</strong>
+        </div>
+      </div>
 
       <p class="description">
-        {{ lawyer.description }}
+        {{ lawyer.description || '该律师暂未填写个人简介，可进入详情页查看执业信息。' }}
       </p>
 
-      <!-- 专业领域标签 -->
-      <div v-if="lawyer.specialties && lawyer.specialties.length > 0" class="tags">
-        <el-tag
-          v-for="specialty in lawyer.specialties"
-          :key="specialty.id || specialty.specialtyId"
-          type="info"
-          size="small"
-        >
-          {{ specialty.name }}
-        </el-tag>
+      <div class="card-footer">
+        <div v-if="specialtyNames.length" class="tags">
+          <el-tag
+            v-for="specialty in specialtyNames.slice(0, 5)"
+            :key="specialty"
+            size="small"
+          >
+            {{ specialty }}
+          </el-tag>
+        </div>
+        <span v-else class="no-tags">暂无专长标签</span>
+
+        <button type="button" class="detail-btn" @click.stop="goDetail">查看详情</button>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <style scoped>
-/* 卡片 */
-.card {
-  display: flex;
-  padding: 20px;
+.lawyer-card {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid #e5eaf3;
   border-radius: 12px;
-  background: white;
+  background: #ffffff;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.08);
-  border: 1px solid #e8eef7;
-  align-items: flex-start;
+  transition: all 0.2s ease;
 }
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(24, 144, 255, 0.12);
-  border-color: #1890ff;
+.lawyer-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
 }
 
-/* 图片 */
+.avatar-wrap {
+  width: 108px;
+  height: 108px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #eff6ff;
+}
+
+.avatar,
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+}
+
 .avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 10px;
-  margin-right: 20px;
-  background-color: #f0f4f8;
   object-fit: cover;
-  flex-shrink: 0;
 }
 
-/* 信息 */
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1d4ed8;
+  font-size: 28px;
+  font-weight: 800;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.1)),
+    #eff6ff;
+}
+
 .info {
-  flex: 1;
   min-width: 0;
 }
 
-.top {
+.top-line {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  gap: 15px;
+  gap: 14px;
+  align-items: flex-start;
 }
 
-.top h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1890ff;
+.name-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+h3 {
   margin: 0;
+  color: #172033;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.verified-badge {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #ecfdf3;
+  color: #067647;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rating-block {
+  flex: 0 0 auto;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.7fr 0.7fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.meta-grid div {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.meta-grid span {
+  display: block;
+  color: #667085;
+  font-size: 12px;
+}
+
+.meta-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: #344054;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.info p {
-  margin: 8px 0;
-  color: #666;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.label {
-  font-weight: 600;
-  color: #333;
-}
-
-.firm {
-  color: #595959;
-}
-
-.exp {
-  color: #8c8c8c;
-}
-
 .description {
-  color: #666;
+  display: -webkit-box;
+  margin: 13px 0 0;
+  overflow: hidden;
+  color: #475467;
   font-size: 14px;
-  line-height: 1.6;
-  margin: 12px 0 0 0;
+  line-height: 1.7;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-/* 标签 */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-end;
+  margin-top: 14px;
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
 }
 
 .tags :deep(.el-tag) {
-  background-color: #e6f7ff;
-  border-color: #91d5ff;
-  color: #0050b3;
-  font-size: 12px;
-  padding: 4px 10px;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .card {
-    flex-direction: column;
-    text-align: center;
+.no-tags {
+  color: #98a2b3;
+  font-size: 13px;
+}
+
+.detail-btn {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.detail-btn:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+@media (max-width: 720px) {
+  .lawyer-card {
+    grid-template-columns: 1fr;
   }
 
-  .avatar {
-    margin-right: 0;
-    margin-bottom: 15px;
-    width: 100px;
-    height: 100px;
+  .avatar-wrap {
+    width: 88px;
+    height: 88px;
   }
 
-  .top {
+  .top-line,
+  .card-footer {
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+  }
+
+  .meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-btn {
+    width: 100%;
   }
 }
 </style>

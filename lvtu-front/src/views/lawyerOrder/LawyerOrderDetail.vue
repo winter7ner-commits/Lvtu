@@ -46,7 +46,7 @@ const canSubmitResult = computed(() => {
   return order.value?.status === '处理中' && Number(order.value?.lawyerId) === Number(currentLawyerId.value)
 })
 const canViewResult = computed(() => {
-  return ['待评价', '已完成'].includes(order.value?.status) && Number(order.value?.lawyerId) === Number(currentLawyerId.value)
+  return ['待客户确认', '待评价', '已完成'].includes(order.value?.status) && Number(order.value?.lawyerId) === Number(currentLawyerId.value)
 })
 
 const unwrap = (res) => res?.data?.data ?? res?.data ?? null
@@ -79,6 +79,7 @@ const labelize = (key) => {
 
 const getStatusType = (status) => {
   if (status === '处理中') return 'primary'
+  if (status === '待客户确认') return 'warning'
   if (status === '待评价') return 'warning'
   if (status === '已完成') return 'success'
   if (status === '待接单') return 'info'
@@ -333,11 +334,19 @@ onMounted(loadOrder)
 
 <style scoped>
 .detail-page {
-  max-width: 1180px;
-  min-height: 520px;
-  margin: 0 auto;
+  min-height: 100vh;
   padding: 32px 20px 56px;
+  background-color: #f5f5f5;
   color: #172033;
+}
+
+.page-head,
+.detail-grid,
+.result-panel {
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .page-head {
@@ -395,8 +404,8 @@ h3 {
   padding: 20px;
   background: #ffffff;
   border: 1px solid #e5eaf3;
-  border-radius: 8px;
-  box-shadow: 0 8px 22px rgba(30, 64, 175, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .panel-title {
@@ -417,7 +426,7 @@ h3 {
 .form-row {
   padding: 14px;
   background: #f6f8fc;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .info-list span,

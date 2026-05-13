@@ -13,6 +13,7 @@ const currentLawyerId = ref(null)
 const statusOptions = [
   { label: '全部', value: '' },
   { label: '处理中', value: '处理中' },
+  { label: '待客户确认', value: '待客户确认' },
   { label: '待评价', value: '待评价' },
   { label: '已完成', value: '已完成' }
 ]
@@ -40,6 +41,7 @@ const formatTime = (value) => (value ? String(value).replace('T', ' ').slice(0, 
 
 const getStatusType = (status) => {
   if (status === '处理中') return 'primary'
+  if (status === '待客户确认') return 'warning'
   if (status === '待评价') return 'warning'
   if (status === '已完成') return 'success'
   return 'info'
@@ -112,6 +114,10 @@ onMounted(loadOrders)
         <strong>{{ statusCount['处理中'] || 0 }}</strong>
       </div>
       <div class="status-item">
+        <span>待客户确认</span>
+        <strong>{{ statusCount['待客户确认'] || 0 }}</strong>
+      </div>
+      <div class="status-item">
         <span>待评价</span>
         <strong>{{ statusCount['待评价'] || 0 }}</strong>
       </div>
@@ -160,10 +166,19 @@ onMounted(loadOrders)
 
 <style scoped>
 .my-orders-page {
-  max-width: 1180px;
-  margin: 0 auto;
+  min-height: 100vh;
   padding: 32px 20px 56px;
+  background-color: #f5f5f5;
   color: #172033;
+}
+
+.page-head,
+.status-strip,
+.orders-shell {
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .page-head {
@@ -197,7 +212,7 @@ h1 {
 
 .status-strip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 14px;
   margin-bottom: 18px;
 }
@@ -206,7 +221,7 @@ h1 {
   padding: 18px;
   background: #f6f8fc;
   border: 1px solid #e5eaf3;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .status-item span {
@@ -225,8 +240,8 @@ h1 {
   padding: 18px;
   background: #ffffff;
   border: 1px solid #e5eaf3;
-  border-radius: 8px;
-  box-shadow: 0 8px 22px rgba(30, 64, 175, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .order-table {
