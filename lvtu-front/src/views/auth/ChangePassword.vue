@@ -1,26 +1,23 @@
-﻿<template>
+<template>
   <div class="auth-page">
     <div class="auth-card">
-      <h2>注册</h2>
+      <h2>修改密码</h2>
       <el-form :model="form" label-position="top">
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
+        <el-form-item label="旧密码">
+          <el-input type="password" v-model="form.oldPassword" placeholder="请输入旧密码" show-password />
         </el-form-item>
-        <el-form-item label="密码">
-          <el-input type="password" v-model="form.password" placeholder="请输入密码" show-password />
+        <el-form-item label="新密码">
+          <el-input type="password" v-model="form.newPassword" placeholder="请输入新密码" show-password />
         </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="form.email" placeholder="请输入邮箱" />
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="form.phone" placeholder="请输入手机号" />
+        <el-form-item label="确认新密码">
+          <el-input type="password" v-model="form.confirmPassword" placeholder="请再次输入新密码" show-password />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSubmit" :loading="loading" class="submit-btn">注册</el-button>
+          <el-button type="primary" @click="handleSubmit" :loading="loading" class="submit-btn">确认修改</el-button>
         </el-form-item>
         <el-form-item class="auth-footer">
-          <span>已有账号？</span>
-          <router-link to="/login" class="auth-link">去登录</router-link>
+          <span>不想修改了？</span>
+          <router-link to="/user-profile" class="auth-link">返回个人资料</router-link>
         </el-form-item>
       </el-form>
     </div>
@@ -30,28 +27,42 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { register } from '../../api/auth'
+import { useAuthStore } from '../../store/auth'
+import request from '../../utils/request'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const loading = ref(false)
-const form = ref({ username: '', password: '', email: '', phone: '' })
+const form = ref({ oldPassword: '', newPassword: '', confirmPassword: '' })
 
 const handleSubmit = async () => {
-  if (!form.value.username || !form.value.password) {
-    return ElMessage.warning('请输入用户名和密码')
+  if (!form.value.oldPassword || !form.value.newPassword || !form.value.confirmPassword) {
+    return ElMessage.warning('请填写完整信息')
   }
+  if (form.value.newPassword !== form.value.confirmPassword) {
+    return ElMessage.warning('两次输入的新密码不一致')
+  }
+  if (form.value.oldPassword === form.value.newPassword) {
+    return ElMessage.warning('新密码不能与旧密码一致')
+  }
+  
   loading.value = true
   try {
-    const response = await register(form.value)
-    if (response?.code === 200) {
-      ElMessage.success('注册成功，请登录')
+    const response = await request.post('/api/auth/change-password', {
+      username: authStore.user?.username,
+      oldPassword: form.value.oldPassword,
+      newPassword: form.value.newPassword
+    })
+    if (response?.data?.code === 200) {
+      ElMessage.success('密码修改成功，请重新登录')
+      authStore.logout()
       router.push('/login')
     } else {
-      ElMessage.error(response?.message || '注册失败')
+      ElMessage.error(response?.data?.message || '修改失败')
     }
   } catch (error) {
-    ElMessage.error('注册失败，请稍后重试')
+    ElMessage.error('修改失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -120,6 +131,7 @@ const handleSubmit = async () => {
 .auth-link {
   color: #409eff;
   text-decoration: none;
+  margin-left: 5px;
   font-weight: 500;
 }
 

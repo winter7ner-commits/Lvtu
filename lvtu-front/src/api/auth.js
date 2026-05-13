@@ -22,6 +22,10 @@ export const forgotPassword = (data) => {
   return request.post('/api/auth/forgot-password', data).then((res) => res.data)
 }
 
+export const changePassword = (data) => {
+  return request.post('/api/auth/change-password', data).then((res) => res.data)
+}
+
 export const me = () => {
   return request.get('/api/auth/me').then((res) => res.data)
 }
