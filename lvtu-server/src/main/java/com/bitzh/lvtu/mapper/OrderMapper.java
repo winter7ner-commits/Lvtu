@@ -34,6 +34,10 @@ public interface OrderMapper {
     Order selectDetailByOrderId(@Param("orderId") Long orderId);
 
     Order selectById(@Param("orderId") Long orderId);
+
+    int completeEvaluatedPendingOrder(@Param("orderId") Long orderId);
+
+    int completeEvaluatedPendingOrdersByUserId(@Param("userId") Long userId);
     
     // 按订单id搜索支付订单 并计算总金额
     BigDecimal calculateTotalAmountByOrderId(@Param("orderId") Long orderId);

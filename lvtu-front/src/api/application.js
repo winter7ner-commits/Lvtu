@@ -11,7 +11,5 @@ export const submitApplication = (data) =>
 export const uploadLicenseImage = (file) => {
     const formData = new FormData()
     formData.append('file', file)
-    return request.post('/application/uploadImage', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    return request.post('/application/uploadImage', formData, { timeout: 30000 })
 }

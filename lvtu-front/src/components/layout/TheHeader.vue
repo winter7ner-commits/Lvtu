@@ -56,8 +56,6 @@
           </div>
         </div>
         
-        <router-link to="/lawyer-list" class="nav-item">律师</router-link>
-        
         <!-- Orders Dropdown -->
         <div class="nav-item-dropdown">
           <button class="nav-item dropdown-toggle">
@@ -97,6 +95,7 @@
           </button>
           <div class="dropdown-menu user-dropdown">
             <router-link to="/user-profile" class="dropdown-item" @click="showUserMenu = false">个人资料</router-link>
+            <router-link to="/settings" class="dropdown-item" @click="showUserMenu = false">设置</router-link>
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item logout" @click.prevent="handleLogout">退出登录</a>
           </div>

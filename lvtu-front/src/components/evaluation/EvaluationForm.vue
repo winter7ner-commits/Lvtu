@@ -44,11 +44,13 @@
 <script>
 import StarRating from './StarRating.vue';
 import { createEvaluation } from '../../services/evaluationService';
+import { updateOrderStatus } from '@/api/order';
 
 export default {
   components: {
     StarRating
   },
+  emits: ['submitted'],
   props: {
     orderId: {
       type: Number,
@@ -82,11 +84,16 @@ export default {
       this.error = null;
       
       try {
-        await createEvaluation(this.form);
+        const evaluation = await createEvaluation(this.form);
+        const statusResponse = await updateOrderStatus(this.form.orderId, '已完成');
+        if (statusResponse?.code !== 200 || statusResponse?.data === false) {
+          throw new Error(statusResponse?.message || '订单状态更新失败');
+        }
         alert('评价提交成功！');
+        this.$emit('submitted', evaluation);
         this.resetForm();
       } catch (error) {
-        this.error = error.response?.data?.message || '提交失败，请重试';
+        this.error = error.response?.data?.message || error.message || '提交失败，请重试';
         console.error('评价提交失败:', error);
       } finally {
         this.isSubmitting = false;

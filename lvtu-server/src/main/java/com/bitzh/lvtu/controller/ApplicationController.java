@@ -13,6 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
@@ -92,16 +94,11 @@ public class ApplicationController {
             String newFileName = UUID.randomUUID().toString() + ext;
 
             // 5. 确保目录存在
-            File uploadFolder = new File(uploadDir);
-            if (!uploadFolder.exists()) {
-                boolean created = uploadFolder.mkdirs();
-                if (!created) {
-                    return ApiResponse.fail(500, "无法创建上传目录，请检查路径权限");
-                }
-            }
+            Path uploadFolder = resolveUploadFolder();
+            Files.createDirectories(uploadFolder);
 
             // 6. 保存文件
-            File destFile = new File(uploadFolder, newFileName);
+            File destFile = uploadFolder.resolve(newFileName).toFile();
             file.transferTo(destFile);
 
             // 7. 返回可访问的 URL（通过本 Controller 的另一个接口）
@@ -117,7 +114,7 @@ public class ApplicationController {
     // ========== 新增：图片下载接口（供前端预览） ==========
     @GetMapping("/image/{filename}")
     public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
-        File imageFile = new File(uploadDir, filename);
+        File imageFile = resolveUploadFolder().resolve(filename).toFile();
         if (!imageFile.exists()) {
             return ResponseEntity.notFound().build();
         }
@@ -136,5 +133,13 @@ public class ApplicationController {
         } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    private Path resolveUploadFolder() {
+        Path path = Paths.get(uploadDir);
+        if (!path.isAbsolute()) {
+            path = Paths.get(System.getProperty("user.dir")).resolve(path);
+        }
+        return path.normalize().toAbsolutePath();
     }
 }

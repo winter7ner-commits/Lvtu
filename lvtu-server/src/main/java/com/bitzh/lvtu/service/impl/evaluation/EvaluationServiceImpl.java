@@ -3,9 +3,11 @@ package com.bitzh.lvtu.service.impl.evaluation;
 import com.bitzh.lvtu.dto.evaluation.request.CreateEvaluationRequest;
 import com.bitzh.lvtu.dto.evaluation.request.UpdateEvaluationRequest;
 import com.bitzh.lvtu.dto.evaluation.response.EvaluationResponse;
+import com.bitzh.lvtu.entity.ServiceOrder;
 import com.bitzh.lvtu.entity.evaluation.Evaluation;
 import com.bitzh.lvtu.enums.evaluation.EvaluationStatus;
 import com.bitzh.lvtu.exception.evaluation.EvaluationException;
+import com.bitzh.lvtu.mapper.ServiceOrderMapper;
 import com.bitzh.lvtu.mapper.evaluation.EvaluationMapper;
 import com.bitzh.lvtu.service.evaluation.EvaluationService;
 import com.github.pagehelper.PageHelper;
@@ -24,16 +26,22 @@ import java.util.stream.Collectors;
 public class EvaluationServiceImpl implements EvaluationService {
 
     private final EvaluationMapper evaluationMapper;
+    private final ServiceOrderMapper serviceOrderMapper;
 
-    public EvaluationServiceImpl(EvaluationMapper evaluationMapper) {
+    public EvaluationServiceImpl(EvaluationMapper evaluationMapper, ServiceOrderMapper serviceOrderMapper) {
         this.evaluationMapper = evaluationMapper;
+        this.serviceOrderMapper = serviceOrderMapper;
     }
 
     @Override
     public EvaluationResponse createEvaluation(CreateEvaluationRequest request, Long userId) {
-        // 检查订单是否已评价
-        if (evaluationMapper.findByOrderId(request.getOrderId()).isPresent()) {
-            throw new EvaluationException("该订单已评价");
+        ServiceOrder order = serviceOrderMapper.selectByOrderId(request.getOrderId());
+        validateOrderForEvaluation(order, request.getLawyerId());
+
+        Optional<Evaluation> existingEvaluation = evaluationMapper.findByOrderId(request.getOrderId());
+        if (existingEvaluation.isPresent()) {
+            completeOrderIfPendingReview(order);
+            return convertToResponse(existingEvaluation.get());
         }
         
         Evaluation evaluation = new Evaluation();
@@ -59,7 +67,31 @@ public class EvaluationServiceImpl implements EvaluationService {
         evaluation.setUpdatedTime(LocalDateTime.now());
         
         evaluationMapper.insert(evaluation);
+        completeOrderIfPendingReview(order);
         return convertToResponse(evaluation);
+    }
+
+    private void validateOrderForEvaluation(ServiceOrder order, Long lawyerId) {
+        if (order == null) {
+            throw new EvaluationException("订单不存在");
+        }
+        if (order.getLawyerId() == null || !order.getLawyerId().equals(lawyerId)) {
+            throw new EvaluationException("评价律师与订单律师不一致");
+        }
+        if (!"待评价".equals(order.getStatus()) && !"已完成".equals(order.getStatus())) {
+            throw new EvaluationException("当前订单状态不允许评价");
+        }
+    }
+
+    private void completeOrderIfPendingReview(ServiceOrder order) {
+        if ("已完成".equals(order.getStatus())) {
+            return;
+        }
+
+        int updated = serviceOrderMapper.updateStatusWithCurrent(order.getOrderId(), "待评价", "已完成");
+        if (updated == 0) {
+            throw new EvaluationException("评价成功后更新订单状态失败");
+        }
     }
 
     @Override

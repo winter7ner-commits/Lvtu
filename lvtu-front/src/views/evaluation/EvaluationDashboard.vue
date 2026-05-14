@@ -21,7 +21,11 @@
           <strong>订单 #{{ currentOrderId }}</strong>
         </header>
         <div class="panel-body">
-          <EvaluationForm :order-id="currentOrderId" :lawyer-id="currentLawyerId" />
+          <EvaluationForm
+            :order-id="currentOrderId"
+            :lawyer-id="currentLawyerId"
+            @submitted="handleSubmitted"
+          />
         </div>
       </section>
 
@@ -65,6 +69,12 @@ export default {
       this.$router.push({
         name: 'ClientOrderList',
         query: { status: 'pending_review' }
+      })
+    },
+    handleSubmitted() {
+      this.$router.push({
+        name: 'ClientOrderDetail',
+        params: { orderId: this.currentOrderId }
       })
     }
   }

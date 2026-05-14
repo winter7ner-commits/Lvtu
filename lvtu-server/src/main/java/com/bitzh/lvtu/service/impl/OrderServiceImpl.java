@@ -51,11 +51,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order getOrderById(Long id) {
+        orderMapper.completeEvaluatedPendingOrder(id);
         return orderMapper.selectDetailByOrderId(id);
     }
 
     @Override
     public List<Order> getOrdersByUserId(Long userId) {
+        orderMapper.completeEvaluatedPendingOrdersByUserId(userId);
         return orderMapper.selectByUserId(userId);
     }
 

@@ -45,7 +45,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="邮箱" prop="email">
-              <el-input v-model="formData.email" placeholder="可选" />
+              <el-input v-model="formData.email" type="email" placeholder="可选" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -55,7 +55,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="紧急电话" prop="emergencyPhone">
-              <el-input v-model="formData.emergencyPhone" placeholder="可选" />
+              <el-input v-model="formData.emergencyPhone" maxlength="11" inputmode="numeric" placeholder="可选" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -95,7 +95,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="预估预算" prop="budget">
-              <el-input v-model="formData.budget" placeholder="请输入预算金额（元）" />
+              <el-input v-model="formData.budget" inputmode="decimal" placeholder="请输入预算金额（元）" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -238,6 +238,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRegionOptions } from './useRegionOptions'
 import { submitOrderForm } from './submitOrder'
 import { applyCurrentUserInfo } from './useCurrentUserInfo'
+import { commonOrderRules } from './validationRules'
 
 const formRef = ref(null)
 const { regionOptions } = useRegionOptions()
@@ -281,6 +282,7 @@ const formData = reactive({
 
 
 const rules = {
+  ...commonOrderRules,
   region: [{ required: true, message: '请选择所在地区', trigger: 'change' }],
   businessDirection: [{ required: true, message: '请选择业务方向', trigger: 'change' }],
   marriageStatus: [{ required: true, message: '请选择婚姻状态', trigger: 'change' }],

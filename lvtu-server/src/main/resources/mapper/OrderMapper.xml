@@ -133,4 +133,28 @@
         FROM `order`
         WHERE order_id = #{orderId}
     </select>
+
+    <update id="completeEvaluatedPendingOrder">
+        UPDATE `order` o
+        SET o.status = '已完成'
+        WHERE o.order_id = #{orderId}
+          AND o.status = '待评价'
+          AND EXISTS (
+              SELECT 1
+              FROM evaluation e
+              WHERE e.order_id = o.order_id
+          )
+    </update>
+
+    <update id="completeEvaluatedPendingOrdersByUserId">
+        UPDATE `order` o
+        SET o.status = '已完成'
+        WHERE o.user_id = #{userId}
+          AND o.status = '待评价'
+          AND EXISTS (
+              SELECT 1
+              FROM evaluation e
+              WHERE e.order_id = o.order_id
+          )
+    </update>
 </mapper>

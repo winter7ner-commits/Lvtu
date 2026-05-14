@@ -39,9 +39,9 @@
           </el-form-item>
 
           <el-form-item label="律师执业证照片" prop="licenseUrl" class="full">
-            <div class="upload-area" :class="{ 'has-image': displayImageUrl, uploading }">
+            <div class="upload-area" :class="{ 'has-image': displayImageUrl, uploading }" @click="triggerUpload">
               <template v-if="!displayImageUrl">
-                <div class="upload-placeholder" @click="triggerUpload">
+                <div class="upload-placeholder">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="17 8 12 3 7 8"/>
@@ -53,7 +53,7 @@
               </template>
               <template v-else>
                 <img :src="displayImageUrl" class="preview-image" @error="handleImageError" />
-                <button class="replace-btn" @click.stop="triggerUpload">重新上传</button>
+                <button type="button" class="replace-btn" @click.stop.prevent="triggerUpload">重新上传</button>
               </template>
               <div v-if="uploading" class="uploading-mask">
                 <div class="spinner"></div>
@@ -204,23 +204,35 @@ const fillFormData = (data) => {
   }
 }
 
-const triggerUpload = () => fileInputRef.value?.click()
+const triggerUpload = () => {
+  if (uploading.value) return
+  fileInputRef.value?.click()
+}
 
 const handleFileChange = async (e) => {
   const file = e.target.files?.[0]
   if (!file) return
+  const resetFileInput = () => {
+    e.target.value = ''
+  }
   if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
     ElMessage.warning('请上传 JPG/PNG 格式')
+    resetFileInput()
     return
   }
   if (file.size > 10 * 1024 * 1024) {
     ElMessage.warning('图片不能超过 10MB')
+    resetFileInput()
     return
   }
   uploading.value = true
   try {
     const res = await uploadLicenseImage(file)
-    let relativeUrl = res?.data?.data || res?.data
+    const response = res?.data ?? res
+    if (response?.code !== 200) {
+      throw new Error(response?.message || '上传失败')
+    }
+    let relativeUrl = response?.data
     if (typeof relativeUrl === 'string') {
       form.licenseUrl = relativeUrl
       displayImageUrl.value = relativeUrl.startsWith('http') ? relativeUrl : BASE_URL + relativeUrl
@@ -228,12 +240,12 @@ const handleFileChange = async (e) => {
       ElMessage.success('上传成功')
     } else throw new Error('上传失败')
   } catch (err) {
-    ElMessage.error(err?.response?.data?.message || '上传失败')
+    ElMessage.error(err?.response?.data?.message || err?.message || '上传失败')
     form.licenseUrl = ''
     displayImageUrl.value = ''
   } finally {
     uploading.value = false
-    e.target.value = ''
+    resetFileInput()
   }
 }
 
