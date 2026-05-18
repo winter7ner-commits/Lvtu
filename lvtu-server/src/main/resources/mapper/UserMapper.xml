@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitzh.lvtu.mapper.UserMapper">
+
+    <resultMap id="userMap" type="com.bitzh.lvtu.entity.User">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="avatarUrl" column="avatar_url"/>
+        <result property="userType" column="user_type"/>
+        <result property="status" column="status"/>
+        <result property="isVerified" column="is_verified"/>
+        <result property="authStatus" column="auth_status"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="updatedTime" column="updated_time"/>
+        <result property="region" column="region"/>
+    </resultMap>
+
+    <resultMap id="userVerificationMap" type="com.bitzh.lvtu.dto.UserVerificationDTO">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="phone" column="phone"/>
+        <result property="userType" column="user_type"/>
+        <result property="authStatus" column="auth_status"/>
+        <result property="isVerified" column="is_verified"/>
+        <result property="realName" column="real_name"/>
+        <result property="idCardNumber" column="id_card_number"/>
+        <result property="verificationStatus" column="verification_status"/>
+    </resultMap>
+
+    <select id="selectByUsername" resultMap="userMap">
+        SELECT * FROM users WHERE username = #{username} LIMIT 1
+    </select>
+
+    <select id="selectByEmail" resultMap="userMap">
+        SELECT * FROM users WHERE email = #{email} LIMIT 1
+    </select>
+
+    <select id="selectByPhone" resultMap="userMap">
+        SELECT * FROM users WHERE phone = #{phone} LIMIT 1
+    </select>
+
+    <select id="selectById" resultMap="userMap">
+        SELECT * FROM users WHERE user_id = #{userId} LIMIT 1
+    </select>
+
+    <select id="selectVerificationByUserId" resultMap="userVerificationMap">
+        SELECT
+            u.user_id,
+            u.username,
+            u.phone,
+            u.user_type,
+            u.auth_status,
+            u.is_verified,
+            uv.real_name,
+            uv.id_card_number,
+            uv.verification_status
+        FROM users u
+                 LEFT JOIN users_verfications uv ON u.user_id = uv.user_id
+        WHERE u.user_id = #{userId}
+        LIMIT 1
+    </select>
+
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users
+            (username, password_hash, phone, email, avatar_url, user_type, status, is_verified, auth_status, region)
+        VALUES
+            (#{username}, #{passwordHash}, #{phone}, #{email}, #{avatarUrl}, #{userType}, #{status}, #{isVerified}, #{authStatus}, #{region})
+    </insert>
+
+    <update id="updatePassword">
+        UPDATE users
+        SET password_hash = #{passwordHash}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE users
+        SET status = #{status}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateUser">
+        UPDATE users
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="passwordHash != null">password_hash = #{passwordHash},</if>
+            
+            <!-- 使用 choose/when/otherwise 确保 null 值也能被正确更新为 NULL -->
+            <choose>
+                <when test="phone != null">phone = #{phone},</when>
+                <otherwise>phone = NULL,</otherwise>
+            </choose>
+            
+            <choose>
+                <when test="email != null">email = #{email},</when>
+                <otherwise>email = NULL,</otherwise>
+            </choose>
+            
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            
+            <choose>
+                <when test="region != null">region = #{region},</when>
+                <otherwise>region = NULL,</otherwise>
+            </choose>
+            
+            <if test="userType != null">user_type = #{userType},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isVerified != null">is_verified = #{isVerified},</if>
+            <if test="authStatus != null">auth_status = #{authStatus},</if>
+            updated_time = NOW()
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateAuthStatus">
+        UPDATE users
+        SET auth_status = #{authStatus}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateUserType">
+        UPDATE users
+        SET user_type = #{userType}
+        WHERE user_id = #{userId}
+    </update>
+
+    
+    <update id="updateUserProfile">
+        UPDATE users
+        <set>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="region != null">region = #{region},</if>
+            updated_time = NOW()  <!-- 新增此行，确保 <set> 永不为空，且自动维护更新时间 -->
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+
+    <delete id="deleteUser">
+        DELETE FROM users WHERE user_id = #{userId}
+    </delete>
+
+
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.LegalArticleMapper">
+
+    <resultMap id="BaseResultMap" type="com.bitzh.lvtu.entity.LegalArticle">
+        <id column="id" property="id"/>
+        <result column="document_id" property="documentId"/>
+        <result column="article_number" property="articleNumber"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, document_id, article_number, title, content, sort_order, status, created_at, updated_at
+    </sql>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM legal_article ORDER BY document_id, sort_order
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM legal_article WHERE id = #{id}
+    </select>
+
+    <select id="findByDocumentId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM legal_article WHERE document_id = #{documentId} ORDER BY sort_order
+    </select>
+
+    <insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalArticle" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO legal_article (document_id, article_number, title, content, sort_order, status, created_at, updated_at)
+        VALUES (#{documentId}, #{articleNumber}, #{title}, #{content}, #{sortOrder}, #{status}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+    <update id="update" parameterType="com.bitzh.lvtu.entity.LegalArticle">
+        UPDATE legal_article
+        <set>
+            <if test="documentId != null">document_id = #{documentId},</if>
+            <if test="articleNumber != null">article_number = #{articleNumber},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="status != null">status = #{status},</if>
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM legal_article WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitzh.lvtu.mapper.LawyerSettlementMapper">
+
+    <resultMap id="settlementMap" type="com.bitzh.lvtu.entity.LawyerSettlement">
+        <id property="id" column="id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="lawyerId" column="lawyer_id"/>
+        <result property="amount" column="amount"/>
+        <result property="status" column="status"/>
+        <result property="settledAt" column="settled_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO lawyer_settlement (order_id, lawyer_id, amount, status)
+        VALUES (#{orderId}, #{lawyerId}, #{amount}, #{status})
+    </insert>
+
+    <select id="selectByOrderId" resultMap="settlementMap">
+        SELECT id, order_id, lawyer_id, amount, status, settled_at, created_at
+        FROM lawyer_settlement
+        WHERE order_id = #{orderId}
+    </select>
+
+    <select id="selectById" resultMap="settlementMap">
+        SELECT id, order_id, lawyer_id, amount, status, settled_at, created_at
+        FROM lawyer_settlement
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectPendingSettlements" resultMap="settlementMap">
+        SELECT id, order_id, lawyer_id, amount, status, settled_at, created_at
+        FROM lawyer_settlement
+        WHERE status = 0
+        ORDER BY created_at ASC
+    </select>
+
+    <update id="markAsPaid">
+        UPDATE lawyer_settlement
+        SET status = 1,
+            settled_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND status = 0
+    </update>
+
+</mapper>
