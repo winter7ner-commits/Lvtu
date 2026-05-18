@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
+import SearchResults from '../views/SearchResults.vue'
 import LawyerList from '../views/lawyer/LawyerList.vue'
 import LawyerDetail from '../views/lawyer/LawyerDetail.vue'
 import LawArticleList from '../views/lawyer/LawArticleList.vue'
@@ -38,6 +39,7 @@ const router = createRouter({
   },
   routes: [
     { path: '/', component: Home, name: 'Home' },
+    { path: '/search', component: SearchResults, name: 'SearchResults' },
     { path: '/law-article-list', component: LawArticleList, name: 'LawArticleList' },
     { path: '/lawyer-list', component: LawyerList, name: 'LawyerList' },
     { path: '/lawyer/:id', component: LawyerDetail, name: 'LawyerDetail' },
