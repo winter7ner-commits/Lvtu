@@ -24,15 +24,19 @@ const avatarUrl = computed(() => {
   return props.lawyer.avatarUrl || props.lawyer.avatar || props.lawyer.photoUrl || ''
 })
 
+const lawyerId = computed(() => props.lawyer.lawyerId || props.lawyer.id)
+
 const initials = computed(() => {
   const name = props.lawyer.name || '律师'
   return name.slice(-2)
 })
 
 const goDetail = () => {
+  if (!lawyerId.value) return
+
   router.push({
     name: 'LawyerDetail',
-    params: { id: props.lawyer.lawyerId }
+    params: { id: lawyerId.value }
   })
 }
 </script>

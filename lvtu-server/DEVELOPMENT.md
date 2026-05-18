@@ -488,6 +488,91 @@ java -jar target/lvtu-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev
 
 ---
 
+## 补充说明：模块、日志、部署与测试
+
+### 新增模块提示
+
+- **评价模块（evaluation）**: 后端包名建议 `com.bitzh.lvtu.evaluation`，实体 `Evaluation.java`，`EvaluationMapper.java` 及 `EvaluationMapper.xml` 放在 `src/main/resources/mapper/`。
+- **订单模块（order）**: 后端包名建议 `com.bitzh.lvtu.order`，包含 `Order.java`、`OrderService`、`OrderController`、`OrderMapper` 和对应的 Mapper XML。
+
+建议新模块遵循已有分层结构（`controller`/`service`/`mapper`/`entity`/`dto`），并在 `sql/` 中添加相应的建表或迁移脚本。
+
+### 日志与监控
+
+- 使用 `SLF4J + Logback` 作为日志框架，默认配置文件放在 `src/main/resources/logback-spring.xml` 或在 `application-*.properties` 中配置日志级别。
+- 日志建议按模块（package）设置合适的级别（INFO、DEBUG、WARN、ERROR），并在生产环境保留滚动文件策略以避免日志过大。
+- 建议接入应用指标采集（Micrometer）并暴露 `/actuator/health`、`/actuator/metrics` 等监控端点，方便 Prometheus 拉取和 Grafana 展示。
+
+示例 `application-dev.properties` 中常用配置：
+
+```
+management.endpoints.web.exposure.include=health,info,metrics,prometheus
+management.endpoint.health.show-details=always
+```
+
+### 容器化与持续集成
+
+- 推荐提供一个 `Dockerfile` 用于构建镜像，并在 `README.md` 提供镜像构建和运行示例：
+
+```
+# 构建镜像
+./mvnw clean package -DskipTests
+docker build -t lvtu-server:latest .
+
+# 运行容器（示例）
+docker run -d -p 8080:8080 --name lvtu-server -e SPRING_PROFILES_ACTIVE=prod lvtu-server:latest
+```
+
+- 可使用 `GitHub Actions` 或其他 CI 平台：自动构建、执行单元测试、打包并推送镜像到容器仓库（Docker Hub、Azure ACR 等）。
+
+示例 GitHub Actions 任务要点：
+- 检出代码
+- 使用 `mvn -B -DskipTests=true package` 构建
+- 运行单元测试并上报结果
+- 构建并推送 Docker 镜像
+
+### 测试策略
+
+- **单元测试**: 使用 JUnit + Mockito，覆盖 Service 层核心业务逻辑。
+- **集成测试**: 使用 Spring Boot Test 加载上下文，配合 Testcontainers 启动 MySQL 容器以验证 Mapper 与数据库交互。
+- **接口测试**: 使用 MockMvc 或 RestAssured 对 Controller 接口做契约级测试。
+
+示例 Testcontainers 测试简要配置：
+
+```java
+@Testcontainers
+@SpringBootTest
+public class ExampleIntegrationTest {
+    @Container
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0").withDatabaseName("lvtu_db").withUsername("root").withPassword("root");
+
+    @BeforeAll
+    static void init() {
+        System.setProperty("spring.datasource.url", mysql.getJdbcUrl());
+        System.setProperty("spring.datasource.username", mysql.getUsername());
+        System.setProperty("spring.datasource.password", mysql.getPassword());
+    }
+}
+```
+
+### 安全与配置管理
+
+- 敏感信息（数据库密码、第三方密钥）请使用环境变量或外部化配置（Vault、Azure Key Vault 等），避免硬编码在 `application-*.properties` 中并提交到版本库。
+- 建议在 `application.yml` 中通过 `spring.profiles.active` 管理不同环境的配置，并在 CI/CD 中注入生产级凭据。
+- 对外接口需要做基本的安全防护：使用 Spring Security、JWT 鉴权、角色与权限校验，并在必要的接口上做速率限制和输入校验。
+
+### 健康检查与回滚
+
+- 建议实现并暴露 `/actuator/health` 用于负载均衡器与容器平台做就绪/存活探针。
+- 在部署流水线中加入部署回滚策略：当新版本健康检查失败时自动回滚到上一个稳定版本。
+
+### 变更历史（补充）
+
+| 版本 | 日期 | 变更说明 |
+|-----|------|---------|
+| 1.0 | 2024-01-15 | 初始版本，包含后端开发规范 |
+| 1.1 | 2026-05-18 | 补充评价与订单模块说明，日志、容器化与测试策略 |
+
 ## 相关资源
 
 - [Spring Boot 官方文档](https://spring.io/projects/spring-boot)

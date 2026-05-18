@@ -29,6 +29,14 @@ public class LawyerServiceImpl implements LawyerService {
     }
 
     @Override
+    public LawyerDTO detail(Long lawyerId) {
+        if (lawyerId == null) {
+            return null;
+        }
+        return mapper.selectById(lawyerId);
+    }
+
+    @Override
     public List<LawyerDTO> getTopRatedLawyers(Integer limit) {
         int safeLimit = (limit == null || limit <= 0) ? 3 : limit;
         return mapper.selectByTopRating(safeLimit);

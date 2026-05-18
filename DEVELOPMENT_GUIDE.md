@@ -49,6 +49,8 @@
 | **案件管理** | 案件创建、跟进、结案 | `views/case/` | `com.bitzh.lvtu.case` |
 | **用户管理** | 用户认证、权限管理 | `views/user/` | `com.bitzh.lvtu.user` |
 | **认证授权** | 登录、注册、权限控制 | `views/auth/` | `com.bitzh.lvtu.auth` |
+| **评价管理** | 评价表单、评价列表、评价统计 | `views/evaluation/` | `com.bitzh.lvtu.evaluation` |
+| **订单管理** | 订单创建、订单支付、订单查询 | `views/order/` | `com.bitzh.lvtu.order` |
 
 ### 前后端交互流程
 
@@ -183,9 +185,10 @@
 
 3. **后端开发** (lvtu-server)
    - 创建 Entity 类（对应数据库表）
-   - 创建 Mapper 接口和 XML 配置
+   - 创建 Mapper 接口和 XML 配置（路径：`src/main/resources/mapper/`）
    - 创建 Service 业务逻辑类
    - 创建 Controller 提供 REST API
+   - 配置 `application.yml` 或 `application-dev.properties`
    - 编写单元测试
 
 4. **前端开发** (lvtu-front)
@@ -193,6 +196,7 @@
    - 创建页面组件
    - 创建可复用的子组件
    - 集成状态管理（Pinia）
+   - 配置 `vite.config.ts` 文件（如需要代理）
    - 编写功能测试
 
 5. **集成测试**
@@ -325,6 +329,7 @@ npm run dev
 - 查看应用日志：`target/` 目录下的日志文件
 - 使用 Postman 或 Insomnia 测试 API
 - 启用 MyBatis SQL 日志查看执行的 SQL
+- 配置 `application-dev.properties` 以启用开发环境特定设置
 
 ### 前端调试
 
@@ -332,6 +337,7 @@ npm run dev
 - 使用 Vue DevTools 浏览器扩展
 - 使用 `console.log()` 或专业日志工具
 - 使用 Network 标签检查 API 请求
+- 配置 `vite.config.ts` 以启用代理或自定义设置
 
 ---
 
@@ -399,6 +405,7 @@ A: 在 API 响应拦截器中统一处理，根据状态码显示相应的错误
 
 - [lvtu-front 详细开发规范](./lvtu-front/DEVELOPMENT.md)
 - [lvtu-server 详细开发规范](./lvtu-server/DEVELOPMENT.md)
-- [数据库文档](./sql/README.md) (待创建)
+- [数据库文档](./sql/database_dic.md) (待创建)
 - [API 文档](./docs/API.md) (待创建)
 - [部署指南](./docs/DEPLOYMENT.md) (待创建)
+| 1.1 | 2026-05-18 | 增加评价管理、订单管理模块，补充开发流程和调试技巧 |

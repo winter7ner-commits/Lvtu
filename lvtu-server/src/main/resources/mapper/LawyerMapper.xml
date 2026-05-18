@@ -69,6 +69,37 @@
                  l.create_time, l.license_no, u.avatar_url, u.phone, u.auth_status, v.real_name
     </select>
 
+    <!-- 根据律师ID查询已审核律师详情 -->
+    <select id="selectById" resultMap="lawyerMap">
+        SELECT
+            l.lawyer_id,
+            l.law_firm,
+            l.practice_years,
+            l.rating,
+            l.status,
+            l.bio AS description,
+            l.create_time,
+            NULL AS update_time,
+            l.license_no,
+            u.avatar_url,
+            u.phone,
+            u.auth_status AS audit_status,
+            NULL AS audit_remark,
+            v.real_name,
+            GROUP_CONCAT(DISTINCT s.name) AS specialty,
+            COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
+        FROM lawyer l
+                 INNER JOIN users u ON l.user_id = u.user_id
+                 LEFT JOIN users_verfications v ON l.user_id = v.user_id
+                 LEFT JOIN lawyer_specialty ls ON l.lawyer_id = ls.lawyer_id
+                 LEFT JOIN specialty s ON ls.specialty_id = s.specialty_id
+        WHERE l.lawyer_id = #{lawyerId}
+          AND u.auth_status = 2
+          AND l.status = 1
+        GROUP BY l.lawyer_id, l.law_firm, l.practice_years, l.rating, l.status, l.bio,
+                 l.create_time, l.license_no, u.avatar_url, u.phone, u.auth_status, v.real_name
+    </select>
+
     <!-- 评分最高律师 -->
     <select id="selectByTopRating" resultMap="lawyerMap">
         SELECT

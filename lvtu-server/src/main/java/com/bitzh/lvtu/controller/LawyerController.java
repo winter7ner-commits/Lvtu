@@ -27,6 +27,16 @@ public class LawyerController {
         return service.list(specialty);
     }
 
+    // 根据律师ID查询律师详情
+    @GetMapping("/{lawyerId}")
+    public ApiResponse<LawyerDTO> detail(@PathVariable Long lawyerId) {
+        LawyerDTO lawyer = service.detail(lawyerId);
+        if (lawyer == null) {
+            return ApiResponse.fail(404, "律师不存在或未通过认证");
+        }
+        return ApiResponse.success(lawyer);
+    }
+
     /**
      * 获取评分最高的律师列表（热门推荐）
      * @param limit 返回的律师数量，默认3个

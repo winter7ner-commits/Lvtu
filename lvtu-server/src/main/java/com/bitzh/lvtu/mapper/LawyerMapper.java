@@ -16,6 +16,9 @@ public interface LawyerMapper {
     // 查询全部律师（已审核）
     List<LawyerDTO> selectLawyerList();
 
+    // 根据律师ID查询已审核律师详情
+    LawyerDTO selectById(@Param("lawyerId") Long lawyerId);
+
     // 获取评分最高的律师
     List<LawyerDTO> selectByTopRating(@Param("limit") Integer limit);
 

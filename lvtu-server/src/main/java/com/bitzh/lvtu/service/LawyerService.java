@@ -14,6 +14,8 @@ public interface LawyerService {
 
     List<LawyerDTO> list(String specialty);
 
+    LawyerDTO detail(Long lawyerId);
+
     List<LawyerDTO> getTopRatedLawyers(Integer limit);
 
     List<LawyerDTO> pendingList();

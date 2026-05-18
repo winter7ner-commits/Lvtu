@@ -1,258 +1,1047 @@
 <template>
-  <div class="home-page">
-    <!-- Hero Section -->
+  <main class="home-page">
     <section class="hero-section">
-      <div class="hero-content">
-        
-        <!-- Search Bar -->
+      <div class="hero-copy">
+        <p class="eyebrow">律途法律服务</p>
+        <h1>把法律问题交给更合适的专业支持</h1>
+        <p class="subtext">检索律师、法条与个人订单，快速进入咨询、查询和跟进流程。</p>
+
         <div class="hero-search">
-          <input 
+          <el-input
             v-model="searchKeyword"
-            type="text" 
-            placeholder="输入律师名称、专长或地区..." 
-            class="search-input"
+            clearable
+            size="large"
+            placeholder="输入律师、法条、订单号、业务类型或状态"
             @keyup.enter="handleSearch"
           />
-          <button class="search-button" @click="handleSearch">
-            <i class="icon-search"></i>
-            搜索律师
-          </button>
+          <el-button type="primary" size="large" :loading="searching" @click="handleSearch">
+            搜索
+          </el-button>
         </div>
 
-        <!-- Quick Tags -->
         <div class="quick-tags">
-          <span class="tag" @click="searchByKeyword('婚姻法')">婚姻法</span>
-          <span class="tag" @click="searchByKeyword('刑事案件')">刑事案件</span>
-          <span class="tag" @click="searchByKeyword('合同纠纷')">合同纠纷</span>
-          <span class="tag" @click="searchByKeyword('知识产权')">知识产权</span>
+          <button
+            v-for="tag in quickTags"
+            :key="tag"
+            type="button"
+            @click="searchByKeyword(tag)"
+          >
+            {{ tag }}
+          </button>
         </div>
       </div>
-      <div class="hero-image">
-        <img src="/src/assets/images/logo.png" alt="律师服务" />
+
+      <div class="hero-panel">
+        <div class="logo-stage">
+          <span class="logo-ring"></span>
+          <img src="/src/assets/images/logo.png" alt="律途" />
+        </div>
+        <div class="hero-metrics">
+          <div>
+            <strong>{{ hotLawyers.length || '-' }}</strong>
+            <span>热门律师</span>
+          </div>
+          <div>
+            <strong>6</strong>
+            <span>服务类型</span>
+          </div>
+          <div>
+            <strong>24h</strong>
+            <span>需求流转</span>
+          </div>
+        </div>
       </div>
-    </section>        
-  </div>
+    </section>
+
+    <section v-if="hasSearched" class="search-results" v-loading="searching">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">搜索结果</p>
+          <h2>“{{ activeKeyword }}”相关内容</h2>
+        </div>
+        <span>{{ totalResultCount }} 条结果</span>
+      </div>
+
+      <div class="result-grid">
+        <article class="result-panel">
+          <div class="panel-title">
+            <h3>律师</h3>
+            <el-tag effect="plain">{{ lawyerResults.length }}</el-tag>
+          </div>
+          <div v-if="lawyerResults.length" class="result-list">
+            <button
+              v-for="lawyer in lawyerResults"
+              :key="lawyer.lawyerId || lawyer.id"
+              type="button"
+              class="result-item"
+              @click="goToLawyerDetail(lawyer.lawyerId || lawyer.id)"
+            >
+              <span class="item-title">{{ lawyer.name || '未命名律师' }}</span>
+              <small>{{ lawyer.lawFirm || '暂未填写律所' }} · {{ lawyer.practiceYears || '-' }} 年</small>
+              <p>{{ getSpecialtyNames(lawyer).join('、') || lawyer.description || '暂无专长信息' }}</p>
+            </button>
+          </div>
+          <el-empty v-else description="暂无律师结果" />
+        </article>
+
+        <article class="result-panel">
+          <div class="panel-title">
+            <h3>法条</h3>
+            <el-tag effect="plain">{{ articleResults.length }}</el-tag>
+          </div>
+          <div v-if="articleResults.length" class="result-list">
+            <button
+              v-for="article in articleResults"
+              :key="article.id"
+              type="button"
+              class="result-item"
+              @click="openArticle(article)"
+            >
+              <span class="item-title">{{ article.articleNumber || `法条 ${article.id}` }}</span>
+              <small>{{ article.title || '法律条文' }}</small>
+              <p>{{ truncate(article.content, 92) }}</p>
+            </button>
+          </div>
+          <el-empty v-else description="暂无法条结果" />
+        </article>
+
+        <article class="result-panel">
+          <div class="panel-title">
+            <h3>个人订单</h3>
+            <el-tag effect="plain">{{ orderResults.length }}</el-tag>
+          </div>
+          <div v-if="orderNotice" class="login-notice">
+            {{ orderNotice }}
+            <el-button link type="primary" @click="router.push('/login')">去登录</el-button>
+          </div>
+          <div v-else-if="orderResults.length" class="result-list">
+            <button
+              v-for="order in orderResults"
+              :key="order.orderId || order.id"
+              type="button"
+              class="result-item"
+              @click="goToOrderDetail(order.orderId || order.id)"
+            >
+              <span class="item-title">订单 #{{ order.orderId || order.id }}</span>
+              <small>{{ formatServiceType(order.serviceTypeId) }} · {{ order.status || '未知状态' }}</small>
+              <p>{{ formatMoney(order.totalAmount) }} · {{ formatTime(order.createdTime) }}</p>
+            </button>
+          </div>
+          <el-empty v-else description="暂无订单结果" />
+        </article>
+      </div>
+    </section>
+
+    <section class="service-band">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">常用服务</p>
+          <h2>从问题到订单的快速入口</h2>
+        </div>
+        <el-button class="soft-btn" @click="router.push('/order-create')">创建订单</el-button>
+      </div>
+
+      <div class="service-grid">
+        <button
+          v-for="service in services"
+          :key="service.type"
+          type="button"
+          class="service-tile"
+          @click="router.push({ name: 'OrderCreate', query: { type: service.type } })"
+        >
+          <span>{{ service.short }}</span>
+          <strong>{{ service.name }}</strong>
+          <small>{{ service.desc }}</small>
+        </button>
+      </div>
+    </section>
+
+    <section class="home-columns">
+      <article class="home-panel" v-loading="loadingHotLawyers">
+        <div class="section-head compact">
+          <div>
+            <p class="eyebrow">律师推荐</p>
+            <h2>高评分律师</h2>
+          </div>
+          <el-button link type="primary" @click="router.push('/lawyer-list')">全部律师</el-button>
+        </div>
+        <div v-if="hotLawyers.length" class="lawyer-list">
+          <button
+            v-for="lawyer in hotLawyers"
+            :key="lawyer.lawyerId || lawyer.id"
+            type="button"
+            class="lawyer-row"
+            @click="goToLawyerDetail(lawyer.lawyerId || lawyer.id)"
+          >
+            <div class="avatar">{{ getInitials(lawyer.name) }}</div>
+            <div>
+              <strong>{{ lawyer.name || '未命名律师' }}</strong>
+              <span>{{ lawyer.lawFirm || '暂未填写律所' }}</span>
+            </div>
+            <em>{{ Number(lawyer.rating || 0).toFixed(1) }}</em>
+          </button>
+        </div>
+        <el-empty v-else description="暂无推荐律师" />
+      </article>
+
+      <article class="home-panel">
+        <div class="section-head compact">
+          <div>
+            <p class="eyebrow">办事进度</p>
+            <h2>个人订单</h2>
+          </div>
+          <el-button link type="primary" @click="router.push('/orders')">我的订单</el-button>
+        </div>
+        <div class="order-entry">
+          <div>
+            <strong>跟进咨询、支付、服务结果与评价</strong>
+            <p>登录后可在首页搜索自己的订单号、状态和业务类型。</p>
+          </div>
+          <el-button type="primary" plain @click="router.push('/orders')">查看订单</el-button>
+        </div>
+      </article>
+    </section>
+
+    <el-dialog v-model="articleDialogVisible" title="法条详情" width="640px">
+      <div v-if="selectedArticle" class="article-detail">
+        <p class="article-number">{{ selectedArticle.articleNumber || `法条 ${selectedArticle.id}` }}</p>
+        <h3>{{ selectedArticle.title || '法律条文' }}</h3>
+        <p>{{ selectedArticle.content || '暂无条文内容' }}</p>
+      </div>
+    </el-dialog>
+  </main>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getTopRatedLawyers } from '@/api/lawyer'
+import { ElMessage } from 'element-plus'
+import request from '@/utils/request'
+import { getLawyerList, getTopRatedLawyers } from '@/api/lawyer'
+import { getUserOrders } from '@/api/order'
 
 const router = useRouter()
+
 const searchKeyword = ref('')
+const activeKeyword = ref('')
+const hasSearched = ref(false)
+const searching = ref(false)
+const loadingHotLawyers = ref(false)
 const hotLawyers = ref([])
-const loading = ref(false)
+const lawyerResults = ref([])
+const articleResults = ref([])
+const orderResults = ref([])
+const orderNotice = ref('')
+const articleDialogVisible = ref(false)
+const selectedArticle = ref(null)
 
+const quickTags = ['婚姻家事', '合同纠纷', '劳动争议', '知识产权', '待支付']
 
+const services = [
+  { short: '咨', name: '在线法律咨询', type: 'ONLINE_CONSULT', desc: '图文沟通' },
+  { short: '电', name: '电话法律咨询', type: 'PHONE_CONSULT', desc: '预约通话' },
+  { short: '文', name: '文书代写', type: 'DOCUMENT_WRITING', desc: '起草修改' },
+  { short: '合', name: '合同审核', type: 'CONTRACT_REVIEW', desc: '风险排查' },
+  { short: '家', name: '婚姻家事', type: 'MARRIAGE_FAMILY', desc: '家事纠纷' },
+  { short: '诉', name: '诉讼代理', type: 'LITIGATION_AGENT', desc: '案件代理' }
+]
 
-const loadHotLawyers = async () => {
-  loading.value = true
-  try {
-    const res = await getTopRatedLawyers()
-    if (res?.code === 200) {
-      hotLawyers.value = res.data || []
-    }
-  } catch (error) {
-    console.error('加载热门律师失败:', error)
-  } finally {
-    loading.value = false
-  }
+const serviceTypeMap = {
+  101: '在线法律咨询',
+  102: '电话法律咨询',
+  103: '文书代写',
+  104: '合同审核',
+  105: '婚姻家事',
+  106: '诉讼代理'
 }
 
+const totalResultCount = computed(() => {
+  return lawyerResults.value.length + articleResults.value.length + orderResults.value.length
+})
 
-const handleSearch = () => {
-  if (searchKeyword.value.trim()) {
-    router.push({
-      path: '/lawyer-list',
-      query: { keyword: searchKeyword.value }
-    })
+const unwrapData = (res) => {
+  const payload = res?.data ?? res
+  if (payload && typeof payload === 'object' && 'code' in payload) {
+    return Number(payload.code) === 200 ? payload.data : null
   }
+  return payload
+}
+
+const getCurrentUserId = () => {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null')
+  return currentUser?.userId || currentUser?.id || userInfo?.userId || Number(localStorage.getItem('userId')) || null
+}
+
+const getSearchText = (value) => {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'object') return Object.values(value).map(getSearchText).join(' ')
+  return String(value)
+}
+
+const matchesKeyword = (value, keyword) => {
+  return getSearchText(value).toLowerCase().includes(keyword.toLowerCase())
+}
+
+const getSpecialtyNames = (lawyer) => {
+  return (lawyer.specialties || [])
+    .map((item) => item?.name || item?.specialtyName)
+    .filter(Boolean)
+}
+
+const searchLawyers = async (keyword) => {
+  const list = unwrapData(await getLawyerList())
+  if (!Array.isArray(list)) return []
+
+  return list.filter((lawyer) => matchesKeyword([
+    lawyer.name,
+    lawyer.lawFirm,
+    lawyer.description,
+    lawyer.specialty,
+    getSpecialtyNames(lawyer).join(' ')
+  ], keyword)).slice(0, 6)
+}
+
+const searchArticles = async (keyword) => {
+  const res = await request.get('/api/articles')
+  const list = unwrapData(res)
+  if (!Array.isArray(list)) return []
+
+  return list.filter((article) => matchesKeyword([
+    article.articleNumber,
+    article.title,
+    article.content
+  ], keyword)).slice(0, 6)
+}
+
+const normalizeOrderForSearch = (order) => ({
+  ...order,
+  serviceName: formatServiceType(order.serviceTypeId),
+  amountText: formatMoney(order.totalAmount),
+  formText: getSearchText(parseFormData(order.formData))
+})
+
+const searchOrders = async (keyword) => {
+  orderNotice.value = ''
+  const userId = getCurrentUserId()
+  if (!userId) {
+    orderNotice.value = '登录后可搜索个人订单'
+    return []
+  }
+
+  const res = await getUserOrders(userId)
+  const list = unwrapData(res)
+  if (!Array.isArray(list)) return []
+
+  return list
+    .map(normalizeOrderForSearch)
+    .filter((order) => matchesKeyword([
+      order.orderId,
+      order.id,
+      order.status,
+      order.serviceName,
+      order.lawyerId,
+      order.amountText,
+      order.formText
+    ], keyword))
+    .slice(0, 6)
+}
+
+const handleSearch = async () => {
+  const keyword = searchKeyword.value.trim()
+  if (!keyword) {
+    ElMessage.warning('请输入搜索关键词')
+    return
+  }
+
+  searching.value = true
+  hasSearched.value = true
+  activeKeyword.value = keyword
+  lawyerResults.value = []
+  articleResults.value = []
+  orderResults.value = []
+  orderNotice.value = ''
+
+  const [lawyers, articles, orders] = await Promise.allSettled([
+    searchLawyers(keyword),
+    searchArticles(keyword),
+    searchOrders(keyword)
+  ])
+
+  lawyerResults.value = lawyers.status === 'fulfilled' ? lawyers.value : []
+  articleResults.value = articles.status === 'fulfilled' ? articles.value : []
+  orderResults.value = orders.status === 'fulfilled' ? orders.value : []
+
+  if (lawyers.status === 'rejected' || articles.status === 'rejected' || orders.status === 'rejected') {
+    ElMessage.warning('部分搜索结果加载失败，请稍后重试')
+  }
+
+  searching.value = false
 }
 
 const searchByKeyword = (keyword) => {
-  router.push({
-    path: '/lawyer-list',
-    query: { keyword }
-  })
+  searchKeyword.value = keyword
+  handleSearch()
+}
+
+const loadHotLawyers = async () => {
+  loadingHotLawyers.value = true
+  try {
+    const list = unwrapData(await getTopRatedLawyers(4))
+    hotLawyers.value = Array.isArray(list) ? list : []
+  } catch (error) {
+    hotLawyers.value = []
+  } finally {
+    loadingHotLawyers.value = false
+  }
 }
 
 const goToLawyerDetail = (id) => {
+  if (!id) return
   router.push(`/lawyer/${id}`)
 }
 
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+const goToOrderDetail = (id) => {
+  if (!id) return
+  router.push(`/orders/${id}`)
 }
 
-onMounted(() => {
-  loadHotLawyers()
-})
+const openArticle = (article) => {
+  selectedArticle.value = article
+  articleDialogVisible.value = true
+}
+
+const truncate = (value, length = 80) => {
+  const text = value || ''
+  return text.length > length ? `${text.slice(0, length)}...` : text
+}
+
+const formatServiceType = (id) => serviceTypeMap[id] || `服务类型 ${id || '-'}`
+const formatMoney = (value) => `¥${Number(value || 0).toFixed(2)}`
+const formatTime = (value) => (value ? String(value).replace('T', ' ').slice(0, 16) : '-')
+
+const parseFormData = (raw) => {
+  if (!raw) return {}
+  if (typeof raw === 'object') return raw
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return { content: raw }
+  }
+}
+
+const getInitials = (name = '律师') => name.slice(-2)
+
+onMounted(loadHotLawyers)
 </script>
 
 <style scoped>
 .home-page {
   min-height: 100vh;
-  background: #ffffff;
+  padding: 32px 20px 56px;
+  background: #f5f7fb;
+  color: #172033;
+  text-align: left;
+  overflow-x: hidden;
 }
 
-/* Hero Section */
-.hero-section {
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #60a5fa 100%);
-  padding: 80px 20px;
+.home-page *,
+.home-page *::before,
+.home-page *::after {
+  box-sizing: border-box;
+}
+
+.home-page .hero-section,
+.home-page .search-results,
+.home-page .service-band,
+.home-page .home-columns {
+  width: min(1180px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.home-page .hero-section {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-
-  position: relative; 
-  z-index: 1;
-  margin-top: 0;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 28px;
+  align-items: stretch;
 }
 
-.hero-content {
-  color: #ffffff;
-  animation: slideInLeft 0.6s ease-out;
-}
-
-.hero-search {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 30px;
-}
-
-.search-input {
-  flex: 1;
-  padding: 14px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.search-input:focus {
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-}
-
-.search-button {
+.home-page .hero-copy,
+.home-page .hero-panel,
+.home-page .search-results,
+.home-page .service-band,
+.home-page .home-panel {
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
   background: #ffffff;
-  color: #1e40af;
-  border: none;
-  padding: 14px 30px;
-  border-radius: 6px;
-  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.home-page .hero-copy,
+.home-page .hero-panel {
+  min-width: 0;
+}
+
+.home-page .hero-copy {
+  padding: 34px;
+  animation: homeFadeUp 0.58s ease both;
+}
+
+.home-page .eyebrow {
+  margin: 0 0 8px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.home-page h1,
+.home-page h2,
+.home-page h3,
+.home-page .subtext {
+  margin: 0;
+}
+
+.home-page h1 {
+  max-width: 720px;
+  color: #172033;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: 0;
+}
+
+.home-page h2 {
+  color: #172033;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.home-page h3 {
+  color: #172033;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.home-page .subtext {
+  margin-top: 14px;
+  color: #667085;
+  font-size: 16px;
+}
+
+.home-page .hero-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.home-page .hero-search :deep(.el-input__wrapper),
+.home-page .hero-search :deep(.el-button) {
+  border-radius: 8px;
+}
+
+.home-page .quick-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.home-page .quick-tags button {
+  padding: 8px 12px;
+  border: 1px solid #dbe4f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475467;
   cursor: pointer;
-  transition: all 0.3s ease;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.home-page .quick-tags button:hover {
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+.home-page .hero-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 24px;
+  overflow: hidden;
+  animation: homeFadeUp 0.7s ease 0.08s both;
+}
+
+.home-page .logo-stage {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  min-height: 236px;
+  isolation: isolate;
 }
 
-.search-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+.home-page .logo-stage::before {
+  content: '';
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.16), rgba(37, 99, 235, 0) 62%);
+  animation: logoGlow 3.6s ease-in-out infinite;
+  z-index: -2;
 }
 
-.quick-tags {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
+.home-page .logo-stage::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.45);
+  transform: translate(116px, -58px);
+  animation: logoDot 4.8s ease-in-out infinite;
+  z-index: -1;
 }
 
-.tag {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+.home-page .logo-ring {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: 50%;
+  animation: logoOrbit 10s linear infinite;
+  z-index: -1;
 }
 
-.tag:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
+.home-page .logo-ring::before,
+.home-page .logo-ring::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
 }
 
-.hero-image {
-  animation: slideInRight 0.6s ease-out;
+.home-page .logo-ring::before {
+  inset: 20px;
+  border: 1px dashed rgba(20, 184, 166, 0.18);
 }
 
-.hero-image img {
-  width: 100%;
+.home-page .logo-ring::after {
+  top: 28px;
+  right: 46px;
+  width: 8px;
+  height: 8px;
+  background: #2563eb;
+  box-shadow: 0 0 18px rgba(37, 99, 235, 0.48);
+}
+
+.home-page .hero-panel img {
+  display: block;
+  width: min(100%, 320px);
+  max-width: 100%;
   height: auto;
-  object-fit: cover;
+  max-height: 210px;
+  margin: 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 18px rgba(37, 99, 235, 0.14));
+  animation: logoFloat 4.2s ease-in-out infinite;
 }
 
+.home-page .hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
 
+.home-page .hero-metrics div {
+  padding: 12px 10px;
+  border-radius: 8px;
+  background: #f6f8fc;
+  text-align: center;
+  animation: homeFadeUp 0.5s ease both;
+}
 
-/* Animations */
-@keyframes slideInLeft {
+.home-page .hero-metrics div:nth-child(1) {
+  animation-delay: 0.18s;
+}
+
+.home-page .hero-metrics div:nth-child(2) {
+  animation-delay: 0.26s;
+}
+
+.home-page .hero-metrics div:nth-child(3) {
+  animation-delay: 0.34s;
+}
+
+.home-page .hero-metrics strong {
+  display: block;
+  color: #1d4ed8;
+  font-size: 22px;
+}
+
+.home-page .hero-metrics span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.home-page .search-results,
+.home-page .service-band {
+  margin-top: 20px;
+  padding: 22px;
+}
+
+.home-page .section-head,
+.home-page .panel-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.home-page .section-head {
+  margin-bottom: 18px;
+}
+
+.home-page .section-head > span {
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.home-page .compact {
+  margin-bottom: 16px;
+}
+
+.home-page .result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.home-page .result-panel {
+  min-height: 320px;
+  padding: 16px;
+  border: 1px solid #edf1f7;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.home-page .panel-title {
+  margin-bottom: 12px;
+}
+
+.home-page .result-list,
+.home-page .lawyer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home-page .result-item,
+.home-page .lawyer-row,
+.home-page .service-tile {
+  width: 100%;
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.home-page .result-item {
+  padding: 12px;
+}
+
+.home-page .result-item:hover,
+.home-page .lawyer-row:hover,
+.home-page .service-tile:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.1);
+  transform: translateY(-1px);
+}
+
+.home-page .item-title,
+.home-page .lawyer-row strong {
+  display: block;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.home-page .result-item small,
+.home-page .lawyer-row span {
+  display: block;
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.home-page .result-item p {
+  margin: 8px 0 0;
+  color: #475467;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.home-page .login-notice {
+  padding: 16px;
+  border: 1px dashed #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 14px;
+}
+
+.home-page .soft-btn {
+  border-color: #d6e4ff;
+  color: #1d4ed8;
+  background: #ffffff;
+}
+
+.home-page .service-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-page .service-tile {
+  min-height: 126px;
+  padding: 16px;
+  animation: homeFadeUp 0.5s ease both;
+}
+
+.home-page .service-tile:nth-child(1) {
+  animation-delay: 0.08s;
+}
+
+.home-page .service-tile:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.home-page .service-tile:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.home-page .service-tile:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.home-page .service-tile:nth-child(5) {
+  animation-delay: 0.24s;
+}
+
+.home-page .service-tile:nth-child(6) {
+  animation-delay: 0.28s;
+}
+
+.home-page .service-tile span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 900;
+}
+
+.home-page .service-tile strong,
+.home-page .service-tile small {
+  display: block;
+}
+
+.home-page .service-tile strong {
+  margin-top: 12px;
+  color: #172033;
+  font-size: 15px;
+}
+
+.home-page .service-tile small {
+  margin-top: 5px;
+  color: #667085;
+}
+
+.home-page .home-columns {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.home-page .home-panel {
+  padding: 22px;
+}
+
+.home-page .lawyer-row {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+}
+
+.home-page .avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 900;
+}
+
+.home-page .lawyer-row em {
+  color: #1d4ed8;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.home-page .order-entry {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  min-height: 144px;
+  padding: 18px;
+  border-radius: 8px;
+  background: #f6f8fc;
+}
+
+.home-page .order-entry strong {
+  color: #172033;
+}
+
+.home-page .order-entry p {
+  margin: 8px 0 0;
+  color: #667085;
+  line-height: 1.7;
+}
+
+.home-page .article-detail h3 {
+  margin: 0 0 12px;
+}
+
+.home-page .article-detail p {
+  color: #475467;
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+.home-page .article-number {
+  margin: 0 0 8px;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+@keyframes homeFadeUp {
   from {
     opacity: 0;
-    transform: translateX(-30px);
+    translate: 0 14px;
   }
+
   to {
     opacity: 1;
-    transform: translateX(0);
+    translate: 0 0;
   }
 }
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+
+  50% {
+    transform: translateY(-10px) rotate(1deg);
   }
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+@keyframes logoGlow {
+  0%,
+  100% {
+    opacity: 0.68;
+    transform: scale(0.96);
   }
-  to {
+
+  50% {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1.04);
   }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .hero-section {
+@keyframes logoOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes logoDot {
+  0%,
+  100% {
+    transform: translate(116px, -58px) scale(1);
+  }
+
+  50% {
+    transform: translate(102px, -70px) scale(1.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page *,
+  .home-page *::before,
+  .home-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .home-page .hero-section,
+  .home-page .result-grid,
+  .home-page .home-columns {
     grid-template-columns: 1fr;
-    padding: 50px 15px;
-    gap: 30px;
   }
 
-  .hero-search {
-    flex-direction: column;
+  .home-page .service-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
-  .search-button {
-    justify-content: center;
-  }
-
 }
 
-@media (max-width: 480px) {
-
-  .quick-tags {
-    gap: 8px;
+@media (max-width: 640px) {
+  .home-page {
+    padding: 20px 12px 40px;
   }
 
-  .tag {
-    font-size: 12px;
-    padding: 6px 12px;
+  .home-page .hero-copy,
+  .home-page .hero-panel,
+  .home-page .search-results,
+  .home-page .service-band,
+  .home-page .home-panel {
+    padding: 16px;
   }
 
+  .home-page h1 {
+    font-size: 28px;
+  }
 
+  .home-page .hero-search,
+  .home-page .service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-page .section-head,
+  .home-page .order-entry {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>

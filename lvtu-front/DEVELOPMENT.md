@@ -258,6 +258,90 @@ views/
 
 ---
 
+### `/src/views/evaluation` - 评价模块
+
+**作用**: 管理评价相关的页面组件
+
+**命名规范**:
+
+- **文件名**: PascalCase (如 `EvaluationList.vue`, `EvaluationForm.vue`)
+- **目录结构**: 按功能划分
+
+**结构示例**:
+
+```
+views/
+  ├── evaluation/             # 评价模块
+  │   ├── EvaluationList.vue  # 评价列表页
+  │   ├── EvaluationForm.vue  # 评价表单页
+  │   └── EvaluationDetail.vue # 评价详情页
+```
+
+---
+
+### `/src/views/order` - 订单模块
+
+**作用**: 管理订单相关的页面组件
+
+**命名规范**:
+
+- **文件名**: PascalCase (如 `OrderList.vue`, `OrderDetail.vue`)
+- **目录结构**: 按功能划分
+
+**结构示例**:
+
+```
+views/
+  ├── order/                  # 订单模块
+  │   ├── OrderList.vue       # 订单列表页
+  │   ├── OrderDetail.vue     # 订单详情页
+  │   └── OrderForm.vue       # 订单表单页
+```
+
+---
+
+### `/src/api/evaluation.js` - 评价相关接口
+
+**作用**: 定义评价模块的 API 接口
+
+**示例**:
+
+```javascript
+import request from './request'
+
+// 获取评价列表
+export const getEvaluationList = (params) => request.get('/api/evaluations', { params })
+
+// 获取评价详情
+export const getEvaluationDetail = (id) => request.get(`/api/evaluations/${id}`)
+
+// 创建评价
+export const createEvaluation = (data) => request.post('/api/evaluations', data)
+```
+
+---
+
+### `/src/api/order.js` - 订单相关接口
+
+**作用**: 定义订单模块的 API 接口
+
+**示例**:
+
+```javascript
+import request from './request'
+
+// 获取订单列表
+export const getOrderList = (params) => request.get('/api/orders', { params })
+
+// 获取订单详情
+export const getOrderDetail = (id) => request.get(`/api/orders/${id}`)
+
+// 创建订单
+export const createOrder = (data) => request.post('/api/orders', data)
+```
+
+---
+
 ### `/src/utils` - 工具函数
 
 **作用**: 存放可复用的工具函数和辅助方法
