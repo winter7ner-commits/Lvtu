@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.OrderMapper">
+
+    <resultMap id="OrderResultMap" type="com.bitzh.lvtu.entity.Order">
+        <id property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="lawyerId" column="lawyer_id"/>
+        <result property="serviceTypeId" column="service_type_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="status" column="status"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="updatedTime" column="updated_time"/>
+        <result property="detailId" column="detail_id"/>
+        <result property="formData" column="form_data"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.bitzh.lvtu.entity.Order"
+            useGeneratedKeys="true" keyProperty="orderId" keyColumn="order_id">
+        INSERT INTO `order` (
+            user_id,
+            lawyer_id,
+            service_type_id,
+            total_amount,
+            status
+        ) VALUES (
+            #{userId},
+            #{lawyerId},
+            #{serviceTypeId},
+            #{totalAmount},
+            #{status}
+        )
+    </insert>
+
+    <insert id="insertDetail" parameterType="com.bitzh.lvtu.entity.Order"
+            useGeneratedKeys="true" keyProperty="detailId" keyColumn="detail_id">
+        INSERT INTO order_service_detail (
+            order_id,
+            form_data
+        ) VALUES (
+            #{orderId},
+            #{formData}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.bitzh.lvtu.entity.Order">
+        UPDATE `order`
+        <set>
+            <if test="lawyerId != null">lawyer_id = #{lawyerId},</if>
+            <if test="serviceTypeId != null">service_type_id = #{serviceTypeId},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE order_id = #{orderId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM `order`
+        WHERE order_id = #{orderId}
+    </delete>
+
+    <select id="selectById" resultMap="OrderResultMap">
+        SELECT
+            order_id,
+            user_id,
+            lawyer_id,
+            service_type_id,
+            total_amount,
+            status,
+            created_time,
+            updated_time
+        FROM `order`
+        WHERE order_id = #{orderId}
+    </select>
+
+    <select id="selectByUserId" resultMap="OrderResultMap">
+        SELECT
+            o.order_id,
+            o.user_id,
+            o.lawyer_id,
+            o.service_type_id,
+            o.total_amount,
+            o.status,
+            o.created_time,
+            o.updated_time,
+            d.detail_id,
+            CAST(d.form_data AS CHAR) AS form_data
+        FROM `order` o
+        LEFT JOIN order_service_detail d ON d.order_id = o.order_id
+        WHERE o.user_id = #{userId}
+        ORDER BY o.created_time DESC
+    </select>
+
+    <select id="selectByStatus" resultMap="OrderResultMap">
+        SELECT
+            o.order_id,
+            o.user_id,
+            o.lawyer_id,
+            o.service_type_id,
+            o.total_amount,
+            o.status,
+            o.created_time,
+            o.updated_time,
+            d.detail_id,
+            CAST(d.form_data AS CHAR) AS form_data
+        FROM `order` o
+        LEFT JOIN order_service_detail d ON d.order_id = o.order_id
+        WHERE o.status = #{status}
+        ORDER BY o.created_time DESC
+    </select>
+
+    <select id="selectDetailByOrderId" resultMap="OrderResultMap">
+        SELECT
+            o.order_id,
+            o.user_id,
+            o.lawyer_id,
+            o.service_type_id,
+            o.total_amount,
+            o.status,
+            o.created_time,
+            o.updated_time,
+            d.detail_id,
+            CAST(d.form_data AS CHAR) AS form_data
+        FROM `order` o
+        LEFT JOIN order_service_detail d ON d.order_id = o.order_id
+        WHERE o.order_id = #{orderId}
+    </select>
+
+    <select id="calculateTotalAmountByOrderId" resultType="java.math.BigDecimal">
+        SELECT total_amount
+        FROM `order`
+        WHERE order_id = #{orderId}
+    </select>
+
+    <update id="completeEvaluatedPendingOrder">
+        UPDATE `order` o
+        SET o.status = '已完成'
+        WHERE o.order_id = #{orderId}
+          AND o.status = '待评价'
+          AND EXISTS (
+              SELECT 1
+              FROM evaluation e
+              WHERE e.order_id = o.order_id
+          )
+    </update>
+
+    <update id="completeEvaluatedPendingOrdersByUserId">
+        UPDATE `order` o
+        SET o.status = '已完成'
+        WHERE o.user_id = #{userId}
+          AND o.status = '待评价'
+          AND EXISTS (
+              SELECT 1
+              FROM evaluation e
+              WHERE e.order_id = o.order_id
+          )
+    </update>
+</mapper>

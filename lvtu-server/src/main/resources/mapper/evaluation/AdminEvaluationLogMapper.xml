@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.evaluation.AdminEvaluationLogMapper">
+
+    <resultMap id="AdminLogResultMap" type="com.bitzh.lvtu.entity.evaluation.AdminEvaluationLog">
+        <id property="logId" column="log_id"/>
+        <result property="evaluationId" column="evaluation_id"/>
+        <result property="adminId" column="admin_id"/>
+        <result property="actionType" column="action_type" typeHandler="com.bitzh.lvtu.config.ActionTypeTypeHandler"/>
+        <result property="reason" column="reason"/>
+        <result property="createdTime" column="created_time"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO admin_evaluation_log (
+            evaluation_id,
+            admin_id,
+            action_type,
+            reason
+        ) VALUES (
+            #{evaluationId},
+            #{adminId},
+            #{actionType.value},
+            #{reason}
+        )
+    </insert>
+
+    <select id="findByEvaluationIdOrderByCreatedTimeDesc" resultMap="AdminLogResultMap">
+        SELECT * FROM admin_evaluation_log
+        WHERE evaluation_id = #{evaluationId}
+        ORDER BY created_time DESC
+    </select>
+</mapper>

@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.evaluation.EvaluationMapper">
+
+    <resultMap id="EvaluationResultMap" type="com.bitzh.lvtu.entity.evaluation.Evaluation">
+        <id property="evaluationId" column="evaluation_id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="lawyerId" column="lawyer_id"/>
+        <result property="professionalScore" column="professional_score"/>
+        <result property="responsivenessScore" column="responsiveness_score"/>
+        <result property="attitudeScore" column="attitude_score"/>
+        <result property="totalScore" column="total_score"/>
+        <result property="content" column="content"/>
+        <result property="isAnonymous" column="is_anonymous"/>
+        <result property="status" column="status" typeHandler="com.bitzh.lvtu.config.EvaluationStatusTypeHandler"/>
+        <result property="reportCount" column="report_count"/>
+        <result property="isFeatured" column="is_featured"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="updatedTime" column="updated_time"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="evaluationId">
+        INSERT INTO evaluation (
+            order_id,
+            user_id,
+            lawyer_id,
+            professional_score,
+            responsiveness_score,
+            attitude_score,
+            total_score,
+            content,
+            is_anonymous,
+            status,
+            report_count,
+            is_featured
+        ) VALUES (
+            #{orderId},
+            #{userId},
+            #{lawyerId},
+            #{professionalScore},
+            #{responsivenessScore},
+            #{attitudeScore},
+            #{totalScore},
+            #{content},
+            #{isAnonymous},
+            #{status.value},
+            #{reportCount},
+            #{isFeatured}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE evaluation
+        <set>
+            <if test="professionalScore != null">professional_score = #{professionalScore},</if>
+            <if test="responsivenessScore != null">responsiveness_score = #{responsivenessScore},</if>
+            <if test="attitudeScore != null">attitude_score = #{attitudeScore},</if>
+            <if test="totalScore != null">total_score = #{totalScore},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="isAnonymous != null">is_anonymous = #{isAnonymous},</if>
+            <if test="status != null">status = #{status.value},</if>
+            <if test="reportCount != null">report_count = #{reportCount},</if>
+            <if test="isFeatured != null">is_featured = #{isFeatured},</if>
+            updated_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE evaluation_id = #{evaluationId}
+    </update>
+
+    <select id="findById" resultMap="EvaluationResultMap">
+        SELECT * FROM evaluation
+        WHERE evaluation_id = #{evaluationId}
+    </select>
+
+    <select id="findByOrderId" resultMap="EvaluationResultMap">
+        SELECT * FROM evaluation
+        WHERE order_id = #{orderId}
+    </select>
+
+    <select id="findByLawyerIdAndStatus" resultMap="EvaluationResultMap">
+        SELECT * FROM evaluation
+        WHERE lawyer_id = #{lawyerId} AND status = #{status}
+        ORDER BY created_time DESC
+    </select>
+    
+    <update id="incrementReportCount">
+        UPDATE evaluation
+        SET report_count = report_count + 1
+        WHERE evaluation_id = #{evaluationId}
+    </update>
+</mapper>

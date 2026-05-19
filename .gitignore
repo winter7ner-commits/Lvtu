@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.vite/
+.npm-cache/
+.DS_Store
+.idea/
+.vscode/
+target/
+lvtu_uploads/
+*.log
+hs_err_pid*
