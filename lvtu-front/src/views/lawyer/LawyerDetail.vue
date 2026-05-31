@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getLawyerDetail, getLawyerList } from '@/api/lawyer'
+import EvaluationList from '@/components/evaluation/EvaluationList.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -212,6 +213,14 @@ watch(
             </dl>
           </section>
         </div>
+
+        <!-- 用户评价 -->
+        <section class="detail-panel evaluations-section">
+          <div class="panel-head">
+            <h2>用户评价</h2>
+          </div>
+          <EvaluationList :lawyer-id="detail.lawyerId" :can-report="false" />
+        </section>
       </template>
 
       <el-empty
@@ -482,6 +491,18 @@ h2 {
   border: 1px solid #e5eaf3;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.evaluations-section {
+  margin-top: 16px;
+}
+
+.evaluations-section :deep(.loading),
+.evaluations-section :deep(.empty) {
+  text-align: center;
+  color: #98a2b3;
+  padding: 32px 0;
+  font-size: 15px;
 }
 
 @media (max-width: 820px) {
