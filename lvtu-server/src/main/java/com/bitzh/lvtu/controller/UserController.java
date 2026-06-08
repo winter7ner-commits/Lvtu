@@ -49,7 +49,7 @@ public class UserController {
     }
 
     /**
-     * 更新用户基本资料（手机号、邮箱、地区）
+     * 更新用户基本资料（用户名、手机号、邮箱、地区）
      */
     @PutMapping("/profile")
     public ApiResponse<UserDTO> updateProfile(
@@ -65,11 +65,12 @@ public class UserController {
                 return ApiResponse.fail(401, "无效token");
             }
 
+            String username = body.get("username");
             String phone = body.get("phone");
             String email = body.get("email");
             String region = body.get("region");
 
-            User user = userService.updateUserProfile(userId, phone, email, region);
+            User user = userService.updateUserProfile(userId, username, phone, email, region);
             return ApiResponse.success(UserDTO.from(user));
         } catch (IllegalArgumentException e) {
             System.err.println("更新用户信息参数错误: " + e.getMessage());
@@ -159,6 +160,39 @@ public class UserController {
             return ApiResponse.success("账号已注销", null);
         } catch (Exception e) {
             return ApiResponse.fail(500, "账号注销失败");
+        }
+    }
+
+    /**
+     * 恢复已注销账号（管理员操作）
+     */
+    @PostMapping("/restore")
+    public ApiResponse<UserDTO> restoreUser(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody Map<String, Long> body) {
+        try {
+            if (authorization == null || !authorization.startsWith("Bearer ")) {
+                return ApiResponse.fail(401, "未登录");
+            }
+            String token = authorization.substring(7);
+            Long currentUserId = JwtUtil.getUserId(token);
+            if (currentUserId == null) {
+                return ApiResponse.fail(401, "无效token");
+            }
+            User currentUser = userService.findById(currentUserId);
+            if (currentUser == null || currentUser.getUserType() == null || currentUser.getUserType() != 3) {
+                return ApiResponse.fail(403, "无管理员权限");
+            }
+            Long userId = body.get("userId");
+            if (userId == null) {
+                return ApiResponse.fail(400, "恢复用户ID不能为空");
+            }
+            User user = userService.restoreUser(userId);
+            return ApiResponse.success(UserDTO.from(user));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.fail(400, e.getMessage());
+        } catch (Exception e) {
+            return ApiResponse.fail(500, "账号恢复失败");
         }
     }
 }

@@ -21,7 +21,7 @@
             <li><a href="#" class="footer-link">找律师</a></li>
             <li><a href="#" class="footer-link">法律咨询</a></li>
             <li><a href="#" class="footer-link">案件委托</a></li>
-            <li><a href="#" class="footer-link">帮助中心</a></li>
+            <li><router-link to="/help-center" class="footer-link">帮助中心</router-link></li>
           </ul>
         </div>
 
@@ -30,7 +30,7 @@
           <div class="section-title">支持</div>
           <ul class="section-links">
             <li><a href="#" class="footer-link">联系我们</a></li>
-            <li><a href="#" class="footer-link">常见问题</a></li>
+            <li><router-link to="/help-center" class="footer-link">常见问题</router-link></li>
             <li><a href="#" class="footer-link">用户反馈</a></li>
             <li><a href="#" class="footer-link">意见建议</a></li>
           </ul>

@@ -23,6 +23,8 @@ import EvaluationDashboard from '../views/evaluation/EvaluationDashboard.vue'
 // import AdminRegister from '../views/auth/AdminRegister.vue'
 
 import UserProfile from '../views/user/UserProfile.vue'
+import HelpCenter from '../views/HelpCenter.vue'
+import RestoreAccount from '../views/auth/RestoreAccount.vue'
 // import Settings from '../views/Settings.vue'
 
 import { useAuthStore } from '../store/auth'
@@ -62,6 +64,8 @@ const router = createRouter({
     // { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
 
     { path: '/user-profile', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
+    { path: '/help-center', component: HelpCenter, name: 'HelpCenter' },
+    { path: '/restore-account', component: RestoreAccount, name: 'RestoreAccount' },
     // { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
   ]
 })

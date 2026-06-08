@@ -144,4 +144,104 @@ public class AuthController {
         }
         return ApiResponse.success(UserDTO.from(user));
     }
+
+    /**
+     * 根据手机号查询已注销账号列表（第一步：身份验证后展示可恢复的账号）
+     */
+    @PostMapping("/restore/query")
+    public ApiResponse<java.util.List<java.util.Map<String, Object>>> queryDeactivatedAccounts(@RequestBody Map<String, String> body) {
+        try {
+            String phone = body.get("phone");
+            if (phone == null || phone.trim().isEmpty()) {
+                return ApiResponse.fail(400, "手机号不能为空");
+            }
+
+            java.util.List<User> deactivatedUsers = userService.findDeactivatedUsersByPhone(phone);
+            if (deactivatedUsers == null || deactivatedUsers.isEmpty()) {
+                return ApiResponse.fail(404, "该手机号未关联已注销账号");
+            }
+
+            // 只返回必要信息：userId、username、createdTime
+            java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+            for (User user : deactivatedUsers) {
+                java.util.Map<String, Object> info = new java.util.HashMap<>();
+                info.put("userId", user.getUserId());
+                info.put("username", user.getUsername());
+                info.put("createdTime", user.getCreatedTime());
+                result.add(info);
+            }
+            return ApiResponse.success(result);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.fail(400, e.getMessage());
+        } catch (Exception e) {
+            return ApiResponse.fail(500, "查询失败");
+        }
+    }
+
+    /**
+     * 检查手机号冲突情况（第二步：选择账号后检查冲突）
+     */
+    @PostMapping("/restore/check-conflict")
+    public ApiResponse<java.util.Map<String, Object>> checkPhoneConflict(@RequestBody Map<String, String> body) {
+        try {
+            String phone = body.get("phone");
+            if (phone == null || phone.trim().isEmpty()) {
+                return ApiResponse.fail(400, "手机号不能为空");
+            }
+
+            User activeUser = userService.findActiveUserByPhone(phone);
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("hasConflict", activeUser != null);
+            if (activeUser != null) {
+                result.put("conflictUsername", activeUser.getUsername());
+                result.put("conflictUserId", activeUser.getUserId());
+            }
+            return ApiResponse.success(result);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.fail(400, e.getMessage());
+        } catch (Exception e) {
+            return ApiResponse.fail(500, "检查失败");
+        }
+    }
+
+    /**
+     * 执行自助恢复账号（第三步：确认恢复）
+     */
+    @PostMapping("/restore/execute")
+    public ApiResponse<java.util.Map<String, Object>> executeRestore(@RequestBody Map<String, Object> body) {
+        try {
+            Object userIdObj = body.get("userId");
+            if (userIdObj == null) {
+                return ApiResponse.fail(400, "用户ID不能为空");
+            }
+            Long userId;
+            if (userIdObj instanceof Integer) {
+                userId = ((Integer) userIdObj).longValue();
+            } else if (userIdObj instanceof Long) {
+                userId = (Long) userIdObj;
+            } else {
+                userId = Long.parseLong(userIdObj.toString());
+            }
+
+            Boolean confirmPhoneTransfer = (Boolean) body.get("confirmPhoneTransfer");
+            if (confirmPhoneTransfer == null) {
+                confirmPhoneTransfer = false;
+            }
+
+            User restoredUser = userService.selfRestoreAccount(userId, confirmPhoneTransfer);
+
+            // 生成新token，让用户直接登录
+            String token = JwtUtil.generateToken(restoredUser.getUserId(), restoredUser.getUsername());
+
+            java.util.Map<String, Object> data = new java.util.HashMap<>();
+            data.put("token", token);
+            data.put("user", UserDTO.from(restoredUser));
+            return ApiResponse.success("账号恢复成功", data);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.fail(400, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail(500, "账号恢复失败");
+        }
+    }
 }

@@ -34,4 +34,13 @@ public interface UserMapper {
                           @Param("email") String email, @Param("region") String region);
 
     int deleteUser(@Param("userId") Long userId);
+
+    // 查询手机号关联的所有已注销账号
+    java.util.List<User> selectDeactivatedUsersByPhone(@Param("phone") String phone);
+
+    // 查询手机号关联的正常状态账号
+    User selectActiveUserByPhone(@Param("phone") String phone);
+
+    // 解绑手机号
+    int unbindPhone(@Param("userId") Long userId);
 }

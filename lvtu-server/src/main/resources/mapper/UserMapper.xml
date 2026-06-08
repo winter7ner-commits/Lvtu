@@ -19,6 +19,7 @@
         <result property="createdTime" column="created_time"/>
         <result property="updatedTime" column="updated_time"/>
         <result property="region" column="region"/>
+        <result property="deactivatedPhone" column="deactivated_phone"/>
     </resultMap>
 
     <resultMap id="userVerificationMap" type="com.bitzh.lvtu.dto.UserVerificationDTO">
@@ -34,7 +35,7 @@
     </resultMap>
 
     <select id="selectByUsername" resultMap="userMap">
-        SELECT * FROM users WHERE username = #{username} LIMIT 1
+        SELECT * FROM users WHERE username = #{username} ORDER BY status DESC, user_id DESC LIMIT 1
     </select>
 
     <select id="selectByEmail" resultMap="userMap">
@@ -113,6 +114,10 @@
             <if test="status != null">status = #{status},</if>
             <if test="isVerified != null">is_verified = #{isVerified},</if>
             <if test="authStatus != null">auth_status = #{authStatus},</if>
+            <choose>
+                <when test="deactivatedPhone != null">deactivated_phone = #{deactivatedPhone},</when>
+                <otherwise>deactivated_phone = NULL,</otherwise>
+            </choose>
             updated_time = NOW()
         </set>
         WHERE user_id = #{userId}
@@ -134,6 +139,7 @@
     <update id="updateUserProfile">
         UPDATE users
         <set>
+            <if test="username != null">username = #{username},</if>
             <if test="phone != null">phone = #{phone},</if>
             <if test="email != null">email = #{email},</if>
             <if test="region != null">region = #{region},</if>
@@ -143,9 +149,23 @@
     </update>
 
 
-    <delete id="deleteUser">
-        DELETE FROM users WHERE user_id = #{userId}
-    </delete>
+    <update id="deleteUser">
+        UPDATE users
+        SET status = 0, updated_time = NOW()
+        WHERE user_id = #{userId}
+    </update>
 
+    <select id="selectDeactivatedUsersByPhone" resultMap="userMap">
+        SELECT * FROM users WHERE deactivated_phone = #{phone} AND status = 0
+    </select>
+
+    <select id="selectActiveUserByPhone" resultMap="userMap">
+        SELECT * FROM users WHERE phone = #{phone} AND status != 0 LIMIT 1
+    </select>
+
+    <update id="unbindPhone">
+        UPDATE users SET phone = NULL, updated_time = NOW()
+        WHERE user_id = #{userId}
+    </update>
 
 </mapper>

@@ -71,6 +71,7 @@
           </div>
         </div>
 
+        <router-link to="/help-center" class="nav-item">帮助中心</router-link>
         <router-link to="/about" class="nav-item">关于我们</router-link>
       </nav>
 

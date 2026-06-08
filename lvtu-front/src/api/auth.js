@@ -29,3 +29,17 @@ export const changePassword = (data) => {
 export const me = () => {
   return request.get('/api/auth/me').then((res) => res.data)
 }
+
+// 查询已注销账号
+export const queryDeactivatedAccounts = (phone) => {
+  return request.post('/api/auth/restore/query', { phone }).then(res => res.data)
+}
+// 检查手机号冲突
+export const checkPhoneConflict = (phone) => {
+  return request.post('/api/auth/restore/check-conflict', { phone }).then(res => res.data)
+}
+// 执行恢复账号
+export const executeRestore = (data) => {
+  return request.post('/api/auth/restore/execute', data).then(res => res.data)
+}
+

@@ -56,6 +56,9 @@
           <div class="signup-link">
             没有账户？<el-link type="primary" @click="goToSignup">立即注册</el-link>
           </div>
+          <div class="restore-link">
+            账号已注销？<el-link type="primary" @click="goToRestore">恢复已注销账号</el-link>
+          </div>
         </el-form>
       </div>
     </div>
@@ -147,6 +150,10 @@ const handleForgotPassword = () => {
 
 const goToSignup = () => {
   router.push('/register')
+}
+
+const goToRestore = () => {
+  router.push('/restore-account')
 }
 </script>
 
@@ -256,6 +263,18 @@ const goToSignup = () => {
 
 .signup-link :deep(.el-link) {
   vertical-align: baseline;
+}
+
+.restore-link {
+  text-align: center;
+  font-size: 13px;
+  color: #8c8fa3;
+  margin-top: 10px;
+}
+
+.restore-link :deep(.el-link) {
+  vertical-align: baseline;
+  font-size: 13px;
 }
 
 @media (max-width: 480px) {

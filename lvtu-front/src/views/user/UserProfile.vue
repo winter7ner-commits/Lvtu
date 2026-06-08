@@ -18,6 +18,7 @@
         </div>
         <div class="user-brief">
           <h3>{{ form.username }}</h3>
+          <div class="user-id-display">ID: {{ form.userId || '未知' }}</div>
           <span class="user-type-badge" :class="userTypeClass">{{ userTypeLabel }}</span>
         </div>
       </div>
@@ -41,7 +42,14 @@
           <div class="form-row">
             <div class="form-group">
               <label>用户名</label>
-              <input type="text" v-model="form.username" disabled class="form-input disabled" />
+              <input
+                type="text"
+                v-model="editForm.username"
+                :disabled="!isEditing"
+                class="form-input"
+                :class="{ disabled: !isEditing }"
+                placeholder="请输入用户名"
+              />
             </div>
             <div class="form-group">
               <label>用户类型</label>
@@ -54,7 +62,7 @@
               <label>手机号</label>
               <input
                 type="tel"
-                v-model="form.phone"
+                v-model="editForm.phone"
                 :disabled="!isEditing"
                 class="form-input"
                 :class="{ disabled: !isEditing }"
@@ -65,7 +73,7 @@
               <label>邮箱</label>
               <input
                 type="email"
-                v-model="form.email"
+                v-model="editForm.email"
                 :disabled="!isEditing"
                 class="form-input"
                 :class="{ disabled: !isEditing }"
@@ -79,7 +87,7 @@
               <label>所在地区</label>
               <input
                 type="text"
-                v-model="form.region"
+                v-model="editForm.region"
                 :disabled="!isEditing"
                 class="form-input"
                 :class="{ disabled: !isEditing }"
@@ -126,6 +134,7 @@
         </div>
         <div class="security-actions">
           <button class="security-btn" @click="goChangePassword">修改密码</button>
+          <button class="security-btn" @click="goHelpCenter">帮助中心</button>
           <button class="security-btn danger" @click="handleLogout">退出登录</button>
           <button class="security-btn danger" @click="handleDeactivate">注销账号</button>
         </div>
@@ -156,6 +165,7 @@ const formatDateTime = (date) => {
 }
 
 const form = ref({
+  userId: null,
   username: '',
   phone: '',
   email: '',
@@ -165,6 +175,14 @@ const form = ref({
   userType: 1,
   authStatus: 0,
   createdTime: '',
+})
+
+
+const editForm = ref({
+  username: '',
+  phone: '',
+  email: '',
+  region: '',
 })
 
 const formBackup = ref({})
@@ -193,6 +211,7 @@ const loadUserInfo = () => {
   const user = authStore.user
   if (user) {
     form.value = {
+      userId: user.userId || null,
       username: user.username || '',
       phone: user.phone || '',
       email: user.email || '',
@@ -203,16 +222,23 @@ const loadUserInfo = () => {
       authStatus: user.authStatus || 0,
       createdTime: user.createdTime || '',
     }
+    // 同时初始化 editForm
+    editForm.value = {
+      username: user.username || '',
+      phone: user.phone || '',
+      email: user.email || '',
+      region: user.region || '',
+    }
   }
 }
 
 const startEdit = () => {
-  formBackup.value = { ...form.value }
+  formBackup.value = { ...editForm.value }
   isEditing.value = true
 }
 
 const cancelEdit = () => {
-  form.value = { ...formBackup.value }
+  editForm.value = { ...formBackup.value }
   isEditing.value = false
 }
 
@@ -224,13 +250,18 @@ const handleSave = async () => {
   saving.value = true
   try {
     const data = {
-      phone: form.value.phone,
-      email: form.value.email,
-      region: form.value.region,
+      username: editForm.value.username,
+      phone: editForm.value.phone,
+      email: editForm.value.email,
+      region: editForm.value.region,
     }
     const response = await updateUserProfile(data)
     if (response?.code === 200) {
-      await authStore.initAuth()
+      // 保存成功后，更新卡片显示的用户名和其他信息
+      form.value.username = editForm.value.username
+      form.value.phone = editForm.value.phone
+      form.value.email = editForm.value.email
+      form.value.region = editForm.value.region
       isEditing.value = false
       ElMessage.success('保存成功')
     } else {
@@ -258,10 +289,8 @@ const handleAvatarChange = async (event) => {
     const res = await uploadAvatar(file)
     if (res.code === 200) {
       form.value.avatarUrl = res.data 
-      // 后端已更新数据库中的 avatarUrl，只需刷新用户信息即可
-      await authStore.initAuth()
-      loadUserInfo() 
-      ElMessage.success('头像上传并保存成功！')
+      // 只更新本页面显示的头像，不调用 initAuth 同步到头部
+      ElMessage.success('头像上传成功！')
     } else {
       ElMessage.error(res.message || '上传失败')
     }
@@ -279,6 +308,10 @@ const goChangePassword = () => {
   router.push('/change-password')
 }
 
+const goHelpCenter = () => {
+  router.push('/help-center')
+}
+
 const handleLogout = () => {
   ElMessageBox.confirm('确定要退出登录吗？', '提示', {
     confirmButtonText: '确定',
@@ -290,17 +323,23 @@ const handleLogout = () => {
   }).catch(() => {})
 }
 
-// 新增：注销账号逻辑
+// 注销账号逻辑
 const handleDeactivate = () => {
-  ElMessageBox.confirm('注销账号后数据将无法恢复，确定要注销吗？', '危险操作', {
-    confirmButtonText: '确认注销',
-    cancelButtonText: '取消',
-    type: 'error'
-  }).then(async () => {
+  ElMessageBox.confirm(
+    '注销后您的个人信息将被删除或匿名化，订单记录将保留但脱敏处理。' +
+    '提交后有 7 天冷静期，期间可登录取消注销，冷静期过后账号将被正式注销。' +
+    '如果只是暂时不用，退出登录即可。注销后也可通过绑定手机号自助恢复账号。',
+    '确认注销账号',
+    {
+      confirmButtonText: '确认注销',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
     try {
       const res = await deactivateUser()
       if (res?.code === 200) {
-        ElMessage.success('账号已注销')
+        ElMessage.success('注销申请已提交，7天冷静期内您仍可登录取消注销')
         authStore.logout()
         router.push('/login')
       } else {
@@ -400,6 +439,32 @@ onMounted(() => {
   pointer-events: auto;
 }
 
+
+.user-brief h3 {
+  font-size: 22px;
+  color: #1f2a56;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.user-id-display {
+  font-size: 14px;
+  color: #007bff;
+  margin-bottom: 10px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.user-type-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
 
 .user-brief h3 {
   font-size: 22px;

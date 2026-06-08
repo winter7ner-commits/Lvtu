@@ -17,6 +17,7 @@ public class User {
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
     private String region;
+    private String deactivatedPhone;
 
     public Long getUserId() {
         return userId;
@@ -120,5 +121,13 @@ public class User {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public String getDeactivatedPhone() {
+        return deactivatedPhone;
+    }
+
+    public void setDeactivatedPhone(String deactivatedPhone) {
+        this.deactivatedPhone = deactivatedPhone;
     }
 }
