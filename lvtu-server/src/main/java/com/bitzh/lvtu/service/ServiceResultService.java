@@ -1,6 +1,7 @@
 package com.bitzh.lvtu.service;
 
 import com.bitzh.lvtu.dto.request.SubmitServiceResultRequest;
+import com.bitzh.lvtu.dto.request.RequestRevisionRequest;
 import com.bitzh.lvtu.dto.request.UpdateServiceResultRequest;
 import com.bitzh.lvtu.dto.response.ServiceResultResponse;
 
@@ -13,4 +14,6 @@ public interface ServiceResultService {
     ServiceResultResponse getResultByOrderIdForUser(Long orderId, Long userId);
 
     void updateResult(Long resultId, UpdateServiceResultRequest request);
+
+    ServiceResultResponse requestRevision(Long orderId, RequestRevisionRequest request);
 }

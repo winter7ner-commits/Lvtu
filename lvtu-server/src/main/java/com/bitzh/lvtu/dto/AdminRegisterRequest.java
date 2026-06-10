@@ -5,7 +5,7 @@ public class AdminRegisterRequest {
     private String password;
     private String email;
     private String phone;
-    private Integer userType; // 允许指定用户类型
+    private String adminRole;
 
     public String getUsername() {
         return username;
@@ -39,11 +39,11 @@ public class AdminRegisterRequest {
         this.phone = phone;
     }
 
-    public Integer getUserType() {
-        return userType;
+    public String getAdminRole() {
+        return adminRole;
     }
 
-    public void setUserType(Integer userType) {
-        this.userType = userType;
+    public void setAdminRole(String adminRole) {
+        this.adminRole = adminRole;
     }
 }

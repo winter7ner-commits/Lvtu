@@ -38,6 +38,65 @@ CREATE TABLE IF NOT EXISTS legal_article (
     FOREIGN KEY (document_id) REFERENCES legal_document(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='法条表';
 
+CREATE TABLE IF NOT EXISTS legal_article_explanation (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '解释ID',
+    article_id BIGINT NOT NULL COMMENT '法条ID',
+    content TEXT NOT NULL COMMENT '条文解释',
+    source VARCHAR(100) DEFAULT NULL COMMENT '解释来源',
+    status TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 1启用, 0禁用',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (article_id) REFERENCES legal_article(id) ON DELETE CASCADE,
+    KEY idx_explanation_article (article_id),
+    KEY idx_explanation_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='法条解释表';
+
+CREATE TABLE IF NOT EXISTS legal_article_comment (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '评论ID',
+    article_id BIGINT NOT NULL COMMENT '法条ID',
+    user_id BIGINT NOT NULL COMMENT '评论用户ID',
+    content TEXT NOT NULL COMMENT '评论内容',
+    status TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 1正常, 0隐藏',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (article_id) REFERENCES legal_article(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    KEY idx_comment_article (article_id),
+    KEY idx_comment_user (user_id),
+    KEY idx_comment_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='法条评论表';
+
+CREATE TABLE IF NOT EXISTS legal_article_favorite (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '收藏ID',
+    article_id BIGINT NOT NULL COMMENT '法条ID',
+    user_id BIGINT NOT NULL COMMENT '收藏用户ID',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '收藏时间',
+    UNIQUE KEY uk_article_user (article_id, user_id),
+    FOREIGN KEY (article_id) REFERENCES legal_article(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    KEY idx_favorite_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='法条收藏表';
+
+CREATE TABLE IF NOT EXISTS legal_article_explanation_feedback (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '解释反馈ID',
+    article_id BIGINT NOT NULL COMMENT '法条ID',
+    explanation_id BIGINT NULL COMMENT '解释ID，暂无解释时为空',
+    user_id BIGINT NOT NULL COMMENT '反馈用户ID',
+    helpful TINYINT(1) NOT NULL COMMENT '是否有帮助: 1有帮助, 0无帮助',
+    reason VARCHAR(50) DEFAULT NULL COMMENT '反馈原因',
+    content VARCHAR(140) DEFAULT NULL COMMENT '补充说明',
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT '处理状态: pending待处理, handled已处理',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    handled_at DATETIME DEFAULT NULL COMMENT '处理时间',
+    FOREIGN KEY (article_id) REFERENCES legal_article(id) ON DELETE CASCADE,
+    FOREIGN KEY (explanation_id) REFERENCES legal_article_explanation(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    KEY idx_feedback_article (article_id),
+    KEY idx_feedback_user (user_id),
+    KEY idx_feedback_status (status),
+    KEY idx_feedback_helpful (helpful)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='法条解释反馈表';
+
 -- 插入示例数据（采用 dev-dyk 分支业务数据，字段按当前 main 表结构适配）
 -- 法规分类示例
 INSERT INTO legal_category (id, name, parent_id, sort_order, status) VALUES
@@ -78,3 +137,16 @@ INSERT INTO legal_article (id, document_id, article_number, title, content, sort
 (13, 6, '第一条', '第一章 任务、适用范围和基本原则', '中华人民共和国民事诉讼法以宪法为根据，结合我国民事审判工作的经验和实际情况制定。', 1, 1),
 (14, 7, '第一条', '第一章 任务和基本原则', '为了保证刑法的正确实施，惩罚犯罪，保护人民，保障国家安全和社会公共安全，维护社会主义社会秩序，根据宪法，制定本法。', 1, 1),
 (15, 8, '第一条', '第一章 总则', '为保证人民法院公正、及时审理行政案件，解决行政争议，保护公民、法人和其他组织的合法权益，监督行政机关依法行使职权，根据宪法，制定本法。', 1, 1);
+
+INSERT INTO legal_article_explanation (id, article_id, content, source, status) VALUES
+(1, 4, '本条说明民法典的立法目的。它强调保护民事主体合法权益，调整日常生活和市场活动中的民事关系，并把维护社会经济秩序、弘扬社会主义核心价值观作为基本目标。简单说，这一条回答的是“为什么要制定民法典”。', '平台整理', 1),
+(2, 5, '本条明确民法典调整的对象是平等主体之间的人身关系和财产关系。行政机关基于管理权作出的行政处罚、刑事犯罪追责等，并不属于本条意义上的民事关系。', '平台整理', 1),
+(3, 6, '本条确立民事权益受法律保护的原则。自然人、法人和非法人组织的人身权利、财产权利以及其他合法权益受到侵害时，可以依法请求停止侵害、赔偿损失或承担其他民事责任。', '平台整理', 1);
+
+INSERT INTO legal_article_comment (id, article_id, user_id, content, status) VALUES
+(1, 4, 500001, '这一条适合先看，能帮助理解民法典整体保护什么。', 1),
+(2, 4, 500002, '如果是合同纠纷，通常也要结合具体合同编条文一起看。', 1),
+(3, 5, 500001, '平等主体这个点很关键，行政处罚就不是这里说的民事关系。', 1);
+
+INSERT INTO legal_article_favorite (id, article_id, user_id) VALUES
+(1, 4, 500001);

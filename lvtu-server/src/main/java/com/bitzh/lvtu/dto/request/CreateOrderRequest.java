@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 public class CreateOrderRequest {
     private Long userId;
     private Long lawyerId;
+    private Long targetLawyerId;
+    private String assignmentType;
     private Integer serviceTypeId;
     private BigDecimal totalAmount;
     private String status;

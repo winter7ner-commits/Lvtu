@@ -1,8 +1,10 @@
 package com.bitzh.lvtu.controller;
 
 import com.bitzh.lvtu.common.ApiResponse;
+import com.bitzh.lvtu.service.AdminPermissionService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,15 +16,18 @@ import java.util.Map;
 public class AdminDataController {
 
     private final JdbcTemplate jdbcTemplate;
+    private final AdminPermissionService adminPermissionService;
 
-    public AdminDataController(JdbcTemplate jdbcTemplate) {
+    public AdminDataController(JdbcTemplate jdbcTemplate, AdminPermissionService adminPermissionService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.adminPermissionService = adminPermissionService;
     }
 
     @GetMapping("/users")
-    public ApiResponse<List<Map<String, Object>>> users() {
+    public ApiResponse<List<Map<String, Object>>> users(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "OPERATOR");
         String sql = """
-                SELECT user_id, username, phone, email, user_type, status, is_verified,
+                SELECT user_id, username, phone, email, user_type, admin_role, status, is_verified,
                        auth_status, region, created_time, updated_time
                 FROM users
                 ORDER BY created_time DESC, user_id DESC
@@ -31,7 +36,8 @@ public class AdminDataController {
     }
 
     @GetMapping("/auth-applications")
-    public ApiResponse<List<Map<String, Object>>> authApplications() {
+    public ApiResponse<List<Map<String, Object>>> authApplications(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "CERT_AUDITOR");
         String sql = """
                 SELECT a.application_id, a.user_id, u.username, u.phone, u.email,
                        a.license_no, a.license_url, a.status, a.audit_time,
@@ -45,7 +51,8 @@ public class AdminDataController {
     }
 
     @GetMapping("/orders")
-    public ApiResponse<List<Map<String, Object>>> orders() {
+    public ApiResponse<List<Map<String, Object>>> orders(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "OPERATOR", "CUSTOMER_SERVICE");
         String sql = """
                 SELECT o.order_id, o.user_id, u.username AS user_name, u.phone AS user_phone,
                        o.lawyer_id, lu.username AS lawyer_name, l.law_firm,

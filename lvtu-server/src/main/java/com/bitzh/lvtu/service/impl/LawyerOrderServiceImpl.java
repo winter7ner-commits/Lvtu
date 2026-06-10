@@ -11,6 +11,7 @@ import com.bitzh.lvtu.mapper.LawyerProfileMapper;
 import com.bitzh.lvtu.mapper.OrderServiceDetailMapper;
 import com.bitzh.lvtu.mapper.ServiceOrderMapper;
 import com.bitzh.lvtu.service.LawyerOrderService;
+import com.bitzh.lvtu.service.NotificationService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 public class LawyerOrderServiceImpl implements LawyerOrderService {
 
-    private static final List<String> MY_ORDER_STATUSES = Arrays.asList("处理中", "待客户确认", "待评价", "已完成");
+    private static final List<String> MY_ORDER_STATUSES = Arrays.asList("待接单", "处理中", "待客户确认", "待评价", "已完成", "平台介入");
 
     @Resource
     private ServiceOrderMapper serviceOrderMapper;
@@ -32,6 +33,9 @@ public class LawyerOrderServiceImpl implements LawyerOrderService {
 
     @Resource
     private LawyerProfileMapper lawyerProfileMapper;
+
+    @Resource
+    private NotificationService notificationService;
 
     @Override
     public List<AvailableOrderResponse> listAvailableOrders(Integer serviceTypeId) {
@@ -50,6 +54,8 @@ public class LawyerOrderServiceImpl implements LawyerOrderService {
         response.setOrderId(order.getOrderId());
         response.setUserId(order.getUserId());
         response.setLawyerId(order.getLawyerId());
+        response.setTargetLawyerId(order.getTargetLawyerId());
+        response.setAssignmentType(order.getAssignmentType());
         response.setServiceTypeId(order.getServiceTypeId());
         response.setTotalAmount(order.getTotalAmount());
         response.setStatus(order.getStatus());
@@ -70,11 +76,22 @@ public class LawyerOrderServiceImpl implements LawyerOrderService {
         if (order.getLawyerId() != null) {
             throw new BusinessException("该订单已被接单");
         }
+        if ("DIRECT".equals(order.getAssignmentType()) && !lawyerId.equals(order.getTargetLawyerId())) {
+            throw new BusinessException("该订单为用户指定律师订单，只有指定律师可以接单");
+        }
 
         int updated = serviceOrderMapper.acceptOrder(orderId, lawyerId);
         if (updated == 0) {
             throw new BusinessException("该订单已被接单");
         }
+        notificationService.create(
+                order.getUserId(),
+                "ORDER_ACCEPTED",
+                "订单已被律师接单",
+                "您的订单 #" + orderId + " 已被律师接单，律师将开始处理服务需求。",
+                orderId,
+                "/orders/" + orderId
+        );
     }
 
     @Override
@@ -115,6 +132,7 @@ public class LawyerOrderServiceImpl implements LawyerOrderService {
         AvailableOrderResponse response = new AvailableOrderResponse();
         response.setOrderId(order.getOrderId());
         response.setUserId(order.getUserId());
+        response.setAssignmentType(order.getAssignmentType());
         response.setServiceTypeId(order.getServiceTypeId());
         response.setTotalAmount(order.getTotalAmount());
         response.setStatus(order.getStatus());
@@ -125,11 +143,14 @@ public class LawyerOrderServiceImpl implements LawyerOrderService {
     private MyOrderResponse toMyOrderResponse(ServiceOrder order) {
         MyOrderResponse response = new MyOrderResponse();
         response.setOrderId(order.getOrderId());
+        response.setTargetLawyerId(order.getTargetLawyerId());
+        response.setAssignmentType(order.getAssignmentType());
         response.setServiceTypeId(order.getServiceTypeId());
         response.setTotalAmount(order.getTotalAmount());
         response.setStatus(order.getStatus());
         response.setCreatedTime(order.getCreatedTime());
         response.setUpdatedTime(order.getUpdatedTime());
+        response.setFormData(order.getFormData());
         return response;
     }
 }

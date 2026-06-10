@@ -20,29 +20,33 @@ INSERT INTO service_type (service_type_id, name, description) VALUES
 CREATE TABLE IF NOT EXISTS `order` (
     order_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '订单ID',
     user_id BIGINT NOT NULL COMMENT '用户ID',
-    lawyer_id BIGINT COMMENT '律师ID',
+    lawyer_id BIGINT COMMENT '实际接单律师ID',
+    target_lawyer_id BIGINT NULL COMMENT '用户指定律师ID，公共订单为空',
+    assignment_type VARCHAR(20) NOT NULL DEFAULT 'PUBLIC' COMMENT '分配类型：PUBLIC公共接单，DIRECT指定律师',
     service_type_id INT NOT NULL COMMENT '服务类型ID',
     total_amount DECIMAL(10,2) DEFAULT 0 COMMENT '订单总金额',
-    status VARCHAR(20) NOT NULL DEFAULT '待支付' COMMENT '订单状态（待支付/待接单/处理中/待客户确认/待评价/已完成/已取消）',
+    status VARCHAR(20) NOT NULL DEFAULT '待支付' COMMENT '订单状态（待支付/待接单/处理中/待客户确认/待评价/已完成/已取消/平台介入）',
     created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
     updated_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 
     CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users(user_id),
     CONSTRAINT fk_order_lawyer FOREIGN KEY (lawyer_id) REFERENCES lawyer(lawyer_id),
-    CONSTRAINT fk_order_service FOREIGN KEY (service_type_id) REFERENCES service_type(service_type_id)
+    CONSTRAINT fk_order_target_lawyer FOREIGN KEY (target_lawyer_id) REFERENCES lawyer(lawyer_id),
+    CONSTRAINT fk_order_service FOREIGN KEY (service_type_id) REFERENCES service_type(service_type_id),
+    INDEX idx_order_assignment (assignment_type, target_lawyer_id, status)
 ) COMMENT='订单表（一个订单对应一个服务）';
 
 INSERT INTO `order` (
-    order_id, user_id, lawyer_id, service_type_id, total_amount, status, created_time, updated_time
+    order_id, user_id, lawyer_id, target_lawyer_id, assignment_type, service_type_id, total_amount, status, created_time, updated_time
 ) VALUES
-    (800001, 500001, NULL,   105, 199.00, '待支付', '2026-05-01 10:00:00', '2026-05-01 10:00:00'),
-    (800002, 500002, NULL,   104, 299.00, '待接单', '2026-05-02 11:00:00', '2026-05-02 11:00:00'),
-    (800003, 500001, 700001, 103, 399.00, '处理中', '2026-05-03 09:30:00', '2026-05-03 10:00:00'),
-    (800004, 500002, 700001, 106, 899.00, '待客户确认', '2026-05-04 14:20:00', '2026-05-05 18:00:00'),
-    (800005, 500001, 700001, 101, 129.00, '待评价', '2026-04-28 08:45:00', '2026-04-29 16:10:00'),
-    (800006, 500002, 700002, 104, 599.00, '已完成', '2026-05-06 13:15:00', '2026-05-06 15:30:00'),
-    (800007, 500001, NULL,   102, 159.00, '已取消', '2026-05-07 16:00:00', '2026-05-07 16:20:00');
+    (800001, 500001, NULL,   NULL,   'PUBLIC', 105, 199.00, '待支付', '2026-05-01 10:00:00', '2026-05-01 10:00:00'),
+    (800002, 500002, NULL,   NULL,   'PUBLIC', 104, 299.00, '待接单', '2026-05-02 11:00:00', '2026-05-02 11:00:00'),
+    (800003, 500001, 700001, NULL,   'PUBLIC', 103, 399.00, '处理中', '2026-05-03 09:30:00', '2026-05-03 10:00:00'),
+    (800004, 500002, 700001, NULL,   'PUBLIC', 106, 899.00, '待客户确认', '2026-05-04 14:20:00', '2026-05-05 18:00:00'),
+    (800005, 500001, 700001, 700001, 'DIRECT', 101, 129.00, '待评价', '2026-04-28 08:45:00', '2026-04-29 16:10:00'),
+    (800006, 500002, 700002, NULL,   'PUBLIC', 104, 599.00, '已完成', '2026-05-06 13:15:00', '2026-05-06 15:30:00'),
+    (800007, 500001, NULL,   NULL,   'PUBLIC', 102, 159.00, '已取消', '2026-05-07 16:00:00', '2026-05-07 16:20:00');
 
 
 -- 订单服务详情表

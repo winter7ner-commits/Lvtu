@@ -9,6 +9,7 @@
         <result column="title" property="title"/>
         <result column="content" property="content"/>
         <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
     </resultMap>

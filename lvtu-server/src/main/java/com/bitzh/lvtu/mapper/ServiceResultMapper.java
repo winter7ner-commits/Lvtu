@@ -14,4 +14,6 @@ public interface ServiceResultMapper {
     int update(ServiceResult serviceResult);
 
     int updateStatusByOrderId(@Param("orderId") Long orderId, @Param("status") Integer status);
+
+    int updateStatusById(@Param("id") Long id, @Param("status") Integer status);
 }

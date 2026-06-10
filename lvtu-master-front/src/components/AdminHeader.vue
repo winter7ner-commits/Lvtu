@@ -1,34 +1,31 @@
 <template>
   <header class="header">
     <div class="header-container">
-      <router-link to="/law-management" class="logo">
+      <router-link :to="homePath" class="logo">
         <img src="/icons/logo.png" alt="LVTU" class="logo-img" />
         <span class="logo-text">律途</span>
       </router-link>
 
       <nav class="nav-menu">
-        <router-link to="/law-management" class="nav-item">法条管理</router-link>
-        <router-link to="/users" class="nav-item">用户管理</router-link>
-        <router-link to="/auth-audit" class="nav-item">认证审核</router-link>
-        <router-link to="/orders" class="nav-item">订单查询</router-link>
-        <router-link to="/settlements" class="nav-item">结算管理</router-link>
-        <router-link to="/evaluations" class="nav-item">评价管理</router-link>
+        <router-link v-for="item in visibleMenus" :key="item.path" :to="item.path" class="nav-item">
+          {{ item.label }}
+        </router-link>
       </nav>
 
       <div class="header-right">
         <button class="search-btn" type="button">🔍</button>
         <template v-if="!isLoggedIn">
           <router-link to="/admin/login" class="login-btn">登录</router-link>
-          <router-link to="/admin/register" class="signup-btn">注册</router-link>
         </template>
-        <div v-else class="user-menu-dropdown">
-          <button class="user-menu-btn" type="button">
+        <div v-else class="user-menu-dropdown" :class="{ 'is-active': showUserMenu }" ref="userMenuRef">
+          <button class="user-menu-btn" type="button" @click.stop="toggleUserMenu">
             <span class="avatar-text">admin</span>
             <span>{{ userName }}</span>
+            <span class="role-pill">{{ roleLabel }}</span>
             <i class="dropdown-icon">▼</i>
           </button>
           <div class="dropdown-menu user-dropdown">
-            <a href="#" class="dropdown-item logout" @click="handleLogout">退出登录</a>
+            <a href="#" class="dropdown-item logout" @click.prevent="handleLogout">退出登录</a>
           </div>
         </div>
       </div>
@@ -37,21 +34,44 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { ADMIN_MENU_ITEMS, ADMIN_ROLE_LABELS, canAccessAdminRoute, firstAdminPath, normalizeAdminRole } from '../utils/adminPermissions'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const showUserMenu = ref(false)
+const userMenuRef = ref(null)
 
 const isLoggedIn = computed(() => authStore.isAuthenticated)
 const userName = computed(() => authStore.user?.username || 'admin')
+const roleLabel = computed(() => ADMIN_ROLE_LABELS[normalizeAdminRole(authStore.user)] || '管理员')
+const visibleMenus = computed(() => ADMIN_MENU_ITEMS.filter((item) => canAccessAdminRoute(authStore.user, item.roles)))
+const homePath = computed(() => isLoggedIn.value ? firstAdminPath(authStore.user) : '/admin/login')
 
-const handleLogout = (event) => {
-  event.preventDefault()
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
+}
+
+const closeUserMenu = (event) => {
+  if (!userMenuRef.value || userMenuRef.value.contains(event.target)) return
+  showUserMenu.value = false
+}
+
+const handleLogout = () => {
   authStore.logout()
+  showUserMenu.value = false
   router.push('/admin/login')
 }
+
+onMounted(() => {
+  document.addEventListener('click', closeUserMenu)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeUserMenu)
+})
 </script>
 
 <style scoped>
@@ -95,18 +115,19 @@ const handleLogout = (event) => {
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
-  margin-left: 44px;
+  margin-left: 32px;
 }
 
 .nav-item {
   color: rgba(255, 255, 255, 0.88);
   text-decoration: none;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  padding: 10px 18px;
+  padding: 10px 14px;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
 .nav-item:hover,
@@ -166,6 +187,22 @@ const handleLogout = (event) => {
   padding: 7px 14px 7px 8px;
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.user-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  border-radius: 4px;
+  padding: 0 8px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .avatar-text {
@@ -181,10 +218,10 @@ const handleLogout = (event) => {
 
 .dropdown-icon {
   font-size: 12px;
+  transition: transform 0.2s ease;
 }
 
 .dropdown-menu {
-  display: none;
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
@@ -193,10 +230,22 @@ const handleLogout = (event) => {
   border-radius: 4px;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
   padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
 }
 
-.user-menu-dropdown:hover .dropdown-menu {
-  display: block;
+.user-menu-dropdown.is-active .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.user-menu-dropdown.is-active .dropdown-icon {
+  transform: rotate(180deg);
 }
 
 .dropdown-item {

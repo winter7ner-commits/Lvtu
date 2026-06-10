@@ -8,6 +8,8 @@
         <id property="orderId" column="order_id"/>
         <result property="userId" column="user_id"/>
         <result property="lawyerId" column="lawyer_id"/>
+        <result property="targetLawyerId" column="target_lawyer_id"/>
+        <result property="assignmentType" column="assignment_type"/>
         <result property="serviceTypeId" column="service_type_id"/>
         <result property="totalAmount" column="total_amount"/>
         <result property="status" column="status"/>
@@ -22,12 +24,16 @@
         INSERT INTO `order` (
             user_id,
             lawyer_id,
+            target_lawyer_id,
+            assignment_type,
             service_type_id,
             total_amount,
             status
         ) VALUES (
             #{userId},
             #{lawyerId},
+            #{targetLawyerId},
+            #{assignmentType},
             #{serviceTypeId},
             #{totalAmount},
             #{status}
@@ -49,6 +55,8 @@
         UPDATE `order`
         <set>
             <if test="lawyerId != null">lawyer_id = #{lawyerId},</if>
+            <if test="targetLawyerId != null">target_lawyer_id = #{targetLawyerId},</if>
+            <if test="assignmentType != null">assignment_type = #{assignmentType},</if>
             <if test="serviceTypeId != null">service_type_id = #{serviceTypeId},</if>
             <if test="totalAmount != null">total_amount = #{totalAmount},</if>
             <if test="status != null">status = #{status},</if>
@@ -66,6 +74,8 @@
             order_id,
             user_id,
             lawyer_id,
+            target_lawyer_id,
+            assignment_type,
             service_type_id,
             total_amount,
             status,
@@ -80,6 +90,8 @@
             o.order_id,
             o.user_id,
             o.lawyer_id,
+            o.target_lawyer_id,
+            o.assignment_type,
             o.service_type_id,
             o.total_amount,
             o.status,
@@ -98,6 +110,8 @@
             o.order_id,
             o.user_id,
             o.lawyer_id,
+            o.target_lawyer_id,
+            o.assignment_type,
             o.service_type_id,
             o.total_amount,
             o.status,
@@ -116,6 +130,8 @@
             o.order_id,
             o.user_id,
             o.lawyer_id,
+            o.target_lawyer_id,
+            o.assignment_type,
             o.service_type_id,
             o.total_amount,
             o.status,

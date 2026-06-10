@@ -1,5 +1,14 @@
 <template>
   <div class="form-container">
+    <el-alert
+      v-if="targetLawyerId"
+      title="本订单将指定当前律师处理"
+      type="success"
+      description="支付后订单不会进入公共接单大厅，只会推送给你指定的律师。"
+      show-icon
+      :closable="false"
+      class="direct-lawyer-alert"
+    />
     <el-form :model="formData" :rules="rules" ref="formRef" label-width="120px">
       
       <!-- 1. 用户实名信息（系统自动带出，只读） -->
@@ -203,15 +212,18 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { useRegionOptions } from './useRegionOptions'
 import { submitOrderForm } from './submitOrder'
 import { applyCurrentUserInfo } from './useCurrentUserInfo'
 import { commonOrderRules } from './validationRules'
 
+const route = useRoute()
 const formRef = ref(null)
 const { regionOptions } = useRegionOptions()
+const targetLawyerId = computed(() => route.query.targetLawyerId || route.query.lawyerId || null)
 
 // 自动带出的信息及表单数据
 const formData = reactive({
@@ -277,7 +289,12 @@ const resetForm = () => {
   applyCurrentUserInfo(formData)
 }
 
-const submitForm = () => submitOrderForm({ formRef, formData, serviceTypeId: 101 })
+const submitForm = () => submitOrderForm({
+  formRef,
+  formData,
+  serviceTypeId: 101,
+  targetLawyerId: targetLawyerId.value
+})
 </script>
 
 <style scoped>
@@ -288,6 +305,10 @@ const submitForm = () => submitOrderForm({ formRef, formData, serviceTypeId: 101
 }
 .form-section {
   margin-bottom: 20px;
+}
+
+.direct-lawyer-alert {
+  margin-bottom: 18px;
 }
 .checkbox-list {
   display: flex;

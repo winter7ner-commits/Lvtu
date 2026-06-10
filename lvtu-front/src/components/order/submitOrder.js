@@ -20,6 +20,10 @@ const getCurrentUserId = () => {
   return currentUser?.userId ? Number(currentUser.userId) : null
 }
 
+const getCurrentUser = () => {
+  return JSON.parse(localStorage.getItem('currentUser') || 'null')
+}
+
 const normalizeAmount = (budget, serviceTypeId) => {
   const value = Number(budget)
   if (Number.isFinite(value) && value >= 0) {
@@ -60,11 +64,17 @@ const normalizeForStorage = (value) => {
   return value
 }
 
-export const submitOrderForm = async ({ formRef, formData, serviceTypeId }) => {
+export const submitOrderForm = async ({ formRef, formData, serviceTypeId, targetLawyerId = null }) => {
   if (!formRef.value) return null
 
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return null
+
+  const currentUser = getCurrentUser()
+  if (Number(currentUser?.authStatus) === 2) {
+    ElMessage.warning('律师账号不能发布用户订单，请使用律师端接单与处理订单')
+    return null
+  }
 
   const userId = getCurrentUserId()
   if (!userId) {
@@ -73,11 +83,14 @@ export const submitOrderForm = async ({ formRef, formData, serviceTypeId }) => {
   }
 
   const snapshot = normalizeForStorage(formData)
+  const normalizedTargetLawyerId = targetLawyerId ? Number(targetLawyerId) : null
   const response = await createOrder({
     userId,
     serviceTypeId,
     totalAmount: normalizeAmount(snapshot.budget, serviceTypeId),
     status: '待支付',
+    assignmentType: normalizedTargetLawyerId ? 'DIRECT' : 'PUBLIC',
+    targetLawyerId: normalizedTargetLawyerId,
     formData: snapshot
   })
 

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getLawyerDetail, getLawyerList } from '@/api/lawyer'
 import EvaluationList from '@/components/evaluation/EvaluationList.vue'
+import { promptLogin } from '@/utils/loginPrompt'
 
 const route = useRoute()
 const router = useRouter()
@@ -100,6 +101,14 @@ const contactItems = computed(() => [
   { label: '执业证号', value: detail.value?.licenseNo || '暂未填写' },
   { label: '律师编号', value: detail.value?.lawyerId || '-' }
 ])
+const isLawyerAccount = computed(() => {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
+  return Number(currentUser?.authStatus) === 2
+})
+const isLoggedIn = computed(() => {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
+  return !!localStorage.getItem('authToken') && !!currentUser
+})
 
 const highlights = computed(() => [
   { label: '服务评分', value: rating.value.toFixed(1), suffix: '分' },
@@ -113,14 +122,21 @@ const goBack = () => {
 
 const createConsultOrder = () => {
   if (!detail.value?.lawyerId) return
-
-  router.push({
+  const targetRoute = {
     name: 'OrderCreate',
     query: {
       type: 'ONLINE_CONSULT',
-      lawyerId: detail.value.lawyerId
+      targetLawyerId: detail.value.lawyerId,
+      direct: '1'
     }
-  })
+  }
+
+  if (!isLoggedIn.value) {
+    promptLogin(router, targetRoute, '登录或注册后，你可以指定该律师发起在线咨询，并跟进订单处理进度。')
+    return
+  }
+
+  router.push(targetRoute)
 }
 
 onMounted(loadDetail)
@@ -142,7 +158,7 @@ watch(
             <span class="back-icon">‹</span>
             返回律师列表
           </el-button>
-          <el-button type="primary" size="large" @click="createConsultOrder">发起在线咨询</el-button>
+          <el-button v-if="!isLawyerAccount" type="primary" size="large" @click="createConsultOrder">发起在线咨询</el-button>
         </div>
 
         <section class="profile-hero">

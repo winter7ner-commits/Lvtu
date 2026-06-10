@@ -9,6 +9,8 @@ public class OrderDTO {
     private Long orderId;
     private Long userId;
     private Long lawyerId;
+    private Long targetLawyerId;
+    private String assignmentType;
     private Integer serviceTypeId;
     private BigDecimal totalAmount;
     private String status;

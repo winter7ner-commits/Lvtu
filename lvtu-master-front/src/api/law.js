@@ -44,6 +44,10 @@ export const getArticlesByDocument = (documentId) => {
   return request.get(`/api/articles/document/${documentId}`).then((res) => res.data)
 }
 
+export const getArticleDetail = (id) => {
+  return request.get(`/api/articles/${id}/detail`).then((res) => res.data)
+}
+
 export const createArticle = (data) => {
   return request.post('/api/articles', data).then((res) => res.data)
 }

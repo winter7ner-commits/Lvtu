@@ -46,7 +46,9 @@ public class OrderController {
     private Order toOrder(CreateOrderRequest request) throws JsonProcessingException {
         Order order = new Order();
         order.setUserId(request.getUserId());
-        order.setLawyerId(request.getLawyerId());
+        order.setLawyerId(null);
+        order.setTargetLawyerId(request.getTargetLawyerId());
+        order.setAssignmentType(request.getAssignmentType());
         order.setServiceTypeId(request.getServiceTypeId());
         order.setTotalAmount(request.getTotalAmount());
         order.setStatus(request.getStatus());

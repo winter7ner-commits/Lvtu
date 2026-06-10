@@ -13,6 +13,7 @@
         <result property="email" column="email"/>
         <result property="avatarUrl" column="avatar_url"/>
         <result property="userType" column="user_type"/>
+        <result property="adminRole" column="admin_role"/>
         <result property="status" column="status"/>
         <result property="isVerified" column="is_verified"/>
         <result property="authStatus" column="auth_status"/>
@@ -68,9 +69,9 @@
 
     <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId">
         INSERT INTO users
-            (username, password_hash, phone, email, avatar_url, user_type, status, is_verified, auth_status, region)
+            (username, password_hash, phone, email, avatar_url, user_type, admin_role, status, is_verified, auth_status, region)
         VALUES
-            (#{username}, #{passwordHash}, #{phone}, #{email}, #{avatarUrl}, #{userType}, #{status}, #{isVerified}, #{authStatus}, #{region})
+            (#{username}, #{passwordHash}, #{phone}, #{email}, #{avatarUrl}, #{userType}, #{adminRole}, #{status}, #{isVerified}, #{authStatus}, #{region})
     </insert>
 
     <update id="updatePassword">
@@ -110,6 +111,7 @@
             </choose>
             
             <if test="userType != null">user_type = #{userType},</if>
+            <if test="adminRole != null">admin_role = #{adminRole},</if>
             <if test="status != null">status = #{status},</if>
             <if test="isVerified != null">is_verified = #{isVerified},</if>
             <if test="authStatus != null">auth_status = #{authStatus},</if>
