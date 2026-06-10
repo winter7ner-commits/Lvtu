@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.LegalArticleFavoriteMapper">
+
+    <resultMap id="favoriteMap" type="com.bitzh.lvtu.entity.LegalArticleFavorite">
+        <id column="id" property="id"/>
+        <result column="article_id" property="articleId"/>
+        <result column="user_id" property="userId"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <select id="findByArticleAndUser" resultMap="favoriteMap">
+        SELECT id, article_id, user_id, created_at
+        FROM legal_article_favorite
+        WHERE article_id = #{articleId}
+          AND user_id = #{userId}
+    </select>
+
+    <select id="countByArticleId" resultType="int">
+        SELECT COUNT(*)
+        FROM legal_article_favorite
+        WHERE article_id = #{articleId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO legal_article_favorite (article_id, user_id, created_at)
+        VALUES (#{articleId}, #{userId}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM legal_article_favorite
+        WHERE article_id = #{articleId}
+          AND user_id = #{userId}
+    </delete>
+
+</mapper>

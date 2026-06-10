@@ -5,6 +5,15 @@ const request = axios.create({
   timeout: 5000
 })
 
+request.interceptors.request.use((config) => {
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('authToken')
+  if (token) {
+    config.headers = config.headers || {}
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 request.interceptors.response.use(
   (response) => response,
   (error) => {

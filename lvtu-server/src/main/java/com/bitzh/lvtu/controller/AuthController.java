@@ -5,6 +5,8 @@ import com.bitzh.lvtu.dto.LoginRequest;
 import com.bitzh.lvtu.dto.RegisterRequest;
 import com.bitzh.lvtu.dto.UserDTO;
 import com.bitzh.lvtu.entity.User;
+import com.bitzh.lvtu.exception.BusinessException;
+import com.bitzh.lvtu.service.AdminPermissionService;
 import com.bitzh.lvtu.service.UserService;
 import com.bitzh.lvtu.util.JwtUtil;
 import jakarta.annotation.Resource;
@@ -22,6 +24,9 @@ public class AuthController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private AdminPermissionService adminPermissionService;
+
     @PostMapping("/register")
     public ApiResponse<UserDTO> register(@RequestBody RegisterRequest request) {
         try {
@@ -37,22 +42,12 @@ public class AuthController {
     @PostMapping("/admin/register")
     public ApiResponse<UserDTO> adminRegister(@RequestBody AdminRegisterRequest request, @RequestHeader(value = "Authorization", required = false) String authorization) {
         try {
-            // 验证管理员权限
-            if (authorization == null || !authorization.startsWith("Bearer ")) {
-                return ApiResponse.fail(401, "需要管理员权限");
-            }
-            String token = authorization.substring(7);
-            Long adminId = JwtUtil.getUserId(token);
-            if (adminId == null) {
-                return ApiResponse.fail(401, "无效token");
-            }
-            User admin = userService.findById(adminId);
-            if (admin == null || admin.getUserType() != 3) {
-                return ApiResponse.fail(403, "需要管理员权限");
-            }
+            adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN");
 
             User user = userService.adminRegister(request);
             return ApiResponse.success(UserDTO.from(user));
+        } catch (BusinessException e) {
+            return ApiResponse.fail(e.getCode(), e.getMessage());
         } catch (IllegalArgumentException e) {
             return ApiResponse.fail(400, e.getMessage());
         } catch (Exception e) {

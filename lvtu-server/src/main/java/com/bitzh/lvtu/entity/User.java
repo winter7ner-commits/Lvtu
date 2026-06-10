@@ -11,6 +11,7 @@ public class User {
     private String email;
     private String avatarUrl;
     private Integer userType;
+    private String adminRole;
     private Integer status;
     private Boolean isVerified;
     private Integer authStatus;
@@ -73,6 +74,14 @@ public class User {
 
     public void setUserType(Integer userType) {
         this.userType = userType;
+    }
+
+    public String getAdminRole() {
+        return adminRole;
+    }
+
+    public void setAdminRole(String adminRole) {
+        this.adminRole = adminRole;
     }
 
     public Integer getStatus() {

@@ -26,14 +26,13 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
 import { adminLogin } from '../../api/auth'
+import { canAccessAdminRoute, firstAdminPath } from '../../utils/adminPermissions'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const loading = ref(false)
 const form = ref({ username: '', password: '' })
-
-const redirectPath = route.query.redirect ? String(route.query.redirect) : '/law-management'
 
 const handleSubmit = async () => {
   if (!form.value.username || !form.value.password) {
@@ -46,7 +45,12 @@ const handleSubmit = async () => {
     if (response?.code === 200) {
       const data = response.data
       authStore.setAuth(data.token, data.user)
-      router.push(redirectPath)
+      const redirectPath = route.query.redirect ? String(route.query.redirect) : firstAdminPath(data.user)
+      const targetRoute = router.resolve(redirectPath)
+      const canUseRedirect = targetRoute.matched.some((record) => record.meta.requiresAdmin)
+        ? canAccessAdminRoute(data.user, targetRoute.meta.roles || [])
+        : true
+      router.push(canUseRedirect ? redirectPath : firstAdminPath(data.user))
     } else {
       window.alert(response?.message || '管理员登录失败')
     }

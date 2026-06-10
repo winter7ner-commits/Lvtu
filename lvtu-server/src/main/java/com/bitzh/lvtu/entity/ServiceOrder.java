@@ -8,11 +8,14 @@ public class ServiceOrder {
     private Long orderId;
     private Long userId;
     private Long lawyerId;
+    private Long targetLawyerId;
+    private String assignmentType;
     private Integer serviceTypeId;
     private BigDecimal totalAmount;
     private String status;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
+    private String formData;
 
     public Long getOrderId() {
         return orderId;
@@ -36,6 +39,22 @@ public class ServiceOrder {
 
     public void setLawyerId(Long lawyerId) {
         this.lawyerId = lawyerId;
+    }
+
+    public Long getTargetLawyerId() {
+        return targetLawyerId;
+    }
+
+    public void setTargetLawyerId(Long targetLawyerId) {
+        this.targetLawyerId = targetLawyerId;
+    }
+
+    public String getAssignmentType() {
+        return assignmentType;
+    }
+
+    public void setAssignmentType(String assignmentType) {
+        this.assignmentType = assignmentType;
     }
 
     public Integer getServiceTypeId() {
@@ -76,5 +95,13 @@ public class ServiceOrder {
 
     public void setUpdatedTime(LocalDateTime updatedTime) {
         this.updatedTime = updatedTime;
+    }
+
+    public String getFormData() {
+        return formData;
+    }
+
+    public void setFormData(String formData) {
+        this.formData = formData;
     }
 }

@@ -14,6 +14,10 @@ public class ServiceResultResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<AttachmentResponse> attachments;
+    private List<ResultRevisionResponse> revisionRequests;
+    private List<ServiceResultSubmissionResponse> submissions;
+    private Integer revisionRequestCount;
+    private Integer maxRevisionRequestCount;
 
     public Long getId() {
         return id;
@@ -85,5 +89,37 @@ public class ServiceResultResponse {
 
     public void setAttachments(List<AttachmentResponse> attachments) {
         this.attachments = attachments;
+    }
+
+    public List<ResultRevisionResponse> getRevisionRequests() {
+        return revisionRequests;
+    }
+
+    public void setRevisionRequests(List<ResultRevisionResponse> revisionRequests) {
+        this.revisionRequests = revisionRequests;
+    }
+
+    public List<ServiceResultSubmissionResponse> getSubmissions() {
+        return submissions;
+    }
+
+    public void setSubmissions(List<ServiceResultSubmissionResponse> submissions) {
+        this.submissions = submissions;
+    }
+
+    public Integer getRevisionRequestCount() {
+        return revisionRequestCount;
+    }
+
+    public void setRevisionRequestCount(Integer revisionRequestCount) {
+        this.revisionRequestCount = revisionRequestCount;
+    }
+
+    public Integer getMaxRevisionRequestCount() {
+        return maxRevisionRequestCount;
+    }
+
+    public void setMaxRevisionRequestCount(Integer maxRevisionRequestCount) {
+        this.maxRevisionRequestCount = maxRevisionRequestCount;
     }
 }

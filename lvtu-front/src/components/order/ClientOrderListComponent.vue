@@ -127,7 +127,8 @@ export default {
         pending_customer_confirmation: '待客户确认',
         pending_review: '待评价',
         completed: '已完成',
-        cancelled: '已取消'
+        cancelled: '已取消',
+        intervention: '平台介入'
       }
     }
   },
@@ -228,7 +229,8 @@ export default {
         待客户确认: 'pending_customer_confirmation',
         待评价: 'pending_review',
         已完成: 'completed',
-        已取消: 'cancelled'
+        已取消: 'cancelled',
+        平台介入: 'intervention'
       }
 
       return {
@@ -428,6 +430,11 @@ export default {
 .status-cancelled {
   background-color: #fff1f0;
   color: #b42318;
+}
+
+.status-intervention {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
 /* 操作按钮 */

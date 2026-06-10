@@ -24,7 +24,7 @@
 
           <div class="service-selector">
             <button
-              v-for="service in serviceOptions"
+              v-for="service in visibleServiceOptions"
               :key="service.value"
               type="button"
               :class="['service-option', { active: selectedServiceType === service.value }]"
@@ -67,6 +67,7 @@ const route = useRoute()
 const selectedServiceType = ref('ONLINE_CONSULT')
 const orderCreateRef = ref(null)
 const activeNavKey = ref('section-0')
+const isDirectLawyerOrder = computed(() => !!(route.query.targetLawyerId || route.query.lawyerId))
 
 const serviceOptions = [
   { label: '在线法律咨询', value: 'ONLINE_CONSULT', desc: '图文沟通' },
@@ -85,6 +86,13 @@ const serviceSectionLabels = {
   MARRIAGE_FAMILY: '婚姻家事信息',
   LITIGATION_AGENT: '诉讼案件信息'
 }
+
+const visibleServiceOptions = computed(() => {
+  if (isDirectLawyerOrder.value) {
+    return serviceOptions.filter((item) => item.value === 'ONLINE_CONSULT')
+  }
+  return serviceOptions
+})
 
 const formNavItems = computed(() => [
   { key: 'section-0', indexLabel: '1', label: '实名信息', target: 'section', index: 0 },
@@ -142,6 +150,10 @@ const scrollToTop = () => {
 }
 
 const selectServiceType = async (serviceType) => {
+  if (isDirectLawyerOrder.value && serviceType !== 'ONLINE_CONSULT') {
+    selectedServiceType.value = 'ONLINE_CONSULT'
+    return
+  }
   selectedServiceType.value = serviceType
   activeNavKey.value = 'section-0'
   await nextTick()
@@ -149,7 +161,9 @@ const selectServiceType = async (serviceType) => {
 }
 
 onMounted(() => {
-  if (route.query.type) {
+  if (isDirectLawyerOrder.value) {
+    selectedServiceType.value = 'ONLINE_CONSULT'
+  } else if (route.query.type) {
     selectedServiceType.value = route.query.type
   }
 
@@ -162,7 +176,11 @@ onBeforeUnmount(() => {
 })
 
 watch(() => route.query.type, (newType) => {
-  if (newType) {
+  if (isDirectLawyerOrder.value) {
+    selectedServiceType.value = 'ONLINE_CONSULT'
+    activeNavKey.value = 'section-0'
+    nextTick(updateActiveNav)
+  } else if (newType) {
     selectedServiceType.value = newType
     activeNavKey.value = 'section-0'
     nextTick(updateActiveNav)

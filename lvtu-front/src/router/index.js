@@ -19,6 +19,7 @@ import LawyerOrderHall from '../views/lawyerOrder/LawyerOrderHall.vue'
 import LawyerMyOrders from '../views/lawyerOrder/LawyerMyOrders.vue'
 import LawyerOrderDetail from '../views/lawyerOrder/LawyerOrderDetail.vue'
 import EvaluationDashboard from '../views/evaluation/EvaluationDashboard.vue'
+import NotificationList from '../views/notification/NotificationList.vue'
 // import AdminLogin from '../views/auth/AdminLogin.vue'
 // import AdminRegister from '../views/auth/AdminRegister.vue'
 
@@ -60,6 +61,7 @@ const router = createRouter({
     { path: '/lawyer/orders/my', component: LawyerMyOrders, name: 'LawyerMyOrders', meta: { requiresAuth: true } },
     { path: '/lawyer/orders/:orderId', component: LawyerOrderDetail, name: 'LawyerOrderDetail', meta: { requiresAuth: true } },
     { path: '/evaluations', component: EvaluationDashboard, name: 'EvaluationDashboard' },
+    { path: '/notifications', component: NotificationList, name: 'NotificationList', meta: { requiresAuth: true } },
     // { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
     // { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
 
@@ -86,7 +88,20 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.requiresAuth && !isLoggedIn) {
-    return '/login' // 未登录重定向到登录页
+    return {
+      path: '/login',
+      query: { redirect: to.fullPath }
+    }
+  }
+
+  const isLawyerAccount = Number(user?.authStatus) === 2
+  const userOnlyRoutes = ['OrderCreate', 'ClientOrderList', 'ClientOrderDetail']
+  if (isLawyerAccount && userOnlyRoutes.includes(to.name)) {
+    return '/lawyer/orders/my'
+  }
+
+  if (isLoggedIn && !isLawyerAccount && to.path.startsWith('/lawyer/orders')) {
+    return '/'
   }
 })
 

@@ -11,10 +11,18 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final Set<String> ADMIN_ROLES = Set.of(
+            "SUPER_ADMIN",
+            "CERT_AUDITOR",
+            "OPERATOR",
+            "CUSTOMER_SERVICE"
+    );
 
     @Resource
     private UserMapper userMapper;
@@ -87,8 +95,13 @@ public class UserServiceImpl implements UserService {
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
             throw new IllegalArgumentException("密码不能为空");
         }
-        if (request.getUserType() == null || request.getUserType() < 1 || request.getUserType() > 3) {
-            throw new IllegalArgumentException("用户类型无效");
+        String adminRole = request.getAdminRole();
+        if (adminRole == null || adminRole.trim().isEmpty()) {
+            adminRole = "OPERATOR";
+        }
+        adminRole = adminRole.trim().toUpperCase();
+        if (!ADMIN_ROLES.contains(adminRole)) {
+            throw new IllegalArgumentException("后台角色无效");
         }
         User existingUser = userMapper.selectByUsername(request.getUsername());
         if (existingUser != null) {
@@ -114,7 +127,8 @@ public class UserServiceImpl implements UserService {
         String email = request.getEmail();
         user.setEmail((email != null && !email.trim().isEmpty()) ? email : null);
         user.setAvatarUrl(null);
-        user.setUserType(request.getUserType());
+        user.setUserType(3);
+        user.setAdminRole(adminRole);
         user.setStatus(1);
         user.setIsVerified(false);
         user.setAuthStatus(0);

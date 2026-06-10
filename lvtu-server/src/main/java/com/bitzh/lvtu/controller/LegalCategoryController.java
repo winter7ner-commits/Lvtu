@@ -2,6 +2,7 @@ package com.bitzh.lvtu.controller;
 
 import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.entity.LegalCategory;
+import com.bitzh.lvtu.service.AdminPermissionService;
 import com.bitzh.lvtu.service.LegalCategoryService;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,9 +13,12 @@ import java.util.List;
 public class LegalCategoryController {
 
     private final LegalCategoryService categoryService;
+    private final AdminPermissionService adminPermissionService;
 
-    public LegalCategoryController(LegalCategoryService categoryService) {
+    public LegalCategoryController(LegalCategoryService categoryService,
+                                   AdminPermissionService adminPermissionService) {
         this.categoryService = categoryService;
+        this.adminPermissionService = adminPermissionService;
     }
 
     @GetMapping
@@ -43,7 +47,9 @@ public class LegalCategoryController {
     }
 
     @PostMapping
-    public ApiResponse<LegalCategory> createCategory(@RequestBody LegalCategory category) {
+    public ApiResponse<LegalCategory> createCategory(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                                     @RequestBody LegalCategory category) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "OPERATOR");
         try {
             LegalCategory created = categoryService.createCategory(category);
             return ApiResponse.success(created);
@@ -54,7 +60,10 @@ public class LegalCategoryController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<LegalCategory> updateCategory(@PathVariable Long id, @RequestBody LegalCategory category) {
+    public ApiResponse<LegalCategory> updateCategory(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                                     @PathVariable Long id,
+                                                     @RequestBody LegalCategory category) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "OPERATOR");
         try {
             LegalCategory updated = categoryService.updateCategory(id, category);
             return ApiResponse.success(updated);
@@ -65,7 +74,9 @@ public class LegalCategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> deleteCategory(@PathVariable Long id) {
+    public ApiResponse<Void> deleteCategory(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                            @PathVariable Long id) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "OPERATOR");
         try {
             categoryService.deleteCategory(id);
             return ApiResponse.success(null);

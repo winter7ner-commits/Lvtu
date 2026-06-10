@@ -2,6 +2,7 @@ package com.bitzh.lvtu.controller;
 
 import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.dto.ApplicationDTO;
+import com.bitzh.lvtu.service.AdminPermissionService;
 import com.bitzh.lvtu.service.ApplicationService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,9 @@ public class ApplicationController {
     @Resource
     private ApplicationService applicationService;
 
+    @Resource
+    private AdminPermissionService adminPermissionService;
+
     // 图片保存目录（从配置文件读取）
     @Value("${file.upload-dir:./uploads}")
     private String uploadDir;
@@ -44,24 +48,30 @@ public class ApplicationController {
     }
 
     @GetMapping("/pending")
-    public ApiResponse<List<ApplicationDTO>> pendingList() {
+    public ApiResponse<List<ApplicationDTO>> pendingList(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "CERT_AUDITOR");
         return ApiResponse.success(applicationService.listAll());
     }
 
     @GetMapping("/list")
-    public ApiResponse<List<ApplicationDTO>> list() {
+    public ApiResponse<List<ApplicationDTO>> list(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "CERT_AUDITOR");
         return ApiResponse.success(applicationService.listAll());
     }
 
     @PostMapping("/approve")
-    public ApiResponse<String> approve(@RequestParam Long applicationId) {
+    public ApiResponse<String> approve(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                       @RequestParam Long applicationId) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "CERT_AUDITOR");
         applicationService.approve(applicationId);
         return ApiResponse.success("审核通过", null);
     }
 
     @PostMapping("/reject")
-    public ApiResponse<String> reject(@RequestParam Long applicationId,
+    public ApiResponse<String> reject(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                      @RequestParam Long applicationId,
                                       @RequestParam String rejectReason) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "CERT_AUDITOR");
         applicationService.reject(applicationId, rejectReason);
         return ApiResponse.success("已驳回", null);
     }

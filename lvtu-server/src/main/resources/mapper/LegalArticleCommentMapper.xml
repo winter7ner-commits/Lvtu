@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.LegalArticleCommentMapper">
+
+    <resultMap id="commentMap" type="com.bitzh.lvtu.entity.LegalArticleComment">
+        <id column="id" property="id"/>
+        <result column="article_id" property="articleId"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="avatar_url" property="avatarUrl"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findByArticleId" resultMap="commentMap">
+        SELECT
+            c.id,
+            c.article_id,
+            c.user_id,
+            u.username,
+            u.avatar_url,
+            c.content,
+            c.status,
+            c.created_at,
+            c.updated_at
+        FROM legal_article_comment c
+        LEFT JOIN users u ON u.user_id = c.user_id
+        WHERE c.article_id = #{articleId}
+          AND c.status = 1
+        ORDER BY c.created_at DESC, c.id DESC
+    </select>
+
+    <select id="countByArticleId" resultType="int">
+        SELECT COUNT(*)
+        FROM legal_article_comment
+        WHERE article_id = #{articleId}
+          AND status = 1
+    </select>
+
+    <insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalArticleComment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO legal_article_comment (article_id, user_id, content, status, created_at, updated_at)
+        VALUES (#{articleId}, #{userId}, #{content}, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+</mapper>

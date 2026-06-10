@@ -2,6 +2,7 @@ package com.bitzh.lvtu.controller;
 
 import com.bitzh.lvtu.common.ApiResponse;
 import com.bitzh.lvtu.entity.LegalDocument;
+import com.bitzh.lvtu.service.AdminPermissionService;
 import com.bitzh.lvtu.service.LegalDocumentService;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,9 +13,12 @@ import java.util.List;
 public class LegalDocumentController {
 
     private final LegalDocumentService documentService;
+    private final AdminPermissionService adminPermissionService;
 
-    public LegalDocumentController(LegalDocumentService documentService) {
+    public LegalDocumentController(LegalDocumentService documentService,
+                                   AdminPermissionService adminPermissionService) {
         this.documentService = documentService;
+        this.adminPermissionService = adminPermissionService;
     }
 
     @GetMapping
@@ -54,7 +58,9 @@ public class LegalDocumentController {
     }
 
     @PostMapping
-    public ApiResponse<LegalDocument> createDocument(@RequestBody LegalDocument document) {
+    public ApiResponse<LegalDocument> createDocument(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                                     @RequestBody LegalDocument document) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "OPERATOR");
         try {
             LegalDocument created = documentService.createDocument(document);
             return ApiResponse.success(created);
@@ -65,7 +71,10 @@ public class LegalDocumentController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<LegalDocument> updateDocument(@PathVariable Long id, @RequestBody LegalDocument document) {
+    public ApiResponse<LegalDocument> updateDocument(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                                     @PathVariable Long id,
+                                                     @RequestBody LegalDocument document) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "OPERATOR");
         try {
             LegalDocument updated = documentService.updateDocument(id, document);
             return ApiResponse.success(updated);
@@ -76,7 +85,9 @@ public class LegalDocumentController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> deleteDocument(@PathVariable Long id) {
+    public ApiResponse<Void> deleteDocument(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                            @PathVariable Long id) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "OPERATOR");
         try {
             documentService.deleteDocument(id);
             return ApiResponse.success(null);

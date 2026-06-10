@@ -5,3 +5,6 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+hs_err_pid*.log
+lvtu-server/hs_err_pid*.log
+lvtu-server/lvtu_uploads/

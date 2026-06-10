@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bitzh.lvtu.mapper.ServiceResultRevisionMapper">
+
+    <resultMap id="revisionMap" type="com.bitzh.lvtu.entity.ServiceResultRevision">
+        <id property="id" column="id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="resultId" column="result_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="lawyerId" column="lawyer_id"/>
+        <result property="revisionNo" column="revision_no"/>
+        <result property="content" column="content"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="handledAt" column="handled_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO service_result_revision (
+            order_id,
+            result_id,
+            user_id,
+            lawyer_id,
+            revision_no,
+            content,
+            status
+        ) VALUES (
+            #{orderId},
+            #{resultId},
+            #{userId},
+            #{lawyerId},
+            #{revisionNo},
+            #{content},
+            #{status}
+        )
+    </insert>
+
+    <select id="countByOrderId" resultType="int">
+        SELECT COUNT(*)
+        FROM service_result_revision
+        WHERE order_id = #{orderId}
+          AND status IN (0, 1)
+    </select>
+
+    <select id="selectByOrderId" resultMap="revisionMap">
+        SELECT id, order_id, result_id, user_id, lawyer_id, revision_no, content, status, created_at, handled_at
+        FROM service_result_revision
+        WHERE order_id = #{orderId}
+        ORDER BY created_at ASC, id ASC
+    </select>
+
+    <update id="markPendingHandled">
+        UPDATE service_result_revision
+        SET status = 1,
+            handled_at = CURRENT_TIMESTAMP
+        WHERE order_id = #{orderId}
+          AND status = 0
+    </update>
+
+</mapper>

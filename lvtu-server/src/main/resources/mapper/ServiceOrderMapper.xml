@@ -9,18 +9,22 @@
         <id property="orderId" column="order_id"/>
         <result property="userId" column="user_id"/>
         <result property="lawyerId" column="lawyer_id"/>
+        <result property="targetLawyerId" column="target_lawyer_id"/>
+        <result property="assignmentType" column="assignment_type"/>
         <result property="serviceTypeId" column="service_type_id"/>
         <result property="totalAmount" column="total_amount"/>
         <result property="status" column="status"/>
         <result property="createdTime" column="created_time"/>
         <result property="updatedTime" column="updated_time"/>
+        <result property="formData" column="form_data"/>
     </resultMap>
 
     <select id="selectAvailableOrders" resultMap="serviceOrderMap">
-        SELECT order_id, user_id, lawyer_id, service_type_id, total_amount, status, created_time, updated_time
+        SELECT order_id, user_id, lawyer_id, target_lawyer_id, assignment_type, service_type_id, total_amount, status, created_time, updated_time
         FROM `order`
         WHERE status = '待接单'
           AND lawyer_id IS NULL
+          AND assignment_type = 'PUBLIC'
         <if test="serviceTypeId != null">
             AND service_type_id = #{serviceTypeId}
         </if>
@@ -28,7 +32,7 @@
     </select>
 
     <select id="selectByOrderId" resultMap="serviceOrderMap">
-        SELECT order_id, user_id, lawyer_id, service_type_id, total_amount, status, created_time, updated_time
+        SELECT order_id, user_id, lawyer_id, target_lawyer_id, assignment_type, service_type_id, total_amount, status, created_time, updated_time
         FROM `order`
         WHERE order_id = #{orderId}
     </select>
@@ -40,17 +44,41 @@
         WHERE order_id = #{orderId}
           AND status = '待接单'
           AND lawyer_id IS NULL
+          AND (
+              assignment_type = 'PUBLIC'
+              OR (assignment_type = 'DIRECT' AND target_lawyer_id = #{lawyerId})
+          )
     </update>
 
     <select id="selectMyOrders" resultMap="serviceOrderMap">
-        SELECT order_id, user_id, lawyer_id, service_type_id, total_amount, status, created_time, updated_time
-        FROM `order`
-        WHERE lawyer_id = #{lawyerId}
-          AND status IN ('处理中', '待客户确认', '待评价', '已完成')
+        SELECT
+            o.order_id,
+            o.user_id,
+            o.lawyer_id,
+            o.target_lawyer_id,
+            o.assignment_type,
+            o.service_type_id,
+            o.total_amount,
+            o.status,
+            o.created_time,
+            o.updated_time,
+            CAST(d.form_data AS CHAR) AS form_data
+        FROM `order` o
+        LEFT JOIN order_service_detail d ON d.order_id = o.order_id
+        WHERE (
+            o.lawyer_id = #{lawyerId}
+            OR (
+                o.assignment_type = 'DIRECT'
+                AND o.target_lawyer_id = #{lawyerId}
+                AND o.lawyer_id IS NULL
+                AND o.status = '待接单'
+            )
+        )
+          AND o.status IN ('待接单', '处理中', '待客户确认', '待评价', '已完成', '平台介入')
         <if test="status != null and status != ''">
-            AND status = #{status}
+            AND o.status = #{status}
         </if>
-        ORDER BY updated_time DESC, created_time DESC
+        ORDER BY o.updated_time DESC, o.created_time DESC
     </select>
 
     <update id="updateStatus">
