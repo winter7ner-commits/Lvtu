@@ -82,7 +82,8 @@ export default {
         { label: '待客户确认', value: 'pending_customer_confirmation' },
         { label: '待评价', value: 'pending_review' },
         { label: '已完成', value: 'completed' },
-        { label: '已取消', value: 'cancelled' }
+        { label: '已取消', value: 'cancelled' },
+        { label: '平台介入', value: 'intervention' }
       ],
       businessOptions: [
         { label: '在线法律咨询', value: 'online_consult' },
@@ -250,6 +251,12 @@ export default {
   --status-bg: #fff1f0;
   --status-border: #ffa39e;
   --status-color: #b42318;
+}
+
+.status-btn-intervention {
+  --status-bg: #fef3c7;
+  --status-border: #fbbf24;
+  --status-color: #92400e;
 }
 
 /* 第二行：业务筛选和搜索 */

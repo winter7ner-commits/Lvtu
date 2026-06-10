@@ -11,7 +11,6 @@ public interface LegalArticleMapper {
     List<LegalArticle> findAll();
     LegalArticle findById(@Param("id") Long id);
     List<LegalArticle> findByDocumentId(@Param("documentId") Long documentId);
-    List<LegalArticle> searchByKeyword(@Param("keyword") String keyword);
     int insert(LegalArticle article);
     int update(LegalArticle article);
     int deleteById(@Param("id") Long id);

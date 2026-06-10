@@ -52,10 +52,6 @@ export default {
   },
   emits: ['submitted'],
   props: {
-    userId: {
-      type: Number,
-      default: null
-    },
     orderId: {
       type: Number,
       default: 1001
@@ -68,7 +64,6 @@ export default {
   data() {
     return {
       form: {
-        userId: this.userId,
         orderId: this.orderId,
         lawyerId: this.lawyerId,
         professionalScore: 5,
@@ -84,10 +79,6 @@ export default {
   methods: {
     async submitEvaluation() {
       if (!this.validateForm()) return;
-      if (!this.form.userId) {
-        this.error = '未获取到当前用户，请重新登录后再评价';
-        return;
-      }
       
       this.isSubmitting = true;
       this.error = null;
@@ -124,7 +115,6 @@ export default {
     
     resetForm() {
       this.form = {
-        userId: this.userId,
         orderId: this.orderId,
         lawyerId: this.lawyerId,
         professionalScore: 5,
@@ -136,9 +126,6 @@ export default {
     }
   },
   watch: {
-    userId() {
-      this.form.userId = this.userId;
-    },
     orderId() {
       this.form.orderId = this.orderId;
     },

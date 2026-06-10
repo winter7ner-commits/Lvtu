@@ -1,11 +1,13 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { getUsers } from '../../api/admin'
+import { ADMIN_ROLE_LABELS } from '../../utils/adminPermissions'
 
 const users = ref([])
 const keyword = ref('')
 
 const typeText = (type) => ({ 1: '普通用户', 2: '律师', 3: '管理员' }[type] || '-')
+const roleText = (role) => ADMIN_ROLE_LABELS[role || 'SUPER_ADMIN'] || role || '-'
 const statusText = (status) => ({ 0: '禁用', 1: '正常' }[status] || '-')
 const authText = (status) => ({ 0: '未认证', 1: '已认证', 2: '驳回' }[status] || '-')
 
@@ -37,7 +39,7 @@ onMounted(async () => {
       <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th><th>用户名</th><th>电话</th><th>邮箱</th><th>类型</th><th>状态</th><th>认证</th><th>地区</th><th>创建时间</th>
+            <th>ID</th><th>用户名</th><th>电话</th><th>邮箱</th><th>类型</th><th>后台角色</th><th>状态</th><th>认证</th><th>地区</th><th>创建时间</th>
           </tr>
         </thead>
         <tbody>
@@ -47,6 +49,7 @@ onMounted(async () => {
             <td>{{ item.phone || '-' }}</td>
             <td>{{ item.email || '-' }}</td>
             <td>{{ typeText(item.user_type) }}</td>
+            <td>{{ item.user_type === 3 ? roleText(item.admin_role) : '-' }}</td>
             <td>{{ statusText(item.status) }}</td>
             <td>{{ authText(item.auth_status) }}</td>
             <td>{{ item.region || '-' }}</td>

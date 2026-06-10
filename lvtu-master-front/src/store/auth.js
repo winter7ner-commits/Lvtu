@@ -6,20 +6,7 @@ export const useAuthStore = defineStore('adminAuth', {
     user: JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem('currentUser') || 'null')
   }),
   getters: {
-    isAuthenticated: (state) => !!state.token && !!state.user,
-    userType: (state) => Number(state.user?.userType || 0),
-    isPlatformAdmin() {
-      return this.userType === 3
-    },
-    isReviewer() {
-      return this.userType === 4
-    },
-    canAccessAuthAudit() {
-      return this.isReviewer
-    },
-    canAccessAdminOps() {
-      return this.isPlatformAdmin
-    }
+    isAuthenticated: (state) => !!state.token && !!state.user
   },
   actions: {
     setAuth(token, user) {

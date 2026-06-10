@@ -12,6 +12,7 @@ public class UserDTO {
     private String email;
     private String avatarUrl;
     private Integer userType;
+    private String adminRole;
     private Integer status;
     private Boolean isVerified;
     private Integer authStatus;
@@ -29,6 +30,7 @@ public class UserDTO {
         dto.setEmail(user.getEmail());
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setUserType(user.getUserType());
+        dto.setAdminRole(normalizeAdminRole(user));
         dto.setStatus(user.getStatus());
         dto.setIsVerified(user.getIsVerified());
         dto.setAuthStatus(user.getAuthStatus());
@@ -85,6 +87,14 @@ public class UserDTO {
         this.userType = userType;
     }
 
+    public String getAdminRole() {
+        return adminRole;
+    }
+
+    public void setAdminRole(String adminRole) {
+        this.adminRole = adminRole;
+    }
+
     public Integer getStatus() {
         return status;
     }
@@ -123,5 +133,16 @@ public class UserDTO {
 
     public void setCreatedTime(LocalDateTime createdTime) {
         this.createdTime = createdTime;
+    }
+
+    private static String normalizeAdminRole(User user) {
+        if (user.getUserType() == null || user.getUserType() != 3) {
+            return null;
+        }
+        String role = user.getAdminRole();
+        if (role == null || role.trim().isEmpty()) {
+            return "SUPER_ADMIN";
+        }
+        return role;
     }
 }

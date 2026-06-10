@@ -24,7 +24,6 @@
           <EvaluationForm
             :order-id="currentOrderId"
             :lawyer-id="currentLawyerId"
-            :user-id="currentUserId"
             @submitted="handleSubmitted"
           />
         </div>
@@ -58,15 +57,6 @@ export default {
     },
     currentLawyerId() {
       return Number(this.$route.query.lawyerId) || 2001
-    },
-    currentUserId() {
-      try {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null')
-        return Number(currentUser?.userId || currentUser?.id || userInfo?.id || localStorage.getItem('userId')) || null
-      } catch {
-        return null
-      }
     }
   },
   methods: {

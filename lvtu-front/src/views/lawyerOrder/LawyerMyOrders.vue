@@ -13,10 +13,12 @@ const refreshTimer = ref(null)
 
 const statusOptions = [
   { label: '全部', value: 'all' },
-  { label: '处理中', value: '处理中' },
+  { label: '待接单', value: '待接单' },
+  { label: '待处理', value: '处理中' },
   { label: '待客户确认', value: '待客户确认' },
   { label: '待评价', value: '待评价' },
-  { label: '已完成', value: '已完成' }
+  { label: '已完成', value: '已完成' },
+  { label: '平台介入', value: '平台介入' }
 ]
 
 const serviceTypeMap = {
@@ -46,12 +48,47 @@ const normalizeStatus = (status) => String(status || '').trim()
 const formatServiceType = (id) => serviceTypeMap[id] || `服务类型 ${id || '-'}`
 const formatMoney = (value) => `¥${Number(value || 0).toFixed(2)}`
 const formatTime = (value) => (value ? String(value).replace('T', ' ').slice(0, 16) : '-')
+const displayStatus = (status) => status === '处理中' ? '待处理' : status
+const isDirectOrder = (row) => row?.assignmentType === 'DIRECT'
+
+const parseFormData = (raw) => {
+  if (!raw) return {}
+  if (typeof raw === 'object') return raw
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return { 需求内容: raw }
+  }
+}
+
+const getOrderSummary = (row) => {
+  const data = parseFormData(row.formData)
+  return data.problemTitle ||
+    data.summary ||
+    data.description ||
+    data.problemDescription ||
+    data.keyProblem ||
+    data.coreDemand ||
+    data.eventDescription ||
+    data.supplementaryRemarks ||
+    '暂无需求摘要'
+}
+
+const getActionText = (status) => {
+  if (status === '待接单') return '接单处理'
+  if (status === '处理中') return '进入处理'
+  if (status === '待客户确认') return '查看提交结果'
+  if (status === '平台介入') return '查看处理记录'
+  return '查看详情'
+}
 
 const getStatusType = (status) => {
   if (status === '处理中') return 'primary'
   if (status === '待客户确认') return 'warning'
   if (status === '待评价') return 'warning'
   if (status === '已完成') return 'success'
+  if (status === '待接单') return 'info'
+  if (status === '平台介入') return 'danger'
   return 'info'
 }
 
@@ -133,7 +170,11 @@ onBeforeUnmount(() => {
         <strong>{{ currentLawyerId }}</strong>
       </div>
       <div class="status-item">
-        <span>处理中</span>
+        <span>待接单</span>
+        <strong>{{ statusCount['待接单'] || 0 }}</strong>
+      </div>
+      <div class="status-item">
+        <span>待处理</span>
         <strong>{{ statusCount['处理中'] || 0 }}</strong>
       </div>
       <div class="status-item">
@@ -148,6 +189,10 @@ onBeforeUnmount(() => {
         <span>已完成</span>
         <strong>{{ statusCount['已完成'] || 0 }}</strong>
       </div>
+      <div class="status-item">
+        <span>平台介入</span>
+        <strong>{{ statusCount['平台介入'] || 0 }}</strong>
+      </div>
     </section>
 
     <section class="orders-shell">
@@ -155,39 +200,37 @@ onBeforeUnmount(() => {
         <el-tab-pane v-for="item in statusOptions" :key="item.value" :label="item.label" :name="item.value" />
       </el-tabs>
 
-      <div class="order-table" v-loading="loading">
+      <div class="order-list" v-loading="loading">
         <el-empty v-if="!loading && filteredOrders.length === 0" description="暂无订单" />
-        <el-table
-          v-else
-          :key="activeStatus"
-          :data="filteredOrders"
-          row-key="orderId"
-          style="width: 100%"
-        >
-          <el-table-column prop="orderId" label="订单编号" min-width="120" />
-          <el-table-column label="服务类型" min-width="130">
-            <template #default="{ row }">{{ formatServiceType(row.serviceTypeId) }}</template>
-          </el-table-column>
-          <el-table-column label="金额" min-width="110">
-            <template #default="{ row }">{{ formatMoney(row.totalAmount) }}</template>
-          </el-table-column>
-          <el-table-column label="状态" min-width="110">
-            <template #default="{ row }">
-              <el-tag :type="getStatusType(row.status)" effect="plain">{{ row.status }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="创建时间" min-width="150">
-            <template #default="{ row }">{{ formatTime(row.createdTime) }}</template>
-          </el-table-column>
-          <el-table-column label="更新时间" min-width="150">
-            <template #default="{ row }">{{ formatTime(row.updatedTime) }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="130" fixed="right">
-            <template #default="{ row }">
-              <el-button type="primary" link @click="goDetail(row.orderId)">查看详情</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <template v-else>
+          <article v-for="row in filteredOrders" :key="row.orderId" class="order-card">
+            <div class="order-card-main">
+              <div class="order-card-head">
+                <div>
+                  <strong>订单 #{{ row.orderId }}</strong>
+                  <span>{{ formatServiceType(row.serviceTypeId) }}</span>
+                </div>
+              </div>
+              <p class="order-summary">{{ getOrderSummary(row) }}</p>
+              <div class="order-meta">
+                <span>金额 {{ formatMoney(row.totalAmount) }}</span>
+                <span>创建 {{ formatTime(row.createdTime) }}</span>
+                <span>更新 {{ formatTime(row.updatedTime) }}</span>
+              </div>
+            </div>
+            <div class="order-tags">
+              <span v-if="isDirectOrder(row)" class="order-pill direct-pill">用户指定</span>
+              <span :class="['order-pill', `status-pill-${getStatusType(row.status)}`]">
+                {{ displayStatus(row.status) }}
+              </span>
+            </div>
+            <div class="order-card-action">
+              <el-button type="primary" @click="goDetail(row.orderId)">
+                {{ getActionText(row.status) }}
+              </el-button>
+            </div>
+          </article>
+        </template>
       </div>
     </section>
   </div>
@@ -241,7 +284,7 @@ h1 {
 
 .status-strip {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 14px;
   margin-bottom: 18px;
 }
@@ -273,8 +316,158 @@ h1 {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
-.order-table {
+.order-list {
   min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 132px;
+  gap: 18px;
+  align-items: center;
+  min-height: 132px;
+  padding: 18px;
+  border: 1px solid #e5eaf3;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.order-card-main {
+  min-width: 0;
+}
+
+.order-card-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.order-card-head strong {
+  display: block;
+  color: #172033;
+  font-size: 17px;
+}
+
+.order-card-head span {
+  display: block;
+  margin-top: 4px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.order-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 100%;
+}
+
+.order-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 86px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.direct-pill {
+  color: #ffffff;
+  background: #f59e0b;
+  box-shadow: 0 6px 14px rgba(245, 158, 11, 0.18);
+}
+
+.status-pill-primary {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.status-pill-warning {
+  color: #a16207;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.status-pill-success {
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.status-pill-danger {
+  color: #b42318;
+  background: #fff1f0;
+  border: 1px solid #fecaca;
+}
+
+.status-pill-info {
+  color: #475467;
+  background: #f2f4f7;
+  border: 1px solid #e4e7ec;
+}
+
+.order-summary {
+  margin: 0 0 12px;
+  color: #344054;
+  line-height: 1.7;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.order-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.order-meta span {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f6f8fc;
+  color: #667085;
+  font-size: 12px;
+}
+
+.order-card-action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.order-card-action .el-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 38px;
+  border-radius: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0 14px;
+  margin: 0;
+}
+
+.order-card-action .el-button :deep(span) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 @media (max-width: 768px) {
@@ -285,6 +478,25 @@ h1 {
 
   .status-strip {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .order-card {
+    grid-template-columns: 1fr;
+  }
+
+  .order-tags {
+    flex-direction: row;
+    justify-content: flex-start;
+    height: auto;
+  }
+
+  .order-card-action {
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  .order-card-action .el-button {
+    width: 132px;
   }
 }
 </style>

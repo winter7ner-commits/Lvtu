@@ -11,9 +11,17 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    private static final Set<String> ADMIN_ROLES = Set.of(
+            "SUPER_ADMIN",
+            "CERT_AUDITOR",
+            "OPERATOR",
+            "CUSTOMER_SERVICE"
+    );
 
     @Resource
     private UserMapper userMapper;
@@ -82,8 +90,13 @@ public class UserServiceImpl implements UserService {
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
             throw new IllegalArgumentException("密码不能为空");
         }
-        if (request.getUserType() == null || request.getUserType() < 1 || request.getUserType() > 4) {
-            throw new IllegalArgumentException("用户类型无效");
+        String adminRole = request.getAdminRole();
+        if (adminRole == null || adminRole.trim().isEmpty()) {
+            adminRole = "OPERATOR";
+        }
+        adminRole = adminRole.trim().toUpperCase();
+        if (!ADMIN_ROLES.contains(adminRole)) {
+            throw new IllegalArgumentException("后台角色无效");
         }
         if (userMapper.selectByUsername(request.getUsername()) != null) {
             throw new IllegalArgumentException("用户名已存在");
@@ -97,7 +110,8 @@ public class UserServiceImpl implements UserService {
         String email = request.getEmail();
         user.setEmail((email != null && !email.trim().isEmpty()) ? email : null);
         user.setAvatarUrl(null);
-        user.setUserType(request.getUserType());
+        user.setUserType(3);
+        user.setAdminRole(adminRole);
         user.setStatus(1);
         user.setIsVerified(false);
         user.setAuthStatus(0);
@@ -134,7 +148,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User adminLogin(LoginRequest request) {
         User user = login(request);
-        if (user != null && user.getUserType() != null && (user.getUserType() == 3 || user.getUserType() == 4)) {
+        if (user != null && user.getUserType() != null && user.getUserType() == 3) {
             return user;
         }
         throw new IllegalArgumentException("无管理员权限");

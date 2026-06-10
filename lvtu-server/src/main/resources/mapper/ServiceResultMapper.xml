@@ -37,6 +37,7 @@
         UPDATE service_result
         SET title = #{title},
             content = #{content},
+            status = #{status},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
@@ -46,6 +47,13 @@
         SET status = #{status},
             updated_at = CURRENT_TIMESTAMP
         WHERE order_id = #{orderId}
+    </update>
+
+    <update id="updateStatusById">
+        UPDATE service_result
+        SET status = #{status},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
     </update>
 
 </mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.LegalArticleExplanationMapper">
+
+    <resultMap id="explanationMap" type="com.bitzh.lvtu.entity.LegalArticleExplanation">
+        <id column="id" property="id"/>
+        <result column="article_id" property="articleId"/>
+        <result column="content" property="content"/>
+        <result column="source" property="source"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findByArticleId" resultMap="explanationMap">
+        SELECT id, article_id, content, source, status, created_at, updated_at
+        FROM legal_article_explanation
+        WHERE article_id = #{articleId}
+          AND status = 1
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 1
+    </select>
+
+</mapper>

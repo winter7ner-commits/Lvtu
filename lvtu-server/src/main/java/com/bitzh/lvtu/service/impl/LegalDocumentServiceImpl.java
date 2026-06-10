@@ -32,11 +32,6 @@ public class LegalDocumentServiceImpl implements LegalDocumentService {
     }
 
     @Override
-    public List<LegalDocument> searchByName(String name) {
-        return documentMapper.searchByName(name);
-    }
-
-    @Override
     public LegalDocument createDocument(LegalDocument document) {
         if (document.getStatus() == null) {
             document.setStatus(1);

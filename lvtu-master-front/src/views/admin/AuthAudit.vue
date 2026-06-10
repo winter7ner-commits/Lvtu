@@ -103,9 +103,7 @@
 
 import { ref, computed, onMounted } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { useAuthStore } from '../../store/auth'
 import { getApplicationList, approveApplication, rejectApplication } from '../../api/application'
-const authStore = useAuthStore()
 const list = ref([])
 const loading = ref(false)
 const processingId = ref(null)
@@ -162,7 +160,6 @@ const load = async () => {
   }
 }
 const approve = async (item) => {
-  if (!authStore.isReviewer) return
   await ElMessageBox.confirm('通过该申请？', '确认', { type: 'success' }).catch(() => null)
   processingId.value = item.applicationId
   try {
@@ -173,7 +170,6 @@ const approve = async (item) => {
   finally { processingId.value = null }
 }
 const reject = async (item) => {
-  if (!authStore.isReviewer) return
   let reason = ''
   try {
     const { value } = await ElMessageBox.prompt('请输入驳回原因', '驳回', {

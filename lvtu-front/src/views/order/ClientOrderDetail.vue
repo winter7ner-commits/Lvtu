@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getOrderById } from '@/api/order'
-import { confirmOrderComplete, getOrderResultForUser } from '@/api/lawyerOrder'
+import { confirmOrderComplete, getOrderResultForUser, requestServiceResultRevision } from '@/api/lawyerOrder'
 import { useRegionOptions } from '@/components/order/useRegionOptions'
 
 const route = useRoute()
@@ -11,8 +11,10 @@ const router = useRouter()
 const loading = ref(false)
 const resultLoading = ref(false)
 const confirming = ref(false)
+const requestingRevision = ref(false)
 const order = ref(null)
 const serviceResult = ref(null)
+const selectedResultRecord = ref(null)
 const { regionOptions } = useRegionOptions()
 
 const serviceTypeMap = {
@@ -31,6 +33,62 @@ const currentUserId = computed(() => {
 })
 const parsedFormData = computed(() => parseFormData(order.value?.formData))
 const canConfirm = computed(() => order.value?.status === '待客户确认')
+const revisionCount = computed(() => Number(serviceResult.value?.revisionRequestCount || 0))
+const maxRevisionCount = computed(() => Number(serviceResult.value?.maxRevisionRequestCount || 2))
+const canRequestRevision = computed(() => canConfirm.value && !!serviceResult.value)
+const revisionActionText = computed(() => revisionCount.value >= maxRevisionCount.value ? '申请平台介入' : '申请修改')
+const resultSubmissions = computed(() => {
+  if (!serviceResult.value) return []
+  const records = serviceResult.value.submissions?.length ? [...serviceResult.value.submissions] : []
+  if (!records.length && (revisionCount.value === 0 || Number(serviceResult.value.status) === 2)) {
+    records.push({
+      id: 'current',
+      submissionNo: 1,
+      title: serviceResult.value.title,
+      content: serviceResult.value.content,
+      createdAt: serviceResult.value.updatedAt || serviceResult.value.createdAt,
+      attachments: serviceResult.value.attachments || []
+    })
+  }
+
+  return records.sort((a, b) => Number(a.submissionNo || 0) - Number(b.submissionNo || 0))
+})
+const hasCompleteSubmissionHistory = computed(() => resultSubmissions.value.length >= revisionCount.value + 1)
+const initialSubmission = computed(() => {
+  if (hasCompleteSubmissionHistory.value) return resultSubmissions.value[0] || null
+  return revisionCount.value === 0 || Number(serviceResult.value?.status) === 2 ? resultSubmissions.value[0] || null : null
+})
+const latestSubmissionNo = computed(() => {
+  if (!resultSubmissions.value.length) return 0
+  return Math.max(...resultSubmissions.value.map((item) => Number(item.submissionNo || 0)))
+})
+const getSubmissionTitle = (item) => {
+  const no = Number(item?.submissionNo || 1)
+  return no <= 1 ? '提交结果' : `第 ${no - 1} 次修改后提交`
+}
+const getRevisionSubmission = (revision) => {
+  const targetNo = Number(revision?.revisionNo || 0) + 1
+  const exact = resultSubmissions.value.find((item) => Number(item.submissionNo || 0) === targetNo)
+  if (exact) return exact
+  if (Number(revision?.status) === 0) return null
+  if (Number(revision?.revisionNo || 0) === revisionCount.value && serviceResult.value) {
+    return {
+      id: `current-revision-${targetNo}`,
+      submissionNo: targetNo,
+      title: serviceResult.value.title,
+      content: serviceResult.value.content,
+      createdAt: serviceResult.value.updatedAt || serviceResult.value.createdAt,
+      attachments: serviceResult.value.attachments || []
+    }
+  }
+  return null
+}
+const displaySubmissionCount = computed(() => {
+  if (!serviceResult.value) return 0
+  const revisionSubmissions = (serviceResult.value.revisionRequests || [])
+    .filter((item) => !!getRevisionSubmission(item)).length
+  return (initialSubmission.value ? 1 : 0) + revisionSubmissions
+})
 const collapsedInfo = ref([])
 
 const identityKeys = ['realName', 'phone', 'idCard', 'verifiedText', 'accountType']
@@ -344,7 +402,8 @@ const getOrderStatusClass = (status) => {
     待客户确认: 'pending_customer_confirmation',
     待评价: 'pending_review',
     已完成: 'completed',
-    已取消: 'cancelled'
+    已取消: 'cancelled',
+    平台介入: 'intervention'
   }
   return statusMap[status] || 'paid'
 }
@@ -356,6 +415,20 @@ const getResultStatusText = (status) => {
   return '未知'
 }
 
+const getRevisionStatusText = (status) => {
+  if (status === 0) return '待律师处理'
+  if (status === 1) return '律师已重新提交'
+  if (status === 2) return '平台介入'
+  return '未知'
+}
+
+const getRevisionStatusClass = (status) => {
+  if (status === 0) return 'status-pending'
+  if (status === 1) return 'status-submitted'
+  if (status === 2) return 'status-intervention'
+  return 'status-muted'
+}
+
 const loadOrder = async () => {
   loading.value = true
   try {
@@ -365,13 +438,63 @@ const loadOrder = async () => {
       return
     }
     order.value = response.data
-    if (['待客户确认', '待评价', '已完成'].includes(order.value?.status)) {
+    if (['处理中', '待客户确认', '待评价', '已完成', '平台介入'].includes(order.value?.status)) {
       await loadResult()
     }
   } catch (error) {
     ElMessage.error(error?.response?.data?.message || '订单详情加载失败')
   } finally {
     loading.value = false
+  }
+}
+
+const handleRequestRevision = async () => {
+  if (!currentUserId.value) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  if (!serviceResult.value) {
+    ElMessage.warning('律师暂未提交服务结果')
+    return
+  }
+
+  try {
+    const { value } = await ElMessageBox.prompt(
+      revisionCount.value >= maxRevisionCount.value
+        ? '修改次数已达上限，请说明需要平台介入协调的问题。'
+        : `请填写修改意见。当前还可申请 ${maxRevisionCount.value - revisionCount.value} 次修改。`,
+      revisionActionText.value,
+      {
+        inputType: 'textarea',
+        inputPlaceholder: '请具体说明需要律师补充、修正或解释的内容',
+        inputValidator: (text) => {
+          if (!text || !text.trim()) return '修改意见不能为空'
+          if (text.trim().length > 1000) return '修改意见不能超过1000字'
+          return true
+        },
+        confirmButtonText: '提交',
+        cancelButtonText: '取消',
+        type: revisionCount.value >= maxRevisionCount.value ? 'warning' : 'info'
+      }
+    )
+
+    requestingRevision.value = true
+    const response = await requestServiceResultRevision(orderId.value, {
+      userId: currentUserId.value,
+      content: value.trim()
+    })
+    if ((response?.data?.code ?? response?.code) === 200) {
+      ElMessage.success(revisionCount.value >= maxRevisionCount.value ? '已提交平台介入申请' : '修改意见已提交给律师')
+      await loadOrder()
+    } else {
+      ElMessage.error(response?.data?.message || response?.message || '提交失败')
+    }
+  } catch (error) {
+    if (!['cancel', 'close'].includes(error)) {
+      ElMessage.error(error?.response?.data?.message || '提交失败')
+    }
+  } finally {
+    requestingRevision.value = false
   }
 }
 
@@ -455,7 +578,10 @@ onMounted(loadOrder)
         <article class="info-panel">
           <div class="panel-title">
             <h2>订单信息</h2>
-            <span :class="['status-badge', `status-${getOrderStatusClass(order.status)}`]">{{ order.status }}</span>
+            <div class="panel-tags">
+              <span v-if="order.assignmentType === 'DIRECT'" class="direct-badge">指定律师</span>
+              <span :class="['status-badge', `status-${getOrderStatusClass(order.status)}`]">{{ order.status }}</span>
+            </div>
           </div>
           <div class="info-list">
             <div>
@@ -469,6 +595,10 @@ onMounted(loadOrder)
             <div>
               <span>接单律师</span>
               <strong>{{ order.lawyerId || '未接单' }}</strong>
+            </div>
+            <div v-if="order.assignmentType === 'DIRECT'">
+              <span>指定律师</span>
+              <strong>{{ order.targetLawyerId || '-' }}</strong>
             </div>
             <div>
               <span>创建时间</span>
@@ -539,25 +669,130 @@ onMounted(loadOrder)
 
       <section class="result-panel" v-loading="resultLoading">
         <div class="panel-title">
-          <h2>服务结果</h2>
+          <h2>律师处理结果</h2>
           <el-tag v-if="serviceResult" type="success" effect="plain">
             {{ getResultStatusText(serviceResult.status) }}
           </el-tag>
         </div>
         <template v-if="serviceResult">
-          <h3>{{ serviceResult.title }}</h3>
-          <p class="result-content">{{ serviceResult.content || '无补充说明' }}</p>
-          <div v-if="serviceResult.attachments?.length" class="attachment-list">
-            <a v-for="file in serviceResult.attachments" :key="file.id || file.fileUrl" :href="file.fileUrl" target="_blank">
-              {{ file.fileName }}
-            </a>
+          <div class="result-meta-strip">
+            <div>
+              <span>律师提交</span>
+              <strong>{{ displaySubmissionCount }} 次</strong>
+            </div>
+            <div>
+              <span>修改次数</span>
+              <strong>已用 {{ revisionCount }} / 最多 {{ maxRevisionCount }}</strong>
+            </div>
+          </div>
+
+          <div class="process-list">
+            <article v-if="initialSubmission" class="process-item process-item-result">
+              <div class="process-marker"></div>
+              <div class="process-body">
+                <div class="process-head">
+                  <div>
+                    <strong>提交结果</strong>
+                    <span>{{ formatTime(initialSubmission.createdAt) }}</span>
+                  </div>
+                  <em v-if="Number(initialSubmission.submissionNo) === latestSubmissionNo">当前结果</em>
+                </div>
+                <h3>{{ initialSubmission.title }}</h3>
+                <p class="result-content">{{ initialSubmission.content || '无补充说明' }}</p>
+                <div v-if="initialSubmission.attachments?.length" class="attachment-list">
+                  <a
+                    v-for="file in initialSubmission.attachments"
+                    :key="file.id || file.fileUrl"
+                    :href="file.fileUrl"
+                    target="_blank"
+                  >
+                    {{ file.fileName }}
+                  </a>
+                </div>
+              </div>
+            </article>
+            <article v-else class="process-item">
+              <div class="process-marker process-marker-warn"></div>
+              <div class="process-body process-body-warn">
+                原始提交结果历史缺失，当前只能查看已保存的修改后提交结果。
+              </div>
+            </article>
+
+            <article
+              v-for="item in serviceResult.revisionRequests || []"
+              :key="item.id"
+              class="process-item process-item-revision"
+            >
+              <div class="process-marker"></div>
+              <div class="process-body revision-process-body">
+                <div class="revision-main">
+                  <div class="process-head">
+                    <div>
+                      <strong>第 {{ item.revisionNo }} 次修改意见</strong>
+                      <span>{{ formatTime(item.createdAt) }}</span>
+                    </div>
+                  </div>
+                  <p>{{ item.content }}</p>
+                </div>
+                <div class="revision-side">
+                  <span :class="['revision-status', getRevisionStatusClass(item.status)]">
+                    {{ getRevisionStatusText(item.status) }}
+                  </span>
+                  <el-button
+                    v-if="getRevisionSubmission(item)"
+                    class="revision-action-btn detail-action-btn"
+                    type="warning"
+                    size="small"
+                    @click="selectedResultRecord = getRevisionSubmission(item)"
+                  >
+                    查看详细
+                  </el-button>
+                </div>
+              </div>
+            </article>
           </div>
         </template>
         <el-empty v-else description="律师暂未提交服务结果" />
         <div v-if="canConfirm" class="result-actions">
+          <el-button
+            v-if="canRequestRevision"
+            class="request-revision-btn"
+            :loading="requestingRevision"
+            @click="handleRequestRevision"
+          >
+            {{ revisionActionText }}
+          </el-button>
           <el-button class="confirm-complete-btn" :loading="confirming" @click="handleConfirm">确认完成</el-button>
         </div>
       </section>
+
+      <el-dialog
+        :model-value="!!selectedResultRecord"
+        width="640px"
+        :title="selectedResultRecord ? `${getSubmissionTitle(selectedResultRecord)}详情` : '提交结果详情'"
+        @close="selectedResultRecord = null"
+      >
+        <template v-if="selectedResultRecord">
+          <div class="result-dialog-meta">
+            <span>{{ formatTime(selectedResultRecord.createdAt) }}</span>
+            <el-tag v-if="Number(selectedResultRecord.submissionNo) === latestSubmissionNo" type="success" effect="plain">
+              当前结果
+            </el-tag>
+          </div>
+          <h3 class="result-dialog-title">{{ selectedResultRecord.title }}</h3>
+          <p class="result-dialog-content">{{ selectedResultRecord.content || '无补充说明' }}</p>
+          <div v-if="selectedResultRecord.attachments?.length" class="attachment-list">
+            <a
+              v-for="file in selectedResultRecord.attachments"
+              :key="file.id || file.fileUrl"
+              :href="file.fileUrl"
+              target="_blank"
+            >
+              {{ file.fileName }}
+            </a>
+          </div>
+        </template>
+      </el-dialog>
     </template>
   </div>
 </template>
@@ -592,6 +827,13 @@ onMounted(loadOrder)
 .panel-title {
   align-items: center;
   margin-bottom: 18px;
+}
+
+.panel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .eyebrow {
@@ -659,6 +901,19 @@ h3 {
   white-space: nowrap;
 }
 
+.direct-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .status-pending_payment {
   background-color: #fff7e6;
   color: #ad6800;
@@ -692,6 +947,11 @@ h3 {
 .status-cancelled {
   background-color: #fff1f0;
   color: #b42318;
+}
+
+.status-intervention {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
 .order-summary-grid {
@@ -885,6 +1145,32 @@ h3 {
   margin-top: 18px;
 }
 
+.result-meta-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.result-meta-strip div {
+  padding: 14px 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #f8fbff;
+}
+
+.result-meta-strip span {
+  display: block;
+  margin-bottom: 6px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.result-meta-strip strong {
+  color: #1d4ed8;
+  font-size: 18px;
+}
+
 .attachment-list {
   display: flex;
   flex-wrap: wrap;
@@ -899,10 +1185,147 @@ h3 {
   border-radius: 6px;
 }
 
+.process-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.process-item {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 12px;
+  position: relative;
+}
+
+.process-item::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 28px;
+  bottom: -20px;
+  width: 2px;
+  background: #e5eaf3;
+}
+
+.process-item:last-child::before {
+  display: none;
+}
+
+.process-marker {
+  width: 24px;
+  height: 24px;
+  border: 5px solid #eff6ff;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+.process-marker-warn {
+  border-color: #fff7ed;
+  background: #f59e0b;
+}
+
+.process-body {
+  padding: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.process-body-warn {
+  border-color: #fde7b5;
+  background: #fffaf0;
+  color: #92400e;
+  line-height: 1.7;
+}
+
+.process-item-revision .process-body {
+  border-color: #fde7b5;
+  background: #fffaf0;
+}
+
+.process-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.process-head div {
+  min-width: 0;
+}
+
+.process-head strong {
+  display: block;
+  color: #172033;
+  font-size: 16px;
+}
+
+.process-head span {
+  display: block;
+  margin-top: 4px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.process-head em {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #ecfdf3;
+  color: #027a48;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.process-body h3 {
+  margin-bottom: 8px;
+}
+
+.result-dialog-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+  color: #667085;
+}
+
+.result-dialog-title {
+  margin: 0 0 12px;
+  color: #172033;
+}
+
+.result-dialog-content {
+  margin: 0;
+  color: #344054;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .result-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
   margin-top: 20px;
+}
+
+.request-revision-btn {
+  min-width: 112px;
+  border-color: #d97706;
+  color: #92400e;
+  background: #fffbeb;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.request-revision-btn:hover,
+.request-revision-btn:focus {
+  border-color: #b45309;
+  color: #78350f;
+  background: #fef3c7;
 }
 
 .confirm-complete-btn {
@@ -912,6 +1335,77 @@ h3 {
   color: #ffffff;
   border-radius: 10px;
   font-weight: 600;
+}
+
+.revision-process-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  gap: 18px;
+  align-items: center;
+}
+
+.revision-main p {
+  margin: 0;
+  color: #344054;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.revision-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.revision-status {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 100px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-pending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.status-submitted {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.status-intervention {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-muted {
+  background: #f2f4f7;
+  color: #475467;
+}
+
+.revision-action-btn {
+  min-width: 82px;
+  height: 30px;
+  padding: 0 12px;
+  border-color: #f59e0b;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.revision-action-btn:hover,
+.revision-action-btn:focus {
+  border-color: #d97706;
+  background: #d97706;
+  color: #fff;
 }
 
 .confirm-complete-btn:hover,
@@ -970,12 +1464,21 @@ h3 {
   }
 
   .info-list,
-  .form-data {
+  .form-data,
+  .result-meta-strip {
     grid-template-columns: 1fr;
   }
 
   .form-row-wide {
     grid-column: span 1;
+  }
+
+  .revision-process-body {
+    grid-template-columns: 1fr;
+  }
+
+  .revision-side {
+    align-items: flex-start;
   }
 }
 </style>

@@ -29,12 +29,6 @@
         SELECT <include refid="Base_Column_List"/> FROM legal_document WHERE id = #{id}
     </select>
 
-    <select id="searchByName" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/> FROM legal_document
-        WHERE name LIKE CONCAT('%', #{name}, '%') AND status = 1
-        ORDER BY sort_order
-    </select>
-
     <insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalDocument" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO legal_document (name, category_id, publish_date, sort_order, status, created_at, updated_at)
         VALUES (#{name}, #{categoryId}, #{publishDate}, #{sortOrder}, #{status}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)

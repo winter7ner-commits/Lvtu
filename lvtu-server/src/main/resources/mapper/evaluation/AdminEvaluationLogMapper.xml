@@ -6,7 +6,7 @@
         <id property="logId" column="log_id"/>
         <result property="evaluationId" column="evaluation_id"/>
         <result property="adminId" column="admin_id"/>
-        <result property="actionType" column="action_type" typeHandler="com.bitzh.lvtu.config.ActionTypeTypeHandler"/>
+        <result property="actionType" column="action_type"/>
         <result property="reason" column="reason"/>
         <result property="createdTime" column="created_time"/>
     </resultMap>

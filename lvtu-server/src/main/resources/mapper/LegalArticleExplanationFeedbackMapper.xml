@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bitzh.lvtu.mapper.LegalArticleExplanationFeedbackMapper">
+
+    <resultMap id="feedbackMap" type="com.bitzh.lvtu.entity.LegalArticleExplanationFeedback">
+        <id column="id" property="id"/>
+        <result column="article_id" property="articleId"/>
+        <result column="explanation_id" property="explanationId"/>
+        <result column="user_id" property="userId"/>
+        <result column="helpful" property="helpful"/>
+        <result column="reason" property="reason"/>
+        <result column="content" property="content"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="handled_at" property="handledAt"/>
+        <result column="article_number" property="articleNumber"/>
+        <result column="article_title" property="articleTitle"/>
+        <result column="document_name" property="documentName"/>
+        <result column="username" property="username"/>
+        <result column="phone" property="phone"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalArticleExplanationFeedback" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO legal_article_explanation_feedback
+            (article_id, explanation_id, user_id, helpful, reason, content, status, created_at)
+        VALUES
+            (#{articleId}, #{explanationId}, #{userId}, #{helpful}, #{reason}, #{content}, 'pending', CURRENT_TIMESTAMP)
+    </insert>
+
+    <select id="findAll" resultMap="feedbackMap">
+        SELECT
+            f.id,
+            f.article_id,
+            f.explanation_id,
+            f.user_id,
+            f.helpful,
+            f.reason,
+            f.content,
+            f.status,
+            f.created_at,
+            f.handled_at,
+            a.article_number,
+            a.title AS article_title,
+            d.name AS document_name,
+            u.username,
+            u.phone
+        FROM legal_article_explanation_feedback f
+        LEFT JOIN legal_article a ON a.id = f.article_id
+        LEFT JOIN legal_document d ON d.id = a.document_id
+        LEFT JOIN users u ON u.user_id = f.user_id
+        ORDER BY
+            CASE WHEN f.status = 'pending' THEN 0 ELSE 1 END,
+            f.created_at DESC,
+            f.id DESC
+    </select>
+
+    <update id="markHandled">
+        UPDATE legal_article_explanation_feedback
+        SET status = 'handled',
+            handled_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+</mapper>

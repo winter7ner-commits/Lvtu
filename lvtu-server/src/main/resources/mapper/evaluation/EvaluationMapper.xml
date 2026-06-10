@@ -13,7 +13,7 @@
         <result property="totalScore" column="total_score"/>
         <result property="content" column="content"/>
         <result property="isAnonymous" column="is_anonymous"/>
-        <result property="status" column="status" typeHandler="com.bitzh.lvtu.config.EvaluationStatusTypeHandler"/>
+        <result property="status" column="status"/>
         <result property="reportCount" column="report_count"/>
         <result property="isFeatured" column="is_featured"/>
         <result property="createdTime" column="created_time"/>

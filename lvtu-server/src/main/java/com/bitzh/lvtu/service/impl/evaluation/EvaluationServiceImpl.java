@@ -37,9 +37,6 @@ public class EvaluationServiceImpl implements EvaluationService {
     public EvaluationResponse createEvaluation(CreateEvaluationRequest request, Long userId) {
         ServiceOrder order = serviceOrderMapper.selectByOrderId(request.getOrderId());
         validateOrderForEvaluation(order, request.getLawyerId());
-        if (!order.getUserId().equals(userId)) {
-            throw new EvaluationException("只有下单用户可以提交评价");
-        }
 
         Optional<Evaluation> existingEvaluation = evaluationMapper.findByOrderId(request.getOrderId());
         if (existingEvaluation.isPresent()) {
@@ -77,9 +74,6 @@ public class EvaluationServiceImpl implements EvaluationService {
     private void validateOrderForEvaluation(ServiceOrder order, Long lawyerId) {
         if (order == null) {
             throw new EvaluationException("订单不存在");
-        }
-        if (order.getUserId() == null) {
-            throw new EvaluationException("订单缺少用户信息");
         }
         if (order.getLawyerId() == null || !order.getLawyerId().equals(lawyerId)) {
             throw new EvaluationException("评价律师与订单律师不一致");

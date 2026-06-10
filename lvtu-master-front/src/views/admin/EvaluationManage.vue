@@ -13,16 +13,6 @@ const actionReason = ref('')
 const logs = ref([])
 const logTarget = ref(null)
 
-const getCurrentAdminId = () => {
-  try {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null')
-    return Number(currentUser?.userId || currentUser?.id || userInfo?.id || localStorage.getItem('userId')) || null
-  } catch {
-    return null
-  }
-}
-
 const actionTextMap = {
   HIDE: '隐藏评价',
   DELETE: '删除评价',
@@ -98,10 +88,7 @@ const closeAction = () => {
 
 const submitAction = async () => {
   if (!actionTarget.value || actionReason.value.trim().length < 10) return
-  const adminId = getCurrentAdminId()
-  if (!adminId) return
   await handleEvaluation({
-    adminId,
     evaluationId: actionTarget.value.evaluation_id,
     actionType: actionType.value,
     reason: actionReason.value.trim()

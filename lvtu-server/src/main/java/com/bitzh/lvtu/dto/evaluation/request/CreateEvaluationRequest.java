@@ -10,9 +10,6 @@ import lombok.Data;
  */
 @Data
 public class CreateEvaluationRequest {
-    @NotNull(message = "用户ID不能为空")
-    private Long userId;
-
     @NotNull(message = "订单ID不能为空")
     private Long orderId;
     

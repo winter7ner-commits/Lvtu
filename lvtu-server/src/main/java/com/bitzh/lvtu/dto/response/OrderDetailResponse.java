@@ -8,6 +8,8 @@ public class OrderDetailResponse {
     private Long orderId;
     private Long userId;
     private Long lawyerId;
+    private Long targetLawyerId;
+    private String assignmentType;
     private Integer serviceTypeId;
     private BigDecimal totalAmount;
     private String status;
@@ -37,6 +39,22 @@ public class OrderDetailResponse {
 
     public void setLawyerId(Long lawyerId) {
         this.lawyerId = lawyerId;
+    }
+
+    public Long getTargetLawyerId() {
+        return targetLawyerId;
+    }
+
+    public void setTargetLawyerId(Long targetLawyerId) {
+        this.targetLawyerId = targetLawyerId;
+    }
+
+    public String getAssignmentType() {
+        return assignmentType;
+    }
+
+    public void setAssignmentType(String assignmentType) {
+        this.assignmentType = assignmentType;
     }
 
     public Integer getServiceTypeId() {

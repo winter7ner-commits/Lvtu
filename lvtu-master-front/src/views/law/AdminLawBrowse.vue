@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { getArticlesByDocument, getCategories, getDocumentsByCategory } from '../../api/law'
+import { getArticleDetail, getArticlesByDocument, getCategories, getDocumentsByCategory } from '../../api/law'
 
 const route = useRoute()
 
@@ -13,7 +13,9 @@ const selectedDocument = ref(null)
 const selectedDocumentName = ref('')
 const articleModalVisible = ref(false)
 const selectedArticle = ref(null)
+const selectedArticleDetail = ref(null)
 const loading = ref(false)
+const detailLoading = ref(false)
 
 onMounted(() => {
   loadCategories()
@@ -77,9 +79,19 @@ const truncateContent = (content) => {
   return content || ''
 }
 
-const openArticleModal = (article) => {
+const openArticleModal = async (article) => {
   selectedArticle.value = article
+  selectedArticleDetail.value = null
   articleModalVisible.value = true
+  detailLoading.value = true
+  try {
+    const result = await getArticleDetail(article.id)
+    selectedArticleDetail.value = result.code === 200 ? result.data : null
+  } catch (error) {
+    console.error('加载法条详情失败:', error)
+  } finally {
+    detailLoading.value = false
+  }
 }
 </script>
 
@@ -145,7 +157,7 @@ const openArticleModal = (article) => {
     </div>
 
     <div v-if="articleModalVisible" class="modal-overlay" @click.self="articleModalVisible = false">
-      <div class="modal-content">
+      <div class="modal-content" v-loading="detailLoading">
         <div class="modal-header">
           <h2>法条详情</h2>
           <button class="close-btn" @click="articleModalVisible = false">×</button>
@@ -163,10 +175,32 @@ const openArticleModal = (article) => {
             <span class="detail-label">标题：</span>
             <span class="detail-value">{{ selectedArticle.title }}</span>
           </div>
-          <div class="detail-row content-row">
-            <span class="detail-label">条文内容：</span>
+          <section class="readonly-section">
+            <div class="section-title">条文原文</div>
             <div class="content-value">{{ selectedArticle.content }}</div>
-          </div>
+          </section>
+
+          <section class="readonly-section">
+            <div class="section-title">解释</div>
+            <div v-if="selectedArticleDetail?.explanation?.content" class="content-value">
+              {{ selectedArticleDetail.explanation.content }}
+            </div>
+            <div v-else class="empty-line">暂无解释</div>
+          </section>
+
+          <section class="readonly-section">
+            <div class="section-title">评论（{{ selectedArticleDetail?.comments?.length || 0 }}）</div>
+            <div v-if="selectedArticleDetail?.comments?.length" class="admin-comment-list">
+              <article v-for="comment in selectedArticleDetail.comments" :key="comment.id" class="admin-comment-item">
+                <div class="comment-meta">
+                  <strong>{{ comment.username || `用户${comment.userId}` }}</strong>
+                  <span>{{ comment.createdAt ? String(comment.createdAt).replace('T', ' ').slice(0, 16) : '-' }}</span>
+                </div>
+                <p>{{ comment.content }}</p>
+              </article>
+            </div>
+            <div v-else class="empty-line">暂无评论</div>
+          </section>
         </div>
       </div>
     </div>
@@ -344,7 +378,7 @@ const openArticleModal = (article) => {
   background: white;
   border-radius: 8px;
   width: 90%;
-  max-width: 600px;
+  max-width: 760px;
   max-height: 80vh;
   overflow-y: auto;
 }
@@ -399,5 +433,58 @@ const openArticleModal = (article) => {
   word-break: break-all;
   color: #333;
   line-height: 1.8;
+}
+
+.readonly-section {
+  margin-top: 1.2rem;
+  padding: 1rem;
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.section-title {
+  margin-bottom: 0.75rem;
+  color: #172033;
+  font-weight: 800;
+}
+
+.empty-line {
+  color: #909399;
+  line-height: 1.7;
+}
+
+.admin-comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-comment-item {
+  padding: 0.8rem;
+  border: 1px solid #edf1f7;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.comment-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  color: #667085;
+  font-size: 0.85rem;
+}
+
+.comment-meta strong {
+  color: #172033;
+}
+
+.admin-comment-item p {
+  margin: 0;
+  color: #344054;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 </style>

@@ -9,6 +9,7 @@
         <result column="title" property="title"/>
         <result column="content" property="content"/>
         <result column="sort_order" property="sortOrder"/>
+        <result column="status" property="status"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
     </resultMap>
@@ -27,13 +28,6 @@
 
     <select id="findByDocumentId" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/> FROM legal_article WHERE document_id = #{documentId} ORDER BY sort_order
-    </select>
-
-    <select id="searchByKeyword" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/> FROM legal_article
-        WHERE (title LIKE CONCAT('%', #{keyword}, '%') OR content LIKE CONCAT('%', #{keyword}, '%') OR article_number LIKE CONCAT('%', #{keyword}, '%'))
-        AND status = 1
-        ORDER BY document_id, sort_order
     </select>
 
     <insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalArticle" useGeneratedKeys="true" keyProperty="id">

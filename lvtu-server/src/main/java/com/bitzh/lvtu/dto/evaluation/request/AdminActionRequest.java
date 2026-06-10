@@ -9,9 +9,6 @@ import lombok.Data;
  */
 @Data
 public class AdminActionRequest {
-    @NotNull(message = "管理员ID不能为空")
-    private Long adminId;
-
     @NotNull(message = "评价ID不能为空")
     private Long evaluationId;
     

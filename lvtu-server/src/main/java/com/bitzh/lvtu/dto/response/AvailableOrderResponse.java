@@ -7,6 +7,7 @@ public class AvailableOrderResponse {
 
     private Long orderId;
     private Long userId;
+    private String assignmentType;
     private Integer serviceTypeId;
     private BigDecimal totalAmount;
     private String status;
@@ -26,6 +27,14 @@ public class AvailableOrderResponse {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getAssignmentType() {
+        return assignmentType;
+    }
+
+    public void setAssignmentType(String assignmentType) {
+        this.assignmentType = assignmentType;
     }
 
     public Integer getServiceTypeId() {

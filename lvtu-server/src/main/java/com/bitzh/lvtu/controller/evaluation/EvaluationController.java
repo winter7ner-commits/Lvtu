@@ -23,7 +23,9 @@ public class EvaluationController {
     @PostMapping
     public ResponseEntity<EvaluationResponse> createEvaluation(
             @Valid @RequestBody CreateEvaluationRequest request) {
-        EvaluationResponse evaluation = evaluationService.createEvaluation(request, request.getUserId());
+        // 模拟用户ID（实际应用中应从安全上下文获取）
+        Long userId = 1001L;
+        EvaluationResponse evaluation = evaluationService.createEvaluation(request, userId);
         return ResponseEntity.ok(evaluation);
     }
 
