@@ -17,7 +17,7 @@
         </el-form-item>
         <el-form-item class="auth-footer">
           <span>不想修改了？</span>
-          <router-link to="/user-profile" class="auth-link">返回个人资料</router-link>
+          <button @click="goBack" class="auth-link">返回</button>
         </el-form-item>
       </el-form>
     </div>
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
 import request from '../../utils/request'
@@ -35,6 +35,28 @@ const router = useRouter()
 const authStore = useAuthStore()
 const loading = ref(false)
 const form = ref({ oldPassword: '', newPassword: '', confirmPassword: '' })
+
+// 获取来源页面路径
+const fromPath = ref('/user-profile')
+
+// 监听路由变化，更新来源页面
+watch(() => router.currentRoute.value.query.from, (newVal) => {
+  if (newVal) {
+    fromPath.value = newVal
+  }
+}, { immediate: true })
+
+// 返回来源页面
+const goBack = () => {
+  // 直接跳转到来源页面，而不是使用back
+  if (fromPath.value === '/settings') {
+    router.push('/settings')
+  } else if (fromPath.value === '/security-settings') {
+    router.push('/security-settings')
+  } else {
+    router.push('/user-profile')
+  }
+}
 
 const handleSubmit = async () => {
   if (!form.value.oldPassword || !form.value.newPassword || !form.value.confirmPassword) {
@@ -130,9 +152,14 @@ const handleSubmit = async () => {
 
 .auth-link {
   color: #409eff;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
   text-decoration: none;
   margin-left: 5px;
-  font-weight: 500;
 }
 
 .auth-link:hover {

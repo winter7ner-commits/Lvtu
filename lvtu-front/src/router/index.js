@@ -11,6 +11,7 @@ import ChangePassword from '../views/auth/ChangePassword.vue'
 import Settings from '../views/Settings.vue'
 import AuthCenter from '../views/user/AuthCenter.vue'
 import ApplicationForm from '../views/user/ApplicationForm.vue'
+import RealName from '../views/user/RealName.vue'
 import ApplicationStatus from '../views/user/ApplicationStatus.vue'
 import OrderCreate from '../views/order/OrderCreate.vue'
 import ClientOrderList from '../views/order/ClientOrderList.vue'
@@ -26,6 +27,8 @@ import NotificationList from '../views/notification/NotificationList.vue'
 import UserProfile from '../views/user/UserProfile.vue'
 import HelpCenter from '../views/HelpCenter.vue'
 import RestoreAccount from '../views/auth/RestoreAccount.vue'
+import SecuritySettings from '../views/SecuritySettings.vue'
+import SecurityQuestions from '../views/SecurityQuestions.vue'
 // import Settings from '../views/Settings.vue'
 
 import { useAuthStore } from '../store/auth'
@@ -53,6 +56,7 @@ const router = createRouter({
     { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
     { path: '/auth-center', component: AuthCenter, name: 'AuthCenter', meta: { requiresAuth: true } },
     { path: '/apply', component: ApplicationForm, name: 'ApplicationForm', meta: { requiresAuth: true } },
+    { path: '/user/realname', component: RealName, name: 'RealName', meta: { requiresAuth: true } },
     { path: '/application-status', component: ApplicationStatus, name: 'ApplicationStatus', meta: { requiresAuth: true } },
     { path: '/order-create', component: OrderCreate, name: 'OrderCreate', meta: { requiresAuth: true } },
     { path: '/orders', component: ClientOrderList, name: 'ClientOrderList', meta: { requiresAuth: true } },
@@ -68,6 +72,8 @@ const router = createRouter({
     { path: '/user-profile', component: UserProfile, name: 'UserProfile', meta: { requiresAuth: true } },
     { path: '/help-center', component: HelpCenter, name: 'HelpCenter' },
     { path: '/restore-account', component: RestoreAccount, name: 'RestoreAccount' },
+    { path: '/security-settings', component: SecuritySettings, name: 'SecuritySettings', meta: { requiresAuth: true } },
+    { path: '/security-questions', component: SecurityQuestions, name: 'SecurityQuestions', meta: { requiresAuth: true } },
     // { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
   ]
 })

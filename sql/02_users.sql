@@ -2,10 +2,11 @@ USE lvtu;
 
 
 create table users (
-	user_id bigint auto_increment primary key comment '主键ID',
+	userid bigint auto_increment primary key comment '主键ID',
     username varchar(50) not null unique comment '用户名',
     password_hash varchar(255) not null comment '加密后的密码',
     phone varchar(20) unique comment '手机号',
+    deactivated_phone varchar(20) default NULL comment '注销时临时保存的手机号',
     email varchar(100) unique comment '电子邮箱',
     avatar_url varchar(255) default null comment '头像地址',
     user_type tinyint not null default 1 comment '用户类型：1.普通用户，2.律师，3.管理员',
@@ -22,7 +23,7 @@ create table users (
 
 -- 测试用户数据（所有密码均为: test123456）
 INSERT INTO users (
-    user_id, username, password_hash, phone, email, avatar_url, user_type, admin_role,
+    userid, username, password_hash, phone, email, avatar_url, user_type, admin_role,
     `status`, is_verified, auth_status, created_time, updated_time, region
 ) VALUES
     -- 用户1: user_order_a (普通用户)
@@ -41,7 +42,7 @@ INSERT INTO users (
 
 create table users_verfications (
 	verification_id bigint auto_increment primary key comment '实名认证记录ID',
-    user_id bigint not null unique comment '关联用户ID',
+    userid bigint not null unique comment '关联用户ID',
     real_name varchar(100) not null comment '真实姓名',
     id_card_number varchar(100) not null comment '身份证号（加密存储）',
     id_card_front_url varchar(255) default null comment '身份证正面照URL',
@@ -53,12 +54,12 @@ create table users_verfications (
     created_time timestamp default current_timestamp comment '认证提交时间',
     updated_time timestamp default current_timestamp on update current_timestamp comment '更新时间',
     
-    constraint `fk_user_id` foreign key (user_id) references users (user_id) on delete cascade
+    constraint `fk_user_id` foreign key (userid) references users (userid) on delete cascade
 ) engine=InnoDB default charset=utf8mb4 comment='用户实名认证信息表';
 
 -- 发单用户和律师用户都先完成实名认证
 INSERT INTO users_verfications (
-    verification_id, user_id, real_name, id_card_number,
+    verification_id, userid, real_name, id_card_number,
     id_card_front_url, id_card_back_url, verification_status,
     reject_reason, reviewer_id, reviewed_time, created_time, updated_time
 ) VALUES
@@ -69,7 +70,7 @@ INSERT INTO users_verfications (
 
 create table if not exists user_notification (
     id bigint primary key auto_increment comment '消息ID',
-    user_id bigint not null comment '接收用户ID',
+    userid bigint not null comment '接收用户ID',
     type varchar(50) not null comment '消息类型',
     title varchar(100) not null comment '消息标题',
     content varchar(500) not null comment '消息内容',
@@ -78,8 +79,34 @@ create table if not exists user_notification (
     is_read tinyint(1) not null default 0 comment '是否已读：0未读，1已读',
     created_at datetime not null default current_timestamp comment '创建时间',
     read_at datetime null comment '阅读时间',
-    constraint fk_notification_user foreign key (user_id) references users(user_id),
-    index idx_notification_user_read(user_id, is_read),
+    constraint fk_notification_user foreign key (userid) references users(userid),
+    index idx_notification_user_read(userid, is_read),
     index idx_notification_created(created_at),
     index idx_notification_order(related_order_id)
 ) engine=InnoDB default charset=utf8mb4 comment='用户消息通知表';
+
+
+-- 触发器：新用户插入时自动分配 userid（如果未指定）
+DELIMITER $$
+CREATE TRIGGER IF NOT EXISTS tr_users_insert_userid 
+BEFORE INSERT ON users
+FOR EACH ROW
+BEGIN
+    IF NEW.userid IS NULL THEN
+        SELECT COALESCE(MAX(userid), 0) + 1 INTO @max_userid FROM users;
+        SET NEW.userid := @max_userid;
+    END IF;
+END$$
+DELIMITER ;
+
+
+-- 数据迁移：修复已有的已注销用户
+-- 将 phone 中的手机号迁移到 deactivated_phone，然后清空 phone
+-- 将用户名改为 _deactivated_ 前缀，释放原用户名
+UPDATE users
+SET deactivated_phone = phone, phone = NULL
+WHERE status = 0 AND phone IS NOT NULL;
+
+UPDATE users
+SET username = CONCAT('_deactivated_', userid, '_', UNIX_TIMESTAMP(updated_time))
+WHERE status = 0 AND username NOT LIKE '_deactivated_%';

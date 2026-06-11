@@ -2,12 +2,21 @@
   <div class="restore-page">
     <div class="restore-container">
       <div class="restore-card">
-        <!-- 头部 -->
-        <div class="restore-header">
-          <img src="/icons/logo.png" alt="LVTU" class="logo" />
+        <!-- 返回按钮 -->
+        <button class="back-btn" @click="goBack">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          返回
+        </button>
+        
+        <!-- 页面标题 -->
+        <div class="page-title">
           <h2>恢复已注销账号</h2>
-          <p>通过绑定的手机号找回您已注销的账号</p>
+          <p>通过手机号找回您之前注销的账号</p>
         </div>
+        
+
 
         <!-- 步骤指示器 -->
         <div class="steps-indicator">
@@ -32,12 +41,14 @@
           <div class="form-section">
             <label class="form-label">请输入注销账号时绑定的手机号</label>
             <el-input
+              ref="phoneInput"
               v-model="phone"
               placeholder="请输入手机号"
               maxlength="11"
               clearable
               size="large"
               @keyup.enter="handleQueryAccounts"
+              aria-label="手机号"
             >
               <template #prefix>
                 <span class="input-prefix">📱</span>
@@ -58,7 +69,17 @@
           </div>
           <p class="section-desc">请选择您要恢复的账号：</p>
 
-          <div class="account-list">
+          <div v-if="deactivatedAccounts.length === 0" class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h4>未找到已注销账号</h4>
+            <p class="empty-desc">请检查手机号是否正确，或稍后重试。若需帮助，请前往帮助中心联系我们。</p>
+            <div class="empty-actions">
+              <button class="btn-secondary" @click="() => { currentStep = 1; setTimeout(() => phoneInput.value?.focus?.(), 80); }">重新查询</button>
+              <router-link to="/help-center" class="btn-primary">前往帮助中心</router-link>
+            </div>
+          </div>
+
+          <div v-else class="account-list">
             <div
               v-for="account in deactivatedAccounts"
               :key="account.userId"
@@ -183,10 +204,19 @@
           </div>
         </div>
 
+
         <!-- 底部链接 -->
         <div class="restore-footer">
           <router-link to="/login" class="footer-link">返回登录</router-link>
-          <router-link to="/help-center" class="footer-link">帮助中心</router-link>
+          <template v-if="fromPage === '/help-center' || fromPage === 'help-center'">
+            <router-link to="/help-center" class="footer-link">返回帮助中心</router-link>
+          </template>
+          <template v-else-if="fromPage === '/security-settings' || fromPage === 'security-settings'">
+            <router-link to="/security-settings" class="footer-link">返回账号安全</router-link>
+          </template>
+          <template v-else>
+            <router-link to="/help-center" class="footer-link">帮助中心</router-link>
+          </template>
         </div>
       </div>
     </div>
@@ -194,16 +224,26 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../../store/auth'
 import { queryDeactivatedAccounts, checkPhoneConflict, executeRestore } from '../../api/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const currentStep = ref(1)
+const fromPage = ref('')
+const phoneInput = ref(null)
+
+onMounted(() => {
+  // 获取来源页面（优先支持完整路径或简短标识）
+  fromPage.value = String(route.query.from || '')
+  // 自动聚焦手机号输入，提升交互体验
+  setTimeout(() => phoneInput.value?.focus?.(), 80)
+})
 const phone = ref('')
 const loading = ref(false)
 const restoring = ref(false)
@@ -231,17 +271,24 @@ const formatDate = (dateStr) => {
 
 // Step 1: 查询已注销账号
 const handleQueryAccounts = async () => {
-  if (!phone.value || phone.value.trim().length < 11) {
+  const raw = phone.value || ''
+  if (!raw.trim() || raw.trim().length !== 11) {
     ElMessage.warning('请输入正确的11位手机号')
     return
   }
+  const normalized = raw.trim()
+  phone.value = normalized
+  
   loading.value = true
   try {
     const res = await queryDeactivatedAccounts(phone.value.trim())
-    if (res?.code === 200 && res.data?.length > 0) {
-      deactivatedAccounts.value = res.data
+    if (res?.code === 200) {
+      deactivatedAccounts.value = res.data || []
       selectedAccountId.value = null
       currentStep.value = 2
+      if (!deactivatedAccounts.value.length) {
+        ElMessage.info('未找到已注销账号，可重新查询或前往帮助中心')
+      }
     } else {
       ElMessage.error(res?.message || '该手机号未关联已注销账号')
     }
@@ -310,6 +357,28 @@ const handleExecuteRestore = async () => {
 const goHome = () => {
   router.push('/')
 }
+
+const goBack = () => {
+  // 根据来源页面返回到不同的页面
+  // 支持传入完整路径或短标识
+  if (fromPage.value === '/help-center' || fromPage.value === 'help-center') {
+    router.push('/help-center')
+    return
+  }
+  if (fromPage.value === '/security-settings' || fromPage.value === 'security-settings') {
+    router.push('/security-settings')
+    return
+  }
+  // 如果是从登录页面来的，或者没有指定来源，先退出登录再跳转
+  if (!fromPage.value || fromPage.value === '/login' || fromPage.value === 'login') {
+    authStore.logout()
+    router.push('/login')
+    return
+  }
+  // 兜底回退
+  if (window.history.length > 1) router.go(-1)
+  else router.push('/')
+}
 </script>
 
 <style scoped>
@@ -320,6 +389,60 @@ const goHome = () => {
   justify-content: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
   padding: 20px;
+  position: relative;
+}
+
+/* 返回按钮 */
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f5ff;
+  border: 1px solid #d6e4ff;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: fit-content;
+}
+
+.back-btn:hover {
+  background: #e0edff;
+  border-color: #adc6ff;
+  color: #1d4ed8;
+  transform: translateX(-2px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.back-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.back-btn:hover svg {
+  transform: translateX(-2px);
+}
+
+/* 页面标题 */
+.page-title {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.page-title h2 {
+  font-size: 28px;
+  color: #1f2a56;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.page-title p {
+  font-size: 14px;
+  color: #8c8fa3;
+  margin: 0;
 }
 
 .restore-container {
@@ -332,33 +455,6 @@ const goHome = () => {
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   padding: 40px 32px;
-}
-
-/* 头部 */
-.restore-header {
-  text-align: center;
-  margin-bottom: 28px;
-}
-
-.logo {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-bottom: 12px;
-  object-fit: cover;
-}
-
-.restore-header h2 {
-  font-size: 24px;
-  color: #1f2a56;
-  margin: 0 0 8px 0;
-  font-weight: 700;
-}
-
-.restore-header p {
-  color: #8c8fa3;
-  font-size: 14px;
-  margin: 0;
 }
 
 /* 步骤指示器 */
@@ -673,24 +769,23 @@ const goHome = () => {
 
 .info-value {
   font-size: 14px;
-  color: #1f2a56;
   font-weight: 500;
+  color: #1f2a56;
 }
 
 .info-value.highlight {
   color: #2563eb;
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 600;
 }
 
 /* 提示框 */
 .notice-box {
   display: flex;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 16px;
   border-radius: 10px;
-  text-align: left;
   margin-bottom: 16px;
+  text-align: left;
 }
 
 .notice-box.info {
@@ -706,7 +801,6 @@ const goHome = () => {
 .notice-icon {
   font-size: 20px;
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .notice-content {
@@ -716,7 +810,7 @@ const goHome = () => {
 .notice-content p {
   font-size: 13px;
   color: #555770;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
   line-height: 1.6;
 }
 
@@ -724,13 +818,9 @@ const goHome = () => {
   margin-bottom: 0;
 }
 
-.notice-content strong {
-  color: #1f2a56;
-}
-
 .notice-content ul {
   margin: 8px 0 0 0;
-  padding-left: 18px;
+  padding-left: 20px;
 }
 
 .notice-content li {
@@ -740,28 +830,27 @@ const goHome = () => {
   line-height: 1.6;
 }
 
+.notice-content strong {
+  color: #1f2a56;
+}
+
 /* 复选框 */
 .confirm-checkbox {
-  text-align: left;
-  margin: 16px 0;
+  margin: 20px 0;
 }
 
 .checkbox-label {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  cursor: pointer;
+  gap: 8px;
   font-size: 13px;
   color: #555770;
+  cursor: pointer;
   line-height: 1.6;
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
   margin-top: 2px;
-  flex-shrink: 0;
-  accent-color: #2563eb;
   cursor: pointer;
 }
 
@@ -772,7 +861,7 @@ const goHome = () => {
 
 .success-icon {
   font-size: 48px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .success-section h3 {
@@ -781,53 +870,78 @@ const goHome = () => {
   margin: 0 0 20px 0;
 }
 
-.success-section .btn-primary {
-  margin-top: 20px;
-  max-width: 200px;
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state h4 {
+  font-size: 16px;
+  color: #1f2a56;
+  margin: 0 0 8px 0;
+}
+
+.empty-desc {
+  font-size: 13px;
+  color: #8c8fa3;
+  margin: 0 0 20px 0;
+  line-height: 1.6;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.empty-actions .btn-secondary {
+  min-width: 100px;
+}
+
+.empty-actions .btn-primary {
+  min-width: 120px;
 }
 
 /* 底部链接 */
 .restore-footer {
   display: flex;
   justify-content: center;
-  gap: 24px;
+  gap: 16px;
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid #f0f2f5;
+  border-top: 1px solid #e5e7eb;
 }
 
 .footer-link {
   font-size: 13px;
-  color: #8c8fa3;
+  color: #2563eb;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.3s;
 }
 
 .footer-link:hover {
-  color: #2563eb;
+  color: #1e40af;
+  text-decoration: underline;
 }
 
 /* 响应式 */
-@media (max-width: 480px) {
+@media (max-width: 640px) {
+  .restore-page {
+    padding: 16px;
+  }
+
   .restore-card {
-    padding: 28px 20px;
+    padding: 32px 24px;
   }
 
-  .restore-header h2 {
-    font-size: 20px;
-  }
-
-  .step-line {
-    width: 28px;
-  }
-
-  .step span {
-    font-size: 11px;
-  }
-
-  .account-meta {
-    flex-direction: column;
-    gap: 4px;
+  .page-title h2 {
+    font-size: 24px;
   }
 
   .btn-group {
@@ -836,6 +950,15 @@ const goHome = () => {
 
   .btn-group .btn-secondary {
     width: 100%;
+  }
+
+  .empty-actions {
+    flex-direction: column;
+  }
+
+  .restore-footer {
+    flex-direction: column;
+    align-items: center;
   }
 }
 </style>

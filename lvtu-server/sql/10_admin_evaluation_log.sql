@@ -10,7 +10,7 @@ CREATE TABLE admin_evaluation_log (
 
   -- 外键约束
   CONSTRAINT fk_log_eval FOREIGN KEY (evaluation_id) REFERENCES evaluation(evaluation_id),
-  CONSTRAINT fk_log_admin FOREIGN KEY (admin_id) REFERENCES users(user_id)
+  CONSTRAINT fk_log_admin FOREIGN KEY (admin_id) REFERENCES users(userid)
 ) COMMENT '管理员评价处理表';
 
 -- 索引优化

@@ -5,15 +5,11 @@
 
     <div class="settings-card glass">
       <div class="header">
-        <div>
-
-          <h1>设置</h1>
-          <p class="desc">管理您的账户与认证信息</p>
-        </div>
+        <h1>设置</h1>
+        <p class="desc">管理您的账户与认证信息</p>
       </div>
 
       <div class="settings-list">
-        <!-- 认证中心 -->
         <div class="setting-item glass" @click="goToAuthCenter">
           <div class="item-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -33,7 +29,6 @@
           </div>
         </div>
 
-        <!-- 申请状态（如果有申请） -->
         <div class="setting-item glass" @click="goToApplicationStatus">
           <div class="item-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -52,7 +47,6 @@
           </div>
         </div>
 
-        <!-- 账号安全（预留） -->
         <div class="setting-item glass" @click="goToSecurity">
           <div class="item-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -62,7 +56,7 @@
           </div>
           <div class="item-content">
             <h3>账号安全</h3>
-            <p>修改密码、绑定手机</p>
+            <p>修改密码、绑定手机等</p>
           </div>
           <div class="item-arrow">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -71,7 +65,6 @@
           </div>
         </div>
 
-        <!-- 通知设置（预留） -->
         <div class="setting-item glass" @click="goToNotification">
           <div class="item-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -90,7 +83,25 @@
           </div>
         </div>
 
-        <!-- 关于我们 -->
+        <div class="setting-item glass" @click="goToHelpCenter">
+          <div class="item-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12" y2="17"/>
+            </svg>
+          </div>
+          <div class="item-content">
+            <h3>帮助中心</h3>
+            <p>常见问题与使用指南</p>
+          </div>
+          <div class="item-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+
         <div class="setting-item glass" @click="goToAbout">
           <div class="item-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -111,16 +122,32 @@
         </div>
       </div>
 
-      <!-- 退出登录按钮 -->
-      <div class="logout-section">
-        <button class="logout-btn glass" @click="handleLogout">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          退出登录
-        </button>
+      <!-- 添加注销和退出登录按钮 -->
+      <div class="danger-section">
+        <div class="setting-item glass danger-item" @click="handleDeactivate">
+          <div class="item-icon danger-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </div>
+          <div class="item-content">
+            <h3>注销账号</h3>
+            <p>永久删除您的账户信息</p>
+          </div>
+        </div>
+
+        <div class="logout-section">
+          <button class="logout-btn glass" @click="handleLogout">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            退出登录
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -129,8 +156,11 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { deactivateUser } from '../api/user'
+import { useAuthStore } from '../store/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const goToAuthCenter = () => {
   router.push('/auth-center')
@@ -141,17 +171,50 @@ const goToApplicationStatus = () => {
 }
 
 const goToSecurity = () => {
-  ElMessage.info('功能开发中，敬请期待')
-  // router.push('/security')
+  // 跳转到账号安全页面，并传递来源参数
+  router.push({
+    path: '/security-settings',
+    query: { from: '/settings' }
+  })
 }
 
 const goToNotification = () => {
-  ElMessage.info('功能开发中，敬请期待')
-  // router.push('/notification')
+  router.push('/notification')
+}
+
+const goToHelpCenter = () => {
+  router.push('/help-center')
 }
 
 const goToAbout = () => {
-  ElMessage.info('律途 v1.0.0 — 法律服务平台')
+  router.push('/about')
+}
+
+const handleDeactivate = () => {
+  ElMessageBox.confirm(
+    '注销后您的个人信息将被删除或匿名化，订单记录将保留但脱敏处理。' +
+    '提交后有 7 天冷静期，期间可登录取消注销，冷静期过后账号将被正式注销。' +
+    '如果只是暂时不用，退出登录即可。注销后也可通过绑定手机号自助恢复账号。',
+    '确认注销账号',
+    {
+      confirmButtonText: '确认注销',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
+    try {
+      const res = await deactivateUser()
+      if (res?.code === 200) {
+        ElMessage.success('注销申请已提交，7天冷静期内您仍可登录取消注销')
+        authStore.logout()
+        router.push('/login')
+      } else {
+        ElMessage.error(res?.message || '注销失败')
+      }
+    } catch (error) {
+      ElMessage.error('注销请求失败，请稍后重试')
+    }
+  }).catch(() => {})
 }
 
 const handleLogout = async () => {
@@ -161,9 +224,7 @@ const handleLogout = async () => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    // 清除本地存储的登录信息
-    localStorage.removeItem('userId')
-    localStorage.removeItem('token')
+    authStore.logout()
     ElMessage.success('已退出登录')
     router.push('/')
   } catch {
@@ -174,7 +235,7 @@ const handleLogout = async () => {
 
 <style scoped>
 .page {
-  min-height: 100vh;
+  min-height: calc(100vh - 70px);
   padding: 40px;
   background: radial-gradient(circle at top left, rgba(168,183,201,0.25), transparent 40%),
   radial-gradient(circle at bottom right, rgba(125,148,172,0.18), transparent 45%),
@@ -210,12 +271,6 @@ const handleLogout = async () => {
 .header {
   margin-bottom: 32px;
 }
-.mini {
-  color: #7D94AC;
-  letter-spacing: 4px;
-  font-size: 13px;
-  margin-bottom: 8px;
-}
 h1 {
   font-size: 32px;
   color: #42566E;
@@ -230,7 +285,7 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .setting-item {
@@ -278,9 +333,40 @@ h1 {
   color: #9BAABA;
 }
 
+.danger-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(125,148,172,0.15);
+}
+
+.danger-item {
+  background: rgba(255, 241, 240, 0.4);
+}
+
+.danger-item:hover {
+  background: rgba(255, 220, 218, 0.5);
+}
+
+.danger-icon {
+  background: rgba(255, 77, 79, 0.15);
+  color: #ff4d4f;
+}
+
+.danger-item .item-content h3 {
+  color: #ff4d4f;
+}
+
+.danger-item .item-content p {
+  color: #cf1322;
+}
+
 .logout-section {
   display: flex;
   justify-content: center;
+  margin-top: 8px;
 }
 .logout-btn {
   display: inline-flex;

@@ -19,7 +19,7 @@ INSERT INTO service_type (service_type_id, name, description) VALUES
 -- 订单表
 CREATE TABLE IF NOT EXISTS `order` (
     order_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '订单ID',
-    user_id BIGINT NOT NULL COMMENT '用户ID',
+    userid BIGINT NOT NULL COMMENT '用户ID',
     lawyer_id BIGINT COMMENT '实际接单律师ID',
     target_lawyer_id BIGINT NULL COMMENT '用户指定律师ID，公共订单为空',
     assignment_type VARCHAR(20) NOT NULL DEFAULT 'PUBLIC' COMMENT '分配类型：PUBLIC公共接单，DIRECT指定律师',
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `order` (
 
     updated_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 
-    CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users(user_id),
+    CONSTRAINT fk_order_user FOREIGN KEY (userid) REFERENCES users(userid),
     CONSTRAINT fk_order_lawyer FOREIGN KEY (lawyer_id) REFERENCES lawyer(lawyer_id),
     CONSTRAINT fk_order_target_lawyer FOREIGN KEY (target_lawyer_id) REFERENCES lawyer(lawyer_id),
     CONSTRAINT fk_order_service FOREIGN KEY (service_type_id) REFERENCES service_type(service_type_id),
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `order` (
 ) COMMENT='订单表（一个订单对应一个服务）';
 
 INSERT INTO `order` (
-    order_id, user_id, lawyer_id, target_lawyer_id, assignment_type, service_type_id, total_amount, status, created_time, updated_time
+    order_id, userid, lawyer_id, target_lawyer_id, assignment_type, service_type_id, total_amount, status, created_time, updated_time
 ) VALUES
     (800001, 500001, NULL,   NULL,   'PUBLIC', 105, 199.00, '待支付', '2026-05-01 10:00:00', '2026-05-01 10:00:00'),
     (800002, 500002, NULL,   NULL,   'PUBLIC', 104, 299.00, '待接单', '2026-05-02 11:00:00', '2026-05-02 11:00:00'),

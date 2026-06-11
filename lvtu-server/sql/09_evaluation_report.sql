@@ -11,7 +11,7 @@ CREATE TABLE evaluation_report (
 
   -- 外键约束
   CONSTRAINT fk_report_eval FOREIGN KEY (evaluation_id) REFERENCES evaluation(evaluation_id),
-  CONSTRAINT fk_report_user FOREIGN KEY (reporter_id) REFERENCES users(user_id)
+  CONSTRAINT fk_report_user FOREIGN KEY (reporter_id) REFERENCES users(userid)
 ) COMMENT '评价举报表';
 
 -- 索引优化

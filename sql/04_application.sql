@@ -2,7 +2,7 @@ USE lvtu;
 
 CREATE TABLE IF NOT EXISTS `application` (
                                `application_id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-                               `user_id` bigint NOT NULL COMMENT '申请人用户ID',
+                               `userid` bigint NOT NULL COMMENT '申请人用户ID',
                                `license_no` varchar(64) NOT NULL COMMENT '律师执业证号',
                                `license_url` varchar(512) NOT NULL COMMENT '执业证照片URL',
                                `status` tinyint NOT NULL DEFAULT 0 COMMENT '状态: 0待审核, 1通过, 2驳回',
@@ -12,12 +12,12 @@ CREATE TABLE IF NOT EXISTS `application` (
                                `apply_type` tinyint NOT NULL DEFAULT 0 COMMENT '0-首次入驻, 1-资料变更',
                                `law_firm` varchar(128) NOT NULL COMMENT '所属律所',
                                `practice_start_year` int NOT NULL COMMENT '执业开始年份',
-                               CONSTRAINT fk_application_user FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`)
+                               CONSTRAINT fk_application_user FOREIGN KEY (`userid`) REFERENCES `users`(`userid`)
 ) COMMENT='律师认证申请表';
 
 -- 律师由普通用户实名认证后提交申请并审核通过
 INSERT INTO `application` (
-    application_id, user_id, license_no, license_url, `status`,
+    application_id, userid, license_no, license_url, `status`,
     audit_time, reject_reason, create_time, apply_type, law_firm, practice_start_year
 ) VALUES
     (400001, 500003, 'LAWYER-ALPHA-001', '/mock/licenses/lawyer-alpha.jpg', 1, '2026-04-19 11:00:00', NULL, '2026-04-19 09:00:00', 0, '申城律师事务所', 2018),
@@ -25,7 +25,7 @@ INSERT INTO `application` (
 
 CREATE TABLE IF NOT EXISTS `lawyer` (
                           `lawyer_id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-                          `user_id` bigint NOT NULL UNIQUE COMMENT '关联用户ID',
+                          `userid` bigint NOT NULL UNIQUE COMMENT '关联用户ID',
                           `license_no` varchar(64) NOT NULL UNIQUE COMMENT '律师执业证号',
                           `law_firm` varchar(128) NOT NULL COMMENT '所属律所',
                           `bio` text DEFAULT NULL COMMENT '个人简介',
@@ -33,11 +33,11 @@ CREATE TABLE IF NOT EXISTS `lawyer` (
                           `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                           `practice_years` int DEFAULT 0 COMMENT '执业年限',
                           `rating` decimal(2,1) DEFAULT 0.0 COMMENT '评分',
-                          CONSTRAINT fk_lawyer_user FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`)
+                          CONSTRAINT fk_lawyer_user FOREIGN KEY (`userid`) REFERENCES `users`(`userid`)
 ) COMMENT='律师信息表';
 
 INSERT INTO `lawyer` (
-    lawyer_id, user_id, license_no, law_firm, bio, `status`, create_time, practice_years, rating
+    lawyer_id, userid, license_no, law_firm, bio, `status`, create_time, practice_years, rating
 ) VALUES
     (700001, 500003, 'LAWYER-ALPHA-001', '申城律师事务所', '擅长婚姻家事、合同审核与民商事纠纷。', 1, '2026-04-19 11:05:00', 8, 4.8),
     (700002, 500004, 'LAWYER-BETA-001', '南山律师事务所', '擅长劳动争议、企业合规与诉讼代理。', 1, '2026-04-19 11:15:00', 5, 4.6);

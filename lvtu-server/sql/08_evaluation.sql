@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS evaluation;
 CREATE TABLE evaluation (
   evaluation_id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '评价唯一ID',
   order_id BIGINT NOT NULL COMMENT '关联订单ID',
-  user_id BIGINT NOT NULL COMMENT '评价者用户ID',
+  userid BIGINT NOT NULL COMMENT '评价者用户ID',
   lawyer_id BIGINT NOT NULL COMMENT '被评价律师ID',
   professional_score TINYINT NOT NULL COMMENT '专业度评分(1-5分)',
   responsiveness_score TINYINT NOT NULL COMMENT '响应速度评分(1-5分)',
@@ -27,7 +27,7 @@ CREATE TABLE evaluation (
 
   -- 外键约束
   CONSTRAINT fk_eval_order FOREIGN KEY (order_id) REFERENCES application(application_id),
-  CONSTRAINT fk_eval_user FOREIGN KEY (user_id) REFERENCES users(user_id),
+  CONSTRAINT fk_eval_user FOREIGN KEY (userid) REFERENCES users(userid),
   CONSTRAINT fk_eval_lawyer FOREIGN KEY (lawyer_id) REFERENCES lawyer(lawyer_id)
 ) COMMENT '服务评价表';
 

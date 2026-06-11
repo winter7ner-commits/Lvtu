@@ -134,9 +134,7 @@
         </div>
         <div class="security-actions">
           <button class="security-btn" @click="goChangePassword">修改密码</button>
-          <button class="security-btn" @click="goHelpCenter">帮助中心</button>
           <button class="security-btn danger" @click="handleLogout">退出登录</button>
-          <button class="security-btn danger" @click="handleDeactivate">注销账号</button>
         </div>
       </div>
     </div>
@@ -147,7 +145,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
-import { updateUserProfile, uploadAvatar, deactivateUser } from '../../api/user'
+import { updateUserProfile, uploadAvatar } from '../../api/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
@@ -305,11 +303,11 @@ const goVerify = () => {
 }
 
 const goChangePassword = () => {
-  router.push('/change-password')
-}
-
-const goHelpCenter = () => {
-  router.push('/help-center')
+  // 跳转到修改密码页面，并传递来源参数
+  router.push({
+    path: '/change-password',
+    query: { from: '/user-profile' }
+  })
 }
 
 const handleLogout = () => {
@@ -320,34 +318,6 @@ const handleLogout = () => {
   }).then(() => {
     authStore.logout()
     router.push('/')
-  }).catch(() => {})
-}
-
-// 注销账号逻辑
-const handleDeactivate = () => {
-  ElMessageBox.confirm(
-    '注销后您的个人信息将被删除或匿名化，订单记录将保留但脱敏处理。' +
-    '提交后有 7 天冷静期，期间可登录取消注销，冷静期过后账号将被正式注销。' +
-    '如果只是暂时不用，退出登录即可。注销后也可通过绑定手机号自助恢复账号。',
-    '确认注销账号',
-    {
-      confirmButtonText: '确认注销',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(async () => {
-    try {
-      const res = await deactivateUser()
-      if (res?.code === 200) {
-        ElMessage.success('注销申请已提交，7天冷静期内您仍可登录取消注销')
-        authStore.logout()
-        router.push('/login')
-      } else {
-        ElMessage.error(res?.message || '注销失败')
-      }
-    } catch (error) {
-      ElMessage.error('注销请求失败，请稍后重试')
-    }
   }).catch(() => {})
 }
 
@@ -455,22 +425,6 @@ onMounted(() => {
   letter-spacing: 0.5px;
   font-weight: 500;
   word-break: break-all;
-}
-
-.user-type-badge {
-  display: inline-block;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-
-.user-brief h3 {
-  font-size: 22px;
-  color: #1f2a56;
-  margin: 0 0 10px 0;
-  font-weight: 600;
 }
 
 .user-type-badge {

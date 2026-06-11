@@ -139,7 +139,7 @@ const searchQuery = ref('')
 const expandedId = ref(null)
 
 // FAQ 数据
-const categories = ref([
+const categories = [
   {
     id: 'order',
     name: '订单相关',
@@ -412,14 +412,14 @@ const categories = ref([
       }
     ]
   }
-])
+]
 
 // 搜索过滤
 const filteredCategories = computed(() => {
-  if (!searchQuery.value.trim()) return categories.value
+  if (!searchQuery.value.trim()) return categories
 
   const query = searchQuery.value.toLowerCase()
-  return categories.value
+  return categories
     .map(category => {
       const filteredItems = category.items.filter(
         item =>
@@ -448,7 +448,15 @@ const scrollToCategory = (categoryId) => {
 // 处理操作按钮
 const handleAction = (action) => {
   if (action.route) {
-    router.push(action.route)
+    // 如果是跳转到恢复账号页面，添加来源参数
+    if (action.route === '/restore-account') {
+      router.push({
+        path: action.route,
+        query: { from: '/help-center' }
+      })
+    } else {
+      router.push(action.route)
+    }
   }
 }
 </script>

@@ -12,7 +12,7 @@ USE lvtu;
 CREATE TABLE IF NOT EXISTS `evaluation` (
   `evaluation_id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '评价唯一ID',
   `order_id` BIGINT NOT NULL COMMENT '关联订单ID',
-  `user_id` BIGINT NOT NULL COMMENT '评价者用户ID',
+  `userid` BIGINT NOT NULL COMMENT '评价者用户ID',
   `lawyer_id` BIGINT NOT NULL COMMENT '被评价律师ID',
   `professional_score` TINYINT NOT NULL COMMENT '专业度评分(1-5分)',
   `responsiveness_score` TINYINT NOT NULL COMMENT '响应速度评分(1-5分)',
@@ -40,10 +40,8 @@ CREATE TABLE IF NOT EXISTS `evaluation` (
     REFERENCES `order`(order_id),
     
   CONSTRAINT fk_eval_user 
-    FOREIGN KEY (user_id) 
-    REFERENCES users(user_id),
-    
-  CONSTRAINT fk_eval_lawyer 
+    FOREIGN KEY (userid) 
+    REFERENCES users(userid),
     FOREIGN KEY (lawyer_id) 
     REFERENCES lawyer(lawyer_id),
   KEY idx_eval_lawyer (lawyer_id),
@@ -53,7 +51,7 @@ CREATE TABLE IF NOT EXISTS `evaluation` (
 ) COMMENT '服务评价表';
 
 INSERT INTO `evaluation` (
-  `evaluation_id`, `order_id`, `user_id`, `lawyer_id`,
+  `evaluation_id`, `order_id`, `userid`, `lawyer_id`,
   `professional_score`, `responsiveness_score`, `attitude_score`, `total_score`,
   `content`, `is_anonymous`, `status`, `report_count`, `is_featured`,
   `created_time`, `updated_time`
@@ -81,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_report` (
     
   CONSTRAINT fk_report_user 
     FOREIGN KEY (reporter_id) 
-    REFERENCES users(user_id),
+    REFERENCES users(userid),
   KEY idx_report_eval (evaluation_id),
   KEY idx_report_status (status),
   KEY idx_report_time (created_time)
@@ -105,7 +103,7 @@ CREATE TABLE IF NOT EXISTS `admin_evaluation_log` (
     
   CONSTRAINT fk_log_admin 
     FOREIGN KEY (admin_id) 
-    REFERENCES users(user_id),
+    REFERENCES users(userid),
   KEY idx_log_eval (evaluation_id),
   KEY idx_log_action (action_type),
   KEY idx_log_time (created_time)
