@@ -1,34 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
-import SearchResults from '../views/SearchResults.vue'
-import LawyerList from '../views/lawyer/LawyerList.vue'
-import LawyerDetail from '../views/lawyer/LawyerDetail.vue'
-import LawArticleList from '../views/lawyer/LawArticleList.vue'
-import Login from '../views/auth/Login.vue'
-import Register from '../views/auth/Register.vue'
-import ForgotPassword from '../views/auth/ForgotPassword.vue'
-import ChangePassword from '../views/auth/ChangePassword.vue'
-import Settings from '../views/Settings.vue'
-import AuthCenter from '../views/user/AuthCenter.vue'
-import RealName from '../views/user/RealName.vue'
-import ApplicationForm from '../views/user/ApplicationForm.vue'
-import ApplicationStatus from '../views/user/ApplicationStatus.vue'
-import OrderCreate from '../views/order/OrderCreate.vue'
-import ClientOrderList from '../views/order/ClientOrderList.vue'
-import ClientOrderDetail from '../views/order/ClientOrderDetail.vue'
-import LawyerOrderHall from '../views/lawyerOrder/LawyerOrderHall.vue'
-import LawyerMyOrders from '../views/lawyerOrder/LawyerMyOrders.vue'
-import LawyerOrderDetail from '../views/lawyerOrder/LawyerOrderDetail.vue'
-import EvaluationDashboard from '../views/evaluation/EvaluationDashboard.vue'
-import NotificationList from '../views/notification/NotificationList.vue'
-// import AdminLogin from '../views/auth/AdminLogin.vue'
-// import AdminRegister from '../views/auth/AdminRegister.vue'
-
-import UserProfile from '../views/user/UserProfile.vue'
-// import Settings from '../views/Settings.vue'
 
 import { useAuthStore } from '../store/auth'
 
+const Home = () => import('../views/Home.vue')
+const SearchResults = () => import('../views/SearchResults.vue')
+const LawyerList = () => import('../views/lawyer/LawyerList.vue')
+const LawyerDetail = () => import('../views/lawyer/LawyerDetail.vue')
+const LawArticleList = () => import('../views/lawyer/LawArticleList.vue')
+const Login = () => import('../views/auth/Login.vue')
+const Register = () => import('../views/auth/Register.vue')
+const ForgotPassword = () => import('../views/auth/ForgotPassword.vue')
+const ChangePassword = () => import('../views/auth/ChangePassword.vue')
+const Settings = () => import('../views/Settings.vue')
+const AuthCenter = () => import('../views/user/AuthCenter.vue')
+const RealName = () => import('../views/user/RealName.vue')
+const ApplicationForm = () => import('../views/user/ApplicationForm.vue')
+const ApplicationStatus = () => import('../views/user/ApplicationStatus.vue')
+const OrderCreate = () => import('../views/order/OrderCreate.vue')
+const ClientOrderList = () => import('../views/order/ClientOrderList.vue')
+const ClientOrderDetail = () => import('../views/order/ClientOrderDetail.vue')
+const LawyerOrderHall = () => import('../views/lawyerOrder/LawyerOrderHall.vue')
+const LawyerMyOrders = () => import('../views/lawyerOrder/LawyerMyOrders.vue')
+const LawyerOrderDetail = () => import('../views/lawyerOrder/LawyerOrderDetail.vue')
+const EvaluationDashboard = () => import('../views/evaluation/EvaluationDashboard.vue')
+const NotificationList = () => import('../views/notification/NotificationList.vue')
+const UserProfile = () => import('../views/user/UserProfile.vue')
 
 const router = createRouter({
   history: createWebHistory(),

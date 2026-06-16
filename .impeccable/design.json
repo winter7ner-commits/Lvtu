@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-16T11:30:23.1216322+08:00",
+  "title": "Design System: Lvtu",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Workbench Blue",
+        "canonical": "#2563eb",
+        "tonalRamp": ["#172554", "#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#60a5fa", "#bfdbfe", "#eff6ff"]
+      },
+      "primary-deep": {
+        "role": "primary",
+        "displayName": "Authority Blue",
+        "canonical": "#1e40af",
+        "tonalRamp": ["#172554", "#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#60a5fa", "#bfdbfe", "#eff6ff"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#172033", "#344054", "#667085", "#98a2b3", "#e5eaf3", "#f6f8fc", "#f8fafc", "#ffffff"]
+      },
+      "app-bg": {
+        "role": "neutral",
+        "displayName": "Application Mist",
+        "canonical": "#f5f7fb",
+        "tonalRamp": ["#172033", "#344054", "#667085", "#98a2b3", "#d8dee9", "#e5eaf3", "#f5f7fb", "#ffffff"]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#172033",
+        "tonalRamp": ["#0f172a", "#172033", "#344054", "#475467", "#667085", "#98a2b3", "#e5eaf3", "#f8fafc"]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Success Green",
+        "canonical": "#15803d",
+        "tonalRamp": ["#052e16", "#14532d", "#166534", "#15803d", "#16a34a", "#86efac", "#bbf7d0", "#f0fdf4"]
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Warning Amber",
+        "canonical": "#92400e",
+        "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fef3c7", "#fff7ed"]
+      },
+      "danger": {
+        "role": "semantic",
+        "displayName": "Danger Red",
+        "canonical": "#b42318",
+        "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b42318", "#dc2626", "#f87171", "#fecaca", "#fff1f0"]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles in user and admin views."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, section headers, and major panel headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Form copy, table cells, descriptions, and legal-service content."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Eyebrows, field labels, badges, filters, and compact metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "header-shadow",
+        "value": "0 2px 8px rgba(0, 0, 0, 0.1)",
+        "purpose": "Sticky navigation separation."
+      },
+      {
+        "name": "panel-shadow",
+        "value": "0 8px 24px rgba(15, 23, 42, 0.06)",
+        "purpose": "Primary task panels, forms, and cards."
+      },
+      {
+        "name": "admin-panel-shadow",
+        "value": "0 5px 18px rgba(30, 55, 90, 0.08)",
+        "purpose": "Dense admin cards and tables."
+      },
+      {
+        "name": "dropdown-shadow",
+        "value": "0 4px 12px rgba(0, 0, 0, 0.15)",
+        "purpose": "Header dropdown menus and compact floating controls."
+      },
+      {
+        "name": "modal-shadow",
+        "value": "0 24px 64px rgba(15, 23, 42, 0.22)",
+        "purpose": "Blocking dialogs and review panels."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "150ms ease",
+        "purpose": "Compact hover and focus state changes."
+      },
+      {
+        "name": "state-standard",
+        "value": "200ms ease",
+        "purpose": "Cards, dropdowns, and selected states."
+      },
+      {
+        "name": "legacy-standard",
+        "value": "300ms ease",
+        "purpose": "Existing navigation and form transitions; reduce for new dense admin UI when possible."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "640px"
+      },
+      {
+        "name": "tablet",
+        "value": "900px"
+      },
+      {
+        "name": "desktop-collapse",
+        "value": "1240px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action for forms, modals, and admin operations.",
+      "html": "<button class=\"ds-btn-primary\">Submit</button>",
+      "css": ".ds-btn-primary { border: 0; border-radius: 6px; background: #2563eb; color: #ffffff; padding: 10px 18px; font: 800 14px/1.2 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; cursor: pointer; transition: background 0.2s ease, box-shadow 0.2s ease; } .ds-btn-primary:hover { background: #1d4ed8; } .ds-btn-primary:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.24); outline-offset: 2px; } .ds-btn-primary:active { background: #1e40af; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary action for non-destructive alternatives.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { border: 1px solid #d6e4ff; border-radius: 6px; background: #ffffff; color: #1d4ed8; padding: 9px 16px; font: 800 14px/1.2 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease; } .ds-btn-secondary:hover { border-color: #2563eb; background: #eff6ff; } .ds-btn-secondary:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.18); outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Search or filter input for dense lists and tables.",
+      "html": "<label class=\"ds-field\"><span>Search</span><input class=\"ds-input\" placeholder=\"Search by name, phone, email, or region\" /></label>",
+      "css": ".ds-field { display: grid; gap: 6px; color: #344054; font: 700 13px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; } .ds-input { width: 360px; max-width: 100%; border: 1px solid #d8dee9; border-radius: 6px; background: #ffffff; color: #172033; padding: 10px 12px; font: 400 14px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; } .ds-input::placeholder { color: #667085; } .ds-input:hover { border-color: #bfdbfe; } .ds-input:focus { border-color: #2563eb; outline: 3px solid rgba(37, 99, 235, 0.12); }"
+    },
+    {
+      "name": "Content Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Work surface for forms, summaries, and administrative sections.",
+      "html": "<section class=\"ds-card\"><h3>Section Title</h3><p>Aligned work content sits on white with a visible boundary.</p></section>",
+      "css": ".ds-card { border: 1px solid #e5eaf3; border-radius: 8px; background: #ffffff; color: #172033; padding: 22px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; } .ds-card h3 { margin: 0 0 8px; color: #172033; font-size: 22px; line-height: 1.3; font-weight: 800; } .ds-card p { margin: 0; color: #667085; font-size: 14px; line-height: 1.6; }"
+    },
+    {
+      "name": "Data Table",
+      "kind": "custom",
+      "description": "Administrative table with gray header, dividers, and left-aligned content.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>ID</th><th>Name</th><th>Status</th></tr></thead><tbody><tr><td>1024</td><td>Legal service order</td><td>Processing</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; min-width: 520px; border-collapse: collapse; color: #344054; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; } .ds-table th { background: #f6f8fc; color: #344054; text-align: left; padding: 14px 18px; font-size: 14px; font-weight: 800; } .ds-table td { border-top: 1px solid #e6e8ef; padding: 14px 18px; font-size: 14px; line-height: 1.45; } .ds-table tr:hover td { background: #f8fbff; }"
+    },
+    {
+      "name": "Selected Chip",
+      "kind": "chip",
+      "refersTo": "tag-selected",
+      "description": "Selected filter, status, or compact metadata marker.",
+      "html": "<span class=\"ds-chip\">Selected</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; border: 1px solid #bfdbfe; border-radius: 999px; background: #eff6ff; color: #1d4ed8; padding: 4px 10px; font: 800 12px/1.2 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }"
+    },
+    {
+      "name": "Top Navigation Item",
+      "kind": "nav",
+      "description": "Header navigation item for user and admin app shells.",
+      "html": "<a class=\"ds-nav-item\" href=\"#\">Orders</a>",
+      "css": ".ds-nav-item { display: inline-flex; align-items: center; min-height: 38px; padding: 8px 14px; border-radius: 4px; color: rgba(255, 255, 255, 0.9); text-decoration: none; font: 700 14px/1.2 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #1e40af; transition: background 0.2s ease, color 0.2s ease; } .ds-nav-item:hover, .ds-nav-item:focus-visible { color: #ffffff; background: #2563eb; outline: none; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Legal Workbench",
+    "overview": "Lvtu should feel professional, clear, and trustworthy: a stable legal-service workbench where clients, lawyers, and administrators can understand status, complete forms, and act with confidence. The system is not expressive for its own sake. It uses alignment, borders, dividers, and a restrained blue-gray-white palette to make dense legal workflows readable.\n\nThe visual language is information-first. Creativity is subordinate to alignment, predictable grids, rigorous copy, and obvious next actions. The product should never feel playful, promotional, or entertainment-like; it should feel calm enough for sensitive legal tasks and efficient enough for repeated administrative work.",
+    "keyCharacteristics": [
+      "Deep blue actions on white or pale blue surfaces.",
+      "Neutral gray backgrounds that separate pages, panels, and tables.",
+      "Clear borders and dividers instead of decorative effects.",
+      "Strong grid alignment, especially in forms, tables, cards, and admin views.",
+      "Direct, precise UI copy with no emotional overstatement."
+    ],
+    "rules": [
+      {
+        "name": "The Blue Means Action Rule",
+        "body": "Blue is reserved for actions, active state, focus, links, and important values. Do not use saturated blue as decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The White Surface Rule",
+        "body": "Task content lives on white surfaces with visible borders or dividers. Gray backgrounds separate work zones; they do not replace content panels.",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic Color Rule",
+        "body": "Green, amber, red, and purple-like status colors appear only when the data state requires them. Do not introduce mood colors for visual variety.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Display Drama Rule",
+        "body": "Do not introduce decorative display fonts, oversized marketing headings, or expressive letter spacing. Legal-service screens need clarity, not performance.",
+        "section": "typography"
+      },
+      {
+        "name": "The Label Precision Rule",
+        "body": "Labels and status text must be short, literal, and stable across screens. Do not use emotional or conversational phrasing for workflow states.",
+        "section": "typography"
+      },
+      {
+        "name": "The Border First Rule",
+        "body": "Use a visible border or divider before reaching for shadow. Shadow alone is not enough structure for dense legal workflows.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Low Lift Rule",
+        "body": "Hover lift may move an item by 1-2px and add a subtle blue-tinted shadow. Anything bouncy, playful, or theatrical is out of register.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use deep blue, neutral gray, and white as the default palette.",
+      "Do align controls, labels, and table columns to a clear grid before adding visual emphasis.",
+      "Do use borders, dividers, and white surfaces to make legal workflows scannable.",
+      "Do keep copy rigorous, literal, and workflow-oriented.",
+      "Do preserve Element Plus conventions when they already support the expected form or table pattern.",
+      "Do meet WCAG AA contrast for body text, labels, placeholders, disabled controls, focus states, and status chips."
+    ],
+    "donts": [
+      "Don't make the UI feel entertainment-like, playful, gamified, or promotional.",
+      "Don't add decorative legal cliches, ornamental gradients, glass panels, or marketing-style hero effects to task screens.",
+      "Don't use emotional copy, exaggerated reassurance, or casual jokes in legal-service workflows.",
+      "Don't use color for variety when the color does not carry action or state.",
+      "Don't rely on shadow without borders for dense panels, cards, tables, or form sections.",
+      "Don't introduce oversized radius on work cards or inputs; 4-12px is the default system range."
+    ]
+  }
+}

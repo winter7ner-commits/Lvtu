@@ -1,7 +1,7 @@
 <template>
   <div class="page">
-    <div class="order-workspace">
-      <aside class="form-side-nav" aria-label="服务表单导航">
+    <div :class="['order-workspace', { 'no-form-selected': !currentForm }]">
+      <aside v-if="currentForm" class="form-side-nav" aria-label="服务表单导航">
         <p>表单导航</p>
         <button
           v-for="item in formNavItems"
@@ -22,22 +22,29 @@
             <h2>创建订单</h2>
           </div>
 
-          <div class="service-selector">
-            <button
-              v-for="service in visibleServiceOptions"
-              :key="service.value"
-              type="button"
-              :class="['service-option', { active: selectedServiceType === service.value }]"
-              @click="selectServiceType(service.value)"
-            >
-              <span>{{ service.label }}</span>
-              <small>{{ service.desc }}</small>
-            </button>
+          <div class="service-select-area">
+            <div class="service-selector">
+              <button
+                v-for="service in visibleServiceOptions"
+                :key="service.value"
+                type="button"
+                :class="['service-option', { active: selectedServiceType === service.value }]"
+                @click="selectServiceType(service.value)"
+              >
+                <span>{{ service.label }}</span>
+                <small>{{ service.desc }}</small>
+              </button>
+            </div>
+            <p v-if="serviceTypeError" class="service-error">请选择服务类型</p>
           </div>
         </div>
 
         <div class="form-container">
-          <component :is="currentForm" />
+          <component v-if="currentForm" :is="currentForm" />
+          <div v-else class="empty-service-panel">
+            <strong>请选择服务类型</strong>
+            <span>选择后即可填写发布法律服务表单。</span>
+          </div>
         </div>
       </div>
 
@@ -64,9 +71,10 @@ import FormLitigation from '@/components/order/FormLitigation.vue'
 
 const route = useRoute()
 
-const selectedServiceType = ref('ONLINE_CONSULT')
+const selectedServiceType = ref('')
 const orderCreateRef = ref(null)
 const activeNavKey = ref('section-0')
+const serviceTypeError = ref(false)
 const isDirectLawyerOrder = computed(() => !!(route.query.targetLawyerId || route.query.lawyerId))
 
 const serviceOptions = [
@@ -86,6 +94,8 @@ const serviceSectionLabels = {
   MARRIAGE_FAMILY: '婚姻家事信息',
   LITIGATION_AGENT: '诉讼案件信息'
 }
+
+const serviceOptionValues = serviceOptions.map((item) => item.value)
 
 const visibleServiceOptions = computed(() => {
   if (isDirectLawyerOrder.value) {
@@ -121,6 +131,8 @@ const getFormTargetElement = (item) => {
 }
 
 const updateActiveNav = () => {
+  if (!currentForm.value) return
+
   const offset = 118
   let currentKey = formNavItems.value[0]?.key || ''
 
@@ -152,9 +164,11 @@ const scrollToTop = () => {
 const selectServiceType = async (serviceType) => {
   if (isDirectLawyerOrder.value && serviceType !== 'ONLINE_CONSULT') {
     selectedServiceType.value = 'ONLINE_CONSULT'
+    serviceTypeError.value = false
     return
   }
   selectedServiceType.value = serviceType
+  serviceTypeError.value = false
   activeNavKey.value = 'section-0'
   await nextTick()
   updateActiveNav()
@@ -163,8 +177,12 @@ const selectServiceType = async (serviceType) => {
 onMounted(() => {
   if (isDirectLawyerOrder.value) {
     selectedServiceType.value = 'ONLINE_CONSULT'
-  } else if (route.query.type) {
+    serviceTypeError.value = false
+  } else if (serviceOptionValues.includes(route.query.type)) {
     selectedServiceType.value = route.query.type
+    serviceTypeError.value = false
+  } else {
+    serviceTypeError.value = true
   }
 
   nextTick(updateActiveNav)
@@ -178,12 +196,18 @@ onBeforeUnmount(() => {
 watch(() => route.query.type, (newType) => {
   if (isDirectLawyerOrder.value) {
     selectedServiceType.value = 'ONLINE_CONSULT'
+    serviceTypeError.value = false
     activeNavKey.value = 'section-0'
     nextTick(updateActiveNav)
   } else if (newType) {
-    selectedServiceType.value = newType
+    selectedServiceType.value = serviceOptionValues.includes(newType) ? newType : ''
+    serviceTypeError.value = !selectedServiceType.value
     activeNavKey.value = 'section-0'
     nextTick(updateActiveNav)
+  } else {
+    selectedServiceType.value = ''
+    serviceTypeError.value = true
+    activeNavKey.value = 'section-0'
   }
 })
 
@@ -202,7 +226,7 @@ const currentForm = computed(() => {
     case 'LITIGATION_AGENT':
       return FormLitigation
     default:
-      return FormOnlineConsult
+      return null
   }
 })
 </script>
@@ -221,6 +245,11 @@ const currentForm = computed(() => {
   align-items: start;
   width: min(1360px, 100%);
   margin: 0 auto;
+}
+
+.order-workspace.no-form-selected {
+  grid-template-columns: minmax(0, 1040px) 112px;
+  justify-content: center;
 }
 
 .form-side-nav,
@@ -372,12 +401,15 @@ const currentForm = computed(() => {
   font-size: 28px;
 }
 
+.service-select-area {
+  flex: 1;
+  max-width: 520px;
+}
+
 .service-selector {
   display: grid;
   grid-template-columns: repeat(3, minmax(130px, 1fr));
   gap: 10px;
-  flex: 1;
-  max-width: 520px;
 }
 
 .service-option {
@@ -419,8 +451,38 @@ const currentForm = computed(() => {
   box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
 }
 
+.service-error {
+  margin: 8px 0 0;
+  color: #f56c6c;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .form-container {
   padding: 0;
+}
+
+.empty-service-panel {
+  display: flex;
+  min-height: 260px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px dashed #bfd4ff;
+  border-radius: 14px;
+  background: #f8fbff;
+  color: #667085;
+  text-align: center;
+}
+
+.empty-service-panel strong {
+  color: #172033;
+  font-size: 20px;
+}
+
+.empty-service-panel span {
+  font-size: 14px;
 }
 
 :deep(.form-container) {
@@ -525,9 +587,17 @@ const currentForm = computed(() => {
     flex-direction: column;
   }
 
-  .service-selector {
+  .service-error {
+    margin-top: 8px;
+  }
+
+  .service-select-area {
     width: 100%;
     max-width: none;
+  }
+
+  .service-selector {
+    width: 100%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

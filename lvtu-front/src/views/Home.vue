@@ -11,10 +11,11 @@
             v-model="searchKeyword"
             clearable
             size="large"
+            aria-label="搜索律师、法条、订单或服务类型"
             placeholder="输入律师、法条、订单号、业务类型或状态"
             @keyup.enter="handleSearch"
           />
-          <el-button type="primary" size="large" :loading="searching" @click="handleSearch">
+          <el-button type="primary" size="large" @click="handleSearch">
             搜索
           </el-button>
         </div>
@@ -33,8 +34,7 @@
 
       <div class="hero-panel">
         <div class="logo-stage">
-          <span class="logo-ring"></span>
-          <img src="/src/assets/images/logo.png" alt="律途" />
+          <img src="/icons/logo.png" alt="律途" width="320" height="213" fetchpriority="high" decoding="async" />
         </div>
         <div class="hero-metrics">
           <div>
@@ -53,63 +53,81 @@
       </div>
     </section>
 
-    <section class="law-band">
+    <section ref="lawBandRef" class="law-band">
       <div class="section-head">
         <div>
           <p class="eyebrow">法律法规</p>
           <h2>按领域快速查看常用法条</h2>
         </div>
-        <el-button class="soft-btn" :loading="loadingLegal" @click="loadLegalCategories">刷新法规</el-button>
+        <el-button class="soft-btn" :loading="loadingLegal" @click="refreshLegalCategories">刷新法规</el-button>
       </div>
 
-      <div class="law-browser" v-loading="loadingLegal">
+      <div class="law-browser" v-loading="loadingLegal" :aria-busy="loadingLegal || loadingLegalDocuments || loadingLegalArticles">
         <div class="law-column category-column">
           <div class="law-column-title">法律分类</div>
           <div class="law-scroll">
-            <button
-              v-for="category in legalCategories"
-              :key="category.id"
-              type="button"
-              :class="['law-row', { active: selectedLawCategory === category.id }]"
-              @click="selectLawCategory(category.id)"
-            >
-              {{ category.name }}
-            </button>
-            <el-empty v-if="!legalCategories.length && !loadingLegal" description="暂无分类" />
+            <div v-if="!legalLoadStarted" class="law-skeleton" aria-hidden="true">
+              <span v-for="item in 5" :key="item"></span>
+            </div>
+            <template v-else>
+              <button
+                v-for="category in legalCategories"
+                :key="category.id"
+                type="button"
+                :class="['law-row', { active: selectedLawCategory === category.id }]"
+                @click="selectLawCategory(category.id)"
+              >
+                {{ category.name }}
+              </button>
+              <el-empty v-if="!legalCategories.length && !loadingLegal" description="暂无分类" />
+            </template>
           </div>
         </div>
 
         <div class="law-column document-column" v-loading="loadingLegalDocuments">
           <div class="law-column-title">法律</div>
           <div class="law-scroll">
-            <button
-              v-for="document in legalDocuments"
-              :key="document.id"
-              type="button"
-              :class="['law-row', { active: selectedLawDocument === document.id }]"
-              @click="selectLawDocument(document.id)"
-            >
-              {{ document.name }}
-            </button>
-            <el-empty v-if="selectedLawCategory && !legalDocuments.length && !loadingLegalDocuments" description="暂无法律" />
+            <div v-if="!legalLoadStarted" class="law-skeleton" aria-hidden="true">
+              <span v-for="item in 4" :key="item"></span>
+            </div>
+            <template v-else>
+              <button
+                v-for="document in legalDocuments"
+                :key="document.id"
+                type="button"
+                :class="['law-row', { active: selectedLawDocument === document.id }]"
+                @click="selectLawDocument(document.id)"
+              >
+                {{ document.name }}
+              </button>
+              <el-empty v-if="selectedLawCategory && !legalDocuments.length && !loadingLegalDocuments" description="暂无法律" />
+            </template>
           </div>
         </div>
 
         <div class="law-column article-column" v-loading="loadingLegalArticles">
           <div class="law-column-title">法条</div>
           <div class="article-scroll">
-            <button
-              v-for="article in legalArticles"
-              :key="article.id"
-              type="button"
-              class="article-row"
-              @click="openArticleDetail(article)"
-            >
-              <strong>{{ article.articleNumber }}</strong>
-              <span v-if="article.title">{{ article.title }}</span>
-              <p>{{ truncateArticle(article.content) }}</p>
-            </button>
-            <el-empty v-if="selectedLawDocument && !legalArticles.length && !loadingLegalArticles" description="暂无法条" />
+            <div v-if="!legalLoadStarted" class="law-skeleton article" aria-hidden="true">
+              <span v-for="item in 3" :key="item"></span>
+            </div>
+            <template v-else>
+              <button
+                v-for="article in visibleLegalArticles"
+                :key="article.id"
+                type="button"
+                class="article-row"
+                @click="openArticleDetail(article)"
+              >
+                <strong>{{ article.articleNumber }}</strong>
+                <span v-if="article.title">{{ article.title }}</span>
+                <p>{{ article.preview }}</p>
+              </button>
+              <button v-if="hiddenLegalArticleCount > 0" type="button" class="article-more" @click="showMoreLegalArticles">
+                加载更多法条（{{ hiddenLegalArticleCount }}）
+              </button>
+              <el-empty v-if="selectedLawDocument && !legalArticles.length && !loadingLegalArticles" description="暂无法条" />
+            </template>
           </div>
         </div>
       </div>
@@ -164,7 +182,10 @@
             <em>{{ Number(lawyer.rating || 0).toFixed(1) }}</em>
           </button>
         </div>
-        <el-empty v-else description="暂无推荐律师" />
+        <el-empty v-else-if="hotLawyersLoaded" description="暂无推荐律师" />
+        <div v-else class="lawyer-skeleton" aria-hidden="true">
+          <span v-for="item in 3" :key="item"></span>
+        </div>
       </article>
 
       <article v-if="!isLawyerAccount" class="home-panel">
@@ -185,15 +206,34 @@
       </article>
     </section>
 
+    <button type="button" class="home-back-top" aria-label="回到顶部" @click="scrollToTop">
+      ↑
+    </button>
+
     <div v-if="detailVisible" class="detail-overlay" @click.self="closeArticleDetail">
-      <section class="detail-sheet" v-loading="detailLoading">
+      <section
+        ref="detailSheetRef"
+        class="detail-sheet"
+        v-loading="detailLoading"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="article-detail-title"
+        tabindex="-1"
+        @keydown="handleDialogKeydown($event, closeArticleDetail)"
+      >
         <header class="detail-head">
-          <button class="icon-btn" type="button" @click="closeArticleDetail">‹</button>
+          <button class="icon-btn" type="button" aria-label="关闭法条详情" @click="closeArticleDetail">‹</button>
           <div>
             <span>{{ selectedLawDocumentName }}</span>
-            <h2>{{ detailArticle?.articleNumber || '法条详情' }}</h2>
+            <h2 id="article-detail-title">{{ detailArticle?.articleNumber || '法条详情' }}</h2>
           </div>
-          <button :class="['favorite-btn', { active: isFavorited }]" type="button" @click="handleToggleFavorite">
+          <button
+            :class="['favorite-btn', { active: isFavorited }]"
+            type="button"
+            :aria-pressed="isFavorited"
+            :aria-label="isFavorited ? '取消收藏当前法条' : '收藏当前法条'"
+            @click="handleToggleFavorite"
+          >
             <span>{{ isFavorited ? '★' : '☆' }}</span>
             收藏
           </button>
@@ -218,7 +258,7 @@
 
           <section class="comment-block">
             <div class="comment-head">
-              <h3>全部评论（{{ commentCount }}）</h3>
+              <h3 aria-live="polite">全部评论（{{ commentCount }}）</h3>
             </div>
             <div v-if="detailComments.length" class="comment-list">
               <article v-for="comment in detailComments" :key="comment.id" class="comment-item">
@@ -240,13 +280,21 @@
           <input
             v-model="commentDraft"
             maxlength="1000"
+            aria-label="输入法条评论"
             placeholder="期待有价值的评论..."
+            :disabled="commentSubmitting"
             @keyup.enter="submitComment"
           />
-          <button class="comment-submit" type="button" :disabled="commentSubmitting" @click="submitComment">
+          <button class="comment-submit" type="button" :disabled="commentSubmitting" :aria-busy="commentSubmitting" @click="submitComment">
             {{ commentSubmitting ? '发布中' : '发布' }}
           </button>
-          <button :class="['bottom-favorite', { active: isFavorited }]" type="button" @click="handleToggleFavorite">
+          <button
+            :class="['bottom-favorite', { active: isFavorited }]"
+            type="button"
+            :aria-pressed="isFavorited"
+            :aria-label="isFavorited ? '取消收藏当前法条' : '收藏当前法条'"
+            @click="handleToggleFavorite"
+          >
             <span>{{ isFavorited ? '★' : '☆' }}</span>
             {{ favoriteCount }}
           </button>
@@ -255,26 +303,41 @@
     </div>
 
     <div v-if="feedbackVisible" class="feedback-mask" @click.self="closeFeedback">
-      <section class="feedback-panel">
-        <button class="feedback-close" type="button" @click="closeFeedback">×</button>
+      <section
+        ref="feedbackPanelRef"
+        class="feedback-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="feedback-title"
+        tabindex="-1"
+        @keydown="handleDialogKeydown($event, closeFeedback)"
+      >
+        <button class="feedback-close" type="button" aria-label="关闭反馈面板" @click="closeFeedback">×</button>
         <p class="feedback-kicker">建议反馈</p>
-        <h3>{{ feedbackTitle }}</h3>
+        <h3 id="feedback-title">{{ feedbackTitle }}</h3>
         <div class="feedback-reasons">
           <button
             v-for="reason in feedbackReasons"
             :key="reason"
             type="button"
             :class="{ selected: feedbackReason === reason }"
+            :aria-pressed="feedbackReason === reason"
             @click="feedbackReason = feedbackReason === reason ? '' : reason"
           >
             {{ reason }}
           </button>
         </div>
         <div class="feedback-textarea">
-          <textarea v-model="feedbackContent" maxlength="140" :placeholder="feedbackPlaceholder"></textarea>
-          <span>{{ feedbackContent.length }}/140</span>
+          <textarea
+            v-model="feedbackContent"
+            maxlength="140"
+            aria-label="补充反馈内容"
+            aria-describedby="feedback-count"
+            :placeholder="feedbackPlaceholder"
+          ></textarea>
+          <span id="feedback-count" aria-live="polite">{{ feedbackContent.length }}/140</span>
         </div>
-        <button class="feedback-submit" type="button" :disabled="feedbackSubmitting" @click="submitFeedback">
+        <button class="feedback-submit" type="button" :disabled="feedbackSubmitting" :aria-busy="feedbackSubmitting" @click="submitFeedback">
           {{ feedbackSubmitting ? '提交中' : '提交' }}
         </button>
       </section>
@@ -284,7 +347,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getTopRatedLawyers } from '@/api/lawyer'
@@ -302,8 +365,8 @@ import { promptLogin } from '@/utils/loginPrompt'
 const router = useRouter()
 
 const searchKeyword = ref('')
-const searching = ref(false)
 const loadingHotLawyers = ref(false)
+const hotLawyersLoaded = ref(false)
 const hotLawyers = ref([])
 const loadingLegal = ref(false)
 const loadingLegalDocuments = ref(false)
@@ -323,17 +386,134 @@ const feedbackHelpful = ref(true)
 const feedbackReason = ref('')
 const feedbackContent = ref('')
 const feedbackSubmitting = ref(false)
+const detailSheetRef = ref(null)
+const feedbackPanelRef = ref(null)
+const detailReturnFocusElement = ref(null)
+const feedbackReturnFocusElement = ref(null)
+const previousBodyOverflow = ref('')
+const bodyScrollLocked = ref(false)
+const lawBandRef = ref(null)
+const legalLoadStarted = ref(false)
+const visibleArticleLimit = ref(8)
+const ARTICLE_BATCH_SIZE = 8
+
+const documentCache = new Map()
+const articleCache = new Map()
+let legalObserver = null
+let currentCategoryRequestId = 0
+let currentDocumentRequestId = 0
+let currentArticleRequestId = 0
+
+const focusableSelector = [
+  'a[href]',
+  'button:not([disabled])',
+  'textarea:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])'
+].join(', ')
 
 const quickTags = ['婚姻家事', '合同纠纷', '劳动争议', '知识产权', '待支付']
 const helpfulReasons = ['描述符合', '内容有趣', '很好理解', '感受一般']
 const unhelpfulReasons = ['描述不符合', '读不下去', '不太好懂', '感受一般']
 
+const parseCurrentUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('currentUser') || 'null')
+  } catch (error) {
+    return null
+  }
+}
+
+const getActiveElement = () => {
+  if (typeof document === 'undefined') return null
+  const activeElement = document.activeElement
+  return activeElement && typeof activeElement.focus === 'function' ? activeElement : null
+}
+
+const getFocusableElements = (container) => {
+  if (!container) return []
+  return Array.from(container.querySelectorAll(focusableSelector)).filter((element) => {
+    const disabled = element.hasAttribute('disabled') || element.getAttribute('aria-disabled') === 'true'
+    return !disabled && element.getClientRects().length > 0
+  })
+}
+
+const focusFirstElement = (container) => {
+  if (!container || typeof container.focus !== 'function') return
+  const focusableElements = getFocusableElements(container)
+  const target = focusableElements[0] || container
+  target.focus({ preventScroll: true })
+}
+
+const restoreFocusTo = (target, fallbackContainer = null) => {
+  nextTick(() => {
+    if (target && typeof document !== 'undefined' && document.contains(target) && typeof target.focus === 'function') {
+      target.focus({ preventScroll: true })
+      return
+    }
+    if (fallbackContainer) {
+      focusFirstElement(fallbackContainer)
+    }
+  })
+}
+
+const handleDialogKeydown = (event, closeHandler) => {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeHandler()
+    return
+  }
+  if (event.key !== 'Tab') return
+
+  const focusableElements = getFocusableElements(event.currentTarget)
+  if (!focusableElements.length) {
+    event.preventDefault()
+    event.currentTarget.focus({ preventScroll: true })
+    return
+  }
+
+  const firstElement = focusableElements[0]
+  const lastElement = focusableElements[focusableElements.length - 1]
+
+  if (event.shiftKey && document.activeElement === firstElement) {
+    event.preventDefault()
+    lastElement.focus({ preventScroll: true })
+  } else if (!event.shiftKey && document.activeElement === lastElement) {
+    event.preventDefault()
+    firstElement.focus({ preventScroll: true })
+  }
+}
+
+const prefersReducedMotion = () => (
+  typeof window !== 'undefined'
+  && typeof window.matchMedia === 'function'
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+)
+
+const updateBodyScrollLock = () => {
+  if (typeof document === 'undefined') return
+  const shouldLock = detailVisible.value || feedbackVisible.value
+
+  if (shouldLock && !bodyScrollLocked.value) {
+    previousBodyOverflow.value = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    bodyScrollLocked.value = true
+    return
+  }
+
+  if (!shouldLock && bodyScrollLocked.value) {
+    document.body.style.overflow = previousBodyOverflow.value
+    bodyScrollLocked.value = false
+  }
+}
+
 const currentUserId = computed(() => {
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
+  const currentUser = parseCurrentUser()
   return currentUser?.userId || Number(localStorage.getItem('userId')) || null
 })
 const isLawyerAccount = computed(() => {
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
+  const currentUser = parseCurrentUser()
   return Number(currentUser?.authStatus) === 2
 })
 const selectedLawDocumentName = computed(() => {
@@ -350,6 +530,8 @@ const feedbackTitle = computed(() => feedbackHelpful.value ? '这条解释对你
 const feedbackPlaceholder = computed(() =>
   feedbackHelpful.value ? '期待您的建议，我们会持续优化内容～' : '请写下您的问题，我们会认真对待～'
 )
+const visibleLegalArticles = computed(() => legalArticles.value.slice(0, visibleArticleLimit.value))
+const hiddenLegalArticleCount = computed(() => Math.max(legalArticles.value.length - visibleArticleLimit.value, 0))
 
 const services = [
   { short: '咨', name: '在线法律咨询', type: 'ONLINE_CONSULT', desc: '图文沟通' },
@@ -386,6 +568,47 @@ const searchByKeyword = (keyword) => {
   handleSearch()
 }
 
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+}
+
+const scheduleIdleTask = (task, timeout = 900) => {
+  if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(task, { timeout })
+    return
+  }
+  window.setTimeout(task, Math.min(timeout, 300))
+}
+
+const startLegalLoad = () => {
+  if (legalLoadStarted.value || loadingLegal.value) return
+  legalLoadStarted.value = true
+  loadLegalCategories()
+}
+
+const setupLegalObserver = () => {
+  if (typeof window === 'undefined' || legalLoadStarted.value) return
+
+  if (!lawBandRef.value || typeof window.IntersectionObserver !== 'function') {
+    scheduleIdleTask(startLegalLoad, 1200)
+    return
+  }
+
+  legalObserver = new window.IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return
+
+    legalObserver?.disconnect()
+    legalObserver = null
+    startLegalLoad()
+  }, { rootMargin: '220px 0px' })
+
+  legalObserver.observe(lawBandRef.value)
+}
+
+const showMoreLegalArticles = () => {
+  visibleArticleLimit.value += ARTICLE_BATCH_SIZE
+}
+
 const loadHotLawyers = async () => {
   loadingHotLawyers.value = true
   try {
@@ -394,59 +617,134 @@ const loadHotLawyers = async () => {
   } catch (error) {
     hotLawyers.value = []
   } finally {
+    hotLawyersLoaded.value = true
     loadingHotLawyers.value = false
   }
 }
 
-const loadLegalCategories = async () => {
+const loadLegalCategories = async ({ force = false } = {}) => {
+  const requestId = ++currentCategoryRequestId
+  legalLoadStarted.value = true
   loadingLegal.value = true
   try {
+    if (force) {
+      documentCache.clear()
+      articleCache.clear()
+      legalDocuments.value = []
+      legalArticles.value = []
+      selectedLawCategory.value = null
+      selectedLawDocument.value = null
+    }
     const list = unwrapData(await getCategories())
+    if (requestId !== currentCategoryRequestId) return
     legalCategories.value = Array.isArray(list) ? list : []
     if (legalCategories.value.length > 0) {
-      await selectLawCategory(legalCategories.value[0].id)
+      await selectLawCategory(legalCategories.value[0].id, { force })
+    } else {
+      legalDocuments.value = []
+      legalArticles.value = []
+      selectedLawCategory.value = null
+      selectedLawDocument.value = null
     }
   } catch (error) {
+    if (requestId !== currentCategoryRequestId) return
     legalCategories.value = []
     legalDocuments.value = []
     legalArticles.value = []
+    selectedLawCategory.value = null
+    selectedLawDocument.value = null
+    ElMessage.error(error?.response?.data?.message || '法规加载失败，请稍后重试')
   } finally {
-    loadingLegal.value = false
+    if (requestId === currentCategoryRequestId) {
+      loadingLegal.value = false
+    }
   }
 }
 
-const selectLawCategory = async (categoryId) => {
+const refreshLegalCategories = () => {
+  legalObserver?.disconnect()
+  legalObserver = null
+  return loadLegalCategories({ force: true })
+}
+
+const selectLawCategory = async (categoryId, options = {}) => {
+  const { force = false } = options
+  if (!force && selectedLawCategory.value === categoryId && legalDocuments.value.length) return
+
+  const requestId = ++currentDocumentRequestId
   selectedLawCategory.value = categoryId
   selectedLawDocument.value = null
   legalDocuments.value = []
   legalArticles.value = []
+  visibleArticleLimit.value = ARTICLE_BATCH_SIZE
+
+  if (!force && documentCache.has(categoryId)) {
+    legalDocuments.value = documentCache.get(categoryId)
+    if (legalDocuments.value.length > 0) {
+      await selectLawDocument(legalDocuments.value[0].id)
+    }
+    return
+  }
+
   loadingLegalDocuments.value = true
 
   try {
     const list = unwrapData(await getDocumentsByCategory(categoryId))
-    legalDocuments.value = Array.isArray(list) ? list : []
+    if (requestId !== currentDocumentRequestId) return
+    const documents = Array.isArray(list) ? list : []
+    legalDocuments.value = documents
+    documentCache.set(categoryId, documents)
     if (legalDocuments.value.length > 0) {
       await selectLawDocument(legalDocuments.value[0].id)
     }
   } catch (error) {
+    if (requestId !== currentDocumentRequestId) return
     legalDocuments.value = []
+    legalArticles.value = []
+    selectedLawDocument.value = null
+    ElMessage.error(error?.response?.data?.message || '法律列表加载失败')
   } finally {
-    loadingLegalDocuments.value = false
+    if (requestId === currentDocumentRequestId) {
+      loadingLegalDocuments.value = false
+    }
   }
 }
 
-const selectLawDocument = async (documentId) => {
+const selectLawDocument = async (documentId, options = {}) => {
+  const { force = false } = options
+  if (!force && selectedLawDocument.value === documentId && legalArticles.value.length) return
+
+  const requestId = ++currentArticleRequestId
   selectedLawDocument.value = documentId
   legalArticles.value = []
+  visibleArticleLimit.value = ARTICLE_BATCH_SIZE
+
+  if (!force && articleCache.has(documentId)) {
+    legalArticles.value = articleCache.get(documentId)
+    return
+  }
+
   loadingLegalArticles.value = true
 
   try {
     const list = unwrapData(await getArticlesByDocument(documentId))
-    legalArticles.value = Array.isArray(list) ? list : []
+    if (requestId !== currentArticleRequestId) return
+    const articles = Array.isArray(list)
+      ? list.map((article) => ({
+          ...article,
+          preview: truncateArticle(article.content)
+        }))
+      : []
+    legalArticles.value = articles
+    articleCache.set(documentId, articles)
   } catch (error) {
+    if (requestId !== currentArticleRequestId) return
     legalArticles.value = []
+    ElMessage.error(error?.response?.data?.message || '法条加载失败')
   } finally {
-    loadingLegalArticles.value = false
+    if (requestId === currentArticleRequestId) {
+      loadingLegalArticles.value = false
+    }
   }
 }
 
@@ -460,17 +758,29 @@ const formatTime = (value) => {
   return String(value).replace('T', ' ').slice(0, 16)
 }
 
-const openArticleDetail = async (article) => {
+const openArticleDetail = async (article, options = {}) => {
+  const { preserveFocus = false } = options
+  if (!preserveFocus) {
+    detailReturnFocusElement.value = getActiveElement()
+    selectedDetail.value = null
+  }
   detailVisible.value = true
   detailLoading.value = true
   commentDraft.value = ''
-  closeFeedback()
+  closeFeedback({ restoreFocus: false })
+  await nextTick()
+  if (!preserveFocus) {
+    focusFirstElement(detailSheetRef.value)
+  }
 
   try {
     const response = await getArticleDetail(article.id, currentUserId.value)
     selectedDetail.value = unwrapData(response)
   } catch (error) {
     ElMessage.error(error?.response?.data?.message || '加载法条详情失败')
+    if (!preserveFocus) {
+      closeArticleDetail()
+    }
   } finally {
     detailLoading.value = false
   }
@@ -478,7 +788,8 @@ const openArticleDetail = async (article) => {
 
 const closeArticleDetail = () => {
   detailVisible.value = false
-  closeFeedback()
+  closeFeedback({ restoreFocus: false })
+  restoreFocusTo(detailReturnFocusElement.value)
 }
 
 const handleToggleFavorite = async () => {
@@ -491,6 +802,7 @@ const handleToggleFavorite = async () => {
   try {
     const response = await toggleArticleFavorite(detailArticle.value.id, currentUserId.value)
     const data = unwrapData(response)
+    if (!data) throw new Error('Empty favorite response')
     selectedDetail.value = {
       ...selectedDetail.value,
       favorited: data.favorited,
@@ -504,6 +816,7 @@ const handleToggleFavorite = async () => {
 }
 
 const submitComment = async () => {
+  if (commentSubmitting.value) return
   if (!currentUserId.value) {
     promptLogin(router, router.currentRoute.value.fullPath, '登录或注册后，你可以参与法条评论，和其他用户交流法律问题。')
     return
@@ -522,7 +835,7 @@ const submitComment = async () => {
     })
     const currentArticle = detailArticle.value
     commentDraft.value = ''
-    await openArticleDetail(currentArticle)
+    await openArticleDetail(currentArticle, { preserveFocus: true })
     ElMessage.success('评论已发布')
   } catch (error) {
     ElMessage.error(error?.response?.data?.message || '评论发布失败')
@@ -531,20 +844,28 @@ const submitComment = async () => {
   }
 }
 
-const openFeedback = (helpful) => {
+const openFeedback = async (helpful) => {
+  feedbackReturnFocusElement.value = getActiveElement()
   feedbackHelpful.value = helpful
   feedbackReason.value = ''
   feedbackContent.value = ''
   feedbackVisible.value = true
+  await nextTick()
+  focusFirstElement(feedbackPanelRef.value)
 }
 
-const closeFeedback = () => {
+const closeFeedback = (options = {}) => {
+  const { restoreFocus = true } = options
   feedbackVisible.value = false
   feedbackReason.value = ''
   feedbackContent.value = ''
+  if (restoreFocus) {
+    restoreFocusTo(feedbackReturnFocusElement.value, detailVisible.value ? detailSheetRef.value : null)
+  }
 }
 
 const submitFeedback = async () => {
+  if (feedbackSubmitting.value) return
   if (!currentUserId.value) {
     promptLogin(router, router.currentRoute.value.fullPath, '登录或注册后，你可以反馈法条解释质量，帮助平台优化内容。')
     return
@@ -576,9 +897,19 @@ const goToLawyerDetail = (id) => {
 
 const getInitials = (name = '律师') => name.slice(-2)
 
+watch([detailVisible, feedbackVisible], updateBodyScrollLock)
+
 onMounted(() => {
-  loadHotLawyers()
-  loadLegalCategories()
+  scheduleIdleTask(loadHotLawyers, 500)
+  nextTick(setupLegalObserver)
+})
+
+onBeforeUnmount(() => {
+  legalObserver?.disconnect()
+  legalObserver = null
+  if (typeof document !== 'undefined' && bodyScrollLocked.value) {
+    document.body.style.overflow = previousBodyOverflow.value
+  }
 })
 </script>
 
@@ -598,6 +929,23 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
+.home-page button:focus-visible,
+.home-page input:focus-visible,
+.home-page textarea:focus-visible,
+.home-page [tabindex]:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.28);
+  outline-offset: 2px;
+}
+
+.home-page :deep(.el-button:focus-visible) {
+  outline: 3px solid rgba(37, 99, 235, 0.28);
+  outline-offset: 2px;
+}
+
+.home-page :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
 .home-page .hero-section,
 .home-page .law-band,
 .home-page .service-band,
@@ -605,6 +953,13 @@ onMounted(() => {
   width: min(1180px, 100%);
   margin-left: auto;
   margin-right: auto;
+}
+
+.home-page .law-band,
+.home-page .service-band,
+.home-page .home-columns {
+  content-visibility: auto;
+  contain-intrinsic-size: 420px;
 }
 
 .home-page .hero-section {
@@ -622,7 +977,7 @@ onMounted(() => {
   border: 1px solid #e5eaf3;
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: none;
 }
 
 .home-page .hero-copy,
@@ -632,14 +987,13 @@ onMounted(() => {
 
 .home-page .hero-copy {
   padding: 34px;
-  animation: homeFadeUp 0.58s ease both;
 }
 
 .home-page .eyebrow {
   margin: 0 0 8px;
-  color: #2563eb;
+  color: #667085;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .home-page h1,
@@ -647,13 +1001,14 @@ onMounted(() => {
 .home-page h3,
 .home-page .subtext {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .home-page h1 {
   max-width: 720px;
   color: #172033;
   font-size: 38px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.18;
   letter-spacing: 0;
 }
@@ -661,14 +1016,14 @@ onMounted(() => {
 .home-page h2 {
   color: #172033;
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0;
 }
 
 .home-page h3 {
   color: #172033;
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .home-page .subtext {
@@ -697,6 +1052,7 @@ onMounted(() => {
 }
 
 .home-page .quick-tags button {
+  min-height: 44px;
   padding: 8px 12px;
   border: 1px solid #dbe4f0;
   border-radius: 999px;
@@ -704,12 +1060,17 @@ onMounted(() => {
   color: #475467;
   cursor: pointer;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .home-page .quick-tags button:hover {
-  border-color: #2563eb;
-  color: #1d4ed8;
+  border-color: #cbd5e1;
+  color: #334155;
+  background: #f1f5f9;
+}
+
+.home-page .quick-tags button:active {
+  background: #e5eaf3;
 }
 
 .home-page .hero-panel {
@@ -719,7 +1080,7 @@ onMounted(() => {
   align-items: stretch;
   padding: 24px;
   overflow: hidden;
-  animation: homeFadeUp 0.7s ease 0.08s both;
+  contain: paint;
 }
 
 .home-page .logo-stage {
@@ -728,62 +1089,18 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 236px;
+  padding: 14px;
   isolation: isolate;
 }
 
 .home-page .logo-stage::before {
   content: '';
   position: absolute;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.16), rgba(37, 99, 235, 0) 62%);
-  animation: logoGlow 3.6s ease-in-out infinite;
-  z-index: -2;
-}
-
-.home-page .logo-stage::after {
-  content: '';
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 20px rgba(52, 211, 153, 0.45);
-  transform: translate(116px, -58px);
-  animation: logoDot 4.8s ease-in-out infinite;
+  inset: 18px;
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
+  background: #f8fafc;
   z-index: -1;
-}
-
-.home-page .logo-ring {
-  position: absolute;
-  width: 250px;
-  height: 250px;
-  border: 1px solid rgba(37, 99, 235, 0.16);
-  border-radius: 50%;
-  animation: logoOrbit 10s linear infinite;
-  z-index: -1;
-}
-
-.home-page .logo-ring::before,
-.home-page .logo-ring::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-}
-
-.home-page .logo-ring::before {
-  inset: 20px;
-  border: 1px dashed rgba(20, 184, 166, 0.18);
-}
-
-.home-page .logo-ring::after {
-  top: 28px;
-  right: 46px;
-  width: 8px;
-  height: 8px;
-  background: #2563eb;
-  box-shadow: 0 0 18px rgba(37, 99, 235, 0.48);
 }
 
 .home-page .hero-panel img {
@@ -794,8 +1111,6 @@ onMounted(() => {
   max-height: 210px;
   margin: 0 auto;
   object-fit: contain;
-  filter: drop-shadow(0 16px 18px rgba(37, 99, 235, 0.14));
-  animation: logoFloat 4.2s ease-in-out infinite;
 }
 
 .home-page .hero-metrics {
@@ -808,26 +1123,13 @@ onMounted(() => {
 .home-page .hero-metrics div {
   padding: 12px 10px;
   border-radius: 8px;
-  background: #f6f8fc;
+  background: #f8fafc;
   text-align: center;
-  animation: homeFadeUp 0.5s ease both;
-}
-
-.home-page .hero-metrics div:nth-child(1) {
-  animation-delay: 0.18s;
-}
-
-.home-page .hero-metrics div:nth-child(2) {
-  animation-delay: 0.26s;
-}
-
-.home-page .hero-metrics div:nth-child(3) {
-  animation-delay: 0.34s;
 }
 
 .home-page .hero-metrics strong {
   display: block;
-  color: #1d4ed8;
+  color: #334155;
   font-size: 22px;
 }
 
@@ -853,13 +1155,21 @@ onMounted(() => {
   align-items: center;
 }
 
+.home-page .section-head > div,
+.home-page .order-entry > div,
+.home-page .detail-head > div,
+.home-page .lawyer-row > div,
+.home-page .comment-item > div {
+  min-width: 0;
+}
+
 .home-page .section-head {
   margin-bottom: 18px;
 }
 
 .home-page .section-head > span {
-  color: #1d4ed8;
-  font-weight: 800;
+  color: #475467;
+  font-weight: 700;
 }
 
 .home-page .compact {
@@ -880,21 +1190,30 @@ onMounted(() => {
   background: #ffffff;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .home-page .lawyer-row:hover,
 .home-page .service-tile:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.1);
-  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: none;
+  transform: none;
+}
+
+.home-page .lawyer-row:active,
+.home-page .service-tile:active {
+  background: #f8fafc;
 }
 
 .home-page .lawyer-row strong {
   display: block;
   color: #172033;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .home-page .lawyer-row span {
@@ -902,12 +1221,62 @@ onMounted(() => {
   margin-top: 4px;
   color: #667085;
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .home-page .soft-btn {
   border-color: #d6e4ff;
   color: #1d4ed8;
   background: #ffffff;
+}
+
+.home-page .soft-btn:hover,
+.home-page .soft-btn:focus {
+  border-color: #b7cffb;
+  color: #1d4ed8;
+  background: #f8fbff;
+}
+
+.home-page .soft-btn:active {
+  background: #eff6ff;
+}
+
+.home-page .home-back-top {
+  position: fixed;
+  right: 34px;
+  bottom: 42px;
+  z-index: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #d6e4ff;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475467;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+  box-shadow: none;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.home-page .home-back-top:hover {
+  background: #f8fafc;
+  border-color: #d9e1e8;
+  color: #334155;
+}
+
+.home-page .home-back-top:active {
+  background: #eef3fa;
 }
 
 .home-page .service-grid {
@@ -922,6 +1291,7 @@ onMounted(() => {
   gap: 14px;
   min-height: 360px;
   max-height: 390px;
+  contain: layout paint;
 }
 
 .home-page .law-column {
@@ -941,7 +1311,7 @@ onMounted(() => {
   background: #f8fafc;
   color: #172033;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .home-page .law-scroll,
@@ -949,6 +1319,8 @@ onMounted(() => {
   max-height: 312px;
   padding: 10px;
   overflow-y: auto;
+  content-visibility: auto;
+  contain-intrinsic-size: 312px;
 }
 
 .home-page .article-scroll {
@@ -968,10 +1340,39 @@ onMounted(() => {
   background: #cbd5e1;
 }
 
+.home-page .law-skeleton,
+.home-page .lawyer-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home-page .law-skeleton span,
+.home-page .lawyer-skeleton span {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #eef3fa, #f8fafc 46%, #eef3fa);
+  background-size: 180% 100%;
+  animation: homeSkeleton 1.2s ease-in-out infinite;
+}
+
+.home-page .law-skeleton span {
+  height: 40px;
+}
+
+.home-page .law-skeleton.article span {
+  height: 82px;
+}
+
+.home-page .lawyer-skeleton span {
+  height: 72px;
+  border: 1px solid #e5eaf3;
+}
+
 .home-page .law-row {
   display: block;
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   padding: 10px 12px;
   border: 0;
   border-radius: 6px;
@@ -986,31 +1387,45 @@ onMounted(() => {
   background: #f1f5f9;
 }
 
+.home-page .law-row:active {
+  background: #e5eaf3;
+}
+
 .home-page .law-row.active {
   background: #2563eb;
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .home-page .article-row {
   width: 100%;
+  min-width: 0;
   padding: 14px;
   border: 1px solid #e5eaf3;
   border-radius: 8px;
   background: #ffffff;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  content-visibility: auto;
+  contain-intrinsic-size: 96px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .home-page .article-row:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
-  transform: translateY(-1px);
+  border-color: #cbd5e1;
+  box-shadow: none;
+  transform: none;
+}
+
+.home-page .article-row:active {
+  background: #f8fafc;
 }
 
 .home-page .article-row strong {
-  color: #2563eb;
+  color: #334155;
   font-size: 15px;
 }
 
@@ -1018,6 +1433,7 @@ onMounted(() => {
   margin-left: 8px;
   color: #667085;
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .home-page .article-row p {
@@ -1027,34 +1443,30 @@ onMounted(() => {
   word-break: break-word;
 }
 
+.home-page .article-more {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #d6e4ff;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475467;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.home-page .article-more:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.home-page .article-more:active {
+  background: #e5eaf3;
+}
+
 .home-page .service-tile {
   min-height: 126px;
   padding: 16px;
-  animation: homeFadeUp 0.5s ease both;
-}
-
-.home-page .service-tile:nth-child(1) {
-  animation-delay: 0.08s;
-}
-
-.home-page .service-tile:nth-child(2) {
-  animation-delay: 0.12s;
-}
-
-.home-page .service-tile:nth-child(3) {
-  animation-delay: 0.16s;
-}
-
-.home-page .service-tile:nth-child(4) {
-  animation-delay: 0.2s;
-}
-
-.home-page .service-tile:nth-child(5) {
-  animation-delay: 0.24s;
-}
-
-.home-page .service-tile:nth-child(6) {
-  animation-delay: 0.28s;
+  overflow-wrap: anywhere;
 }
 
 .home-page .service-tile span {
@@ -1064,9 +1476,9 @@ onMounted(() => {
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-weight: 900;
+  background: #f1f5f9;
+  color: #475467;
+  font-weight: 600;
 }
 
 .home-page .service-tile strong,
@@ -1111,15 +1523,15 @@ onMounted(() => {
   width: 46px;
   height: 46px;
   border-radius: 8px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-weight: 900;
+  background: #f1f5f9;
+  color: #475467;
+  font-weight: 700;
 }
 
 .home-page .lawyer-row em {
-  color: #1d4ed8;
+  color: #475467;
   font-style: normal;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .home-page .order-entry {
@@ -1172,8 +1584,8 @@ onMounted(() => {
 }
 
 .home-page .icon-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 50%;
   background: #f3f6fb;
@@ -1192,6 +1604,7 @@ onMounted(() => {
   margin-top: 3px;
   color: #172033;
   font-size: 20px;
+  font-weight: 700;
 }
 
 .home-page .favorite-btn,
@@ -1204,6 +1617,7 @@ onMounted(() => {
 }
 
 .home-page .favorite-btn {
+  min-height: 44px;
   padding: 9px 14px;
   background: #f3f6fb;
   color: #475467;
@@ -1211,21 +1625,34 @@ onMounted(() => {
 
 .home-page .favorite-btn.active,
 .home-page .bottom-favorite.active {
-  color: #1d4ed8;
-  background: #eff6ff;
+  color: #334155;
+  background: #f1f5f9;
+}
+
+.home-page .favorite-btn:hover,
+.home-page .bottom-favorite:hover {
+  background: #eef3fa;
+  color: #334155;
+}
+
+.home-page .favorite-btn:active,
+.home-page .bottom-favorite:active {
+  background: #e5eaf3;
 }
 
 .home-page .detail-scroll {
   flex: 1;
   overflow-y: auto;
   padding: 24px 26px 120px;
+  content-visibility: auto;
+  contain-intrinsic-size: 680px;
 }
 
 .home-page .section-label {
   margin-bottom: 12px;
-  color: #2563eb;
+  color: #667085;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .home-page .article-full-text,
@@ -1240,6 +1667,7 @@ onMounted(() => {
   margin-bottom: 12px;
   color: #172033;
   font-size: 18px;
+  font-weight: 700;
 }
 
 .home-page .article-full-text p,
@@ -1248,6 +1676,7 @@ onMounted(() => {
   font-size: 18px;
   line-height: 2;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .home-page .explanation-feedback-actions {
@@ -1258,7 +1687,8 @@ onMounted(() => {
 
 .home-page .explanation-feedback-actions button {
   min-width: 88px;
-  height: 36px;
+  min-height: 44px;
+  padding: 8px 14px;
   border: 1px solid #d8dee9;
   border-radius: 999px;
   background: #ffffff;
@@ -1268,9 +1698,13 @@ onMounted(() => {
 }
 
 .home-page .explanation-feedback-actions button:hover {
-  border-color: #2563eb;
-  color: #2563eb;
-  background: #eff6ff;
+  border-color: #cbd5e1;
+  color: #334155;
+  background: #f8fafc;
+}
+
+.home-page .explanation-feedback-actions button:active {
+  background: #eef3fa;
 }
 
 .home-page .comment-head {
@@ -1303,13 +1737,14 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #e0ecff;
-  color: #1d4ed8;
-  font-weight: 700;
+  background: #f1f5f9;
+  color: #475467;
+  font-weight: 600;
 }
 
 .home-page .comment-meta {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 8px;
@@ -1317,6 +1752,7 @@ onMounted(() => {
 
 .home-page .comment-meta strong {
   color: #172033;
+  font-weight: 600;
 }
 
 .home-page .comment-meta span {
@@ -1356,6 +1792,12 @@ onMounted(() => {
   outline: none;
 }
 
+.home-page .detail-actions input:focus-visible {
+  background: #ffffff;
+  outline: 3px solid rgba(37, 99, 235, 0.28);
+  outline-offset: 2px;
+}
+
 .home-page .comment-submit {
   height: 44px;
   padding: 0 18px;
@@ -1363,8 +1805,17 @@ onMounted(() => {
   color: #ffffff;
 }
 
+.home-page .comment-submit:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.home-page .comment-submit:active:not(:disabled) {
+  background: #1d4ed8;
+}
+
 .home-page .comment-submit:disabled {
-  opacity: 0.6;
+  background: #98a2b3;
+  opacity: 1;
   cursor: not-allowed;
 }
 
@@ -1389,25 +1840,37 @@ onMounted(() => {
 .home-page .feedback-panel {
   position: relative;
   width: min(420px, 100%);
+  max-height: min(720px, calc(100vh - 48px));
+  overflow-y: auto;
   padding: 30px 24px 26px;
+  border: 1px solid #e5eaf3;
   border-radius: 16px;
   background: #ffffff;
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
   text-align: center;
 }
 
 .home-page .feedback-close {
   position: absolute;
-  right: 14px;
-  top: 12px;
-  width: 30px;
-  height: 30px;
+  right: 10px;
+  top: 8px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 50%;
   background: #f3f6fb;
   color: #667085;
   font-size: 20px;
   cursor: pointer;
+}
+
+.home-page .feedback-close:hover {
+  background: #eef3fa;
+  color: #334155;
+}
+
+.home-page .feedback-close:active {
+  background: #e5eaf3;
 }
 
 .home-page .feedback-kicker {
@@ -1419,6 +1882,7 @@ onMounted(() => {
   margin-top: 8px;
   color: #172033;
   font-size: 18px;
+  font-weight: 700;
 }
 
 .home-page .feedback-reasons {
@@ -1429,7 +1893,8 @@ onMounted(() => {
 }
 
 .home-page .feedback-reasons button {
-  height: 42px;
+  min-height: 44px;
+  padding: 8px 12px;
   border: 1px solid #e5eaf3;
   border-radius: 999px;
   background: #f8fafc;
@@ -1439,9 +1904,18 @@ onMounted(() => {
 }
 
 .home-page .feedback-reasons button.selected {
-  border-color: #f59e0b;
-  background: #fff7ed;
-  color: #b45309;
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.home-page .feedback-reasons button:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.home-page .feedback-reasons button:active {
+  background: #e5eaf3;
 }
 
 .home-page .feedback-textarea {
@@ -1460,10 +1934,16 @@ onMounted(() => {
   color: #172033;
   line-height: 1.6;
   box-sizing: border-box;
+  overflow-wrap: anywhere;
 }
 
 .home-page .feedback-textarea textarea:focus {
-  border-color: #f59e0b;
+  border-color: #2563eb;
+}
+
+.home-page .feedback-textarea textarea:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.22);
+  outline-offset: 2px;
 }
 
 .home-page .feedback-textarea span {
@@ -1480,67 +1960,34 @@ onMounted(() => {
   margin-top: 18px;
   border: 0;
   border-radius: 999px;
-  background: #d97706;
+  background: #475467;
   color: #ffffff;
-  font-weight: 800;
+  font-weight: 600;
   cursor: pointer;
 }
 
+.home-page .feedback-submit:hover:not(:disabled) {
+  background: #344054;
+}
+
+.home-page .feedback-submit:active:not(:disabled) {
+  background: #172033;
+}
+
 .home-page .feedback-submit:disabled {
-  opacity: 0.6;
+  background: #98a2b3;
+  opacity: 1;
   cursor: not-allowed;
 }
 
-@keyframes homeFadeUp {
-  from {
-    opacity: 0;
-    translate: 0 14px;
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
-@keyframes logoFloat {
+@keyframes homeSkeleton {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg);
+    background-position: 100% 0;
   }
 
   50% {
-    transform: translateY(-10px) rotate(1deg);
-  }
-}
-
-@keyframes logoGlow {
-  0%,
-  100% {
-    opacity: 0.68;
-    transform: scale(0.96);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.04);
-  }
-}
-
-@keyframes logoOrbit {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes logoDot {
-  0%,
-  100% {
-    transform: translate(116px, -58px) scale(1);
-  }
-
-  50% {
-    transform: translate(102px, -70px) scale(1.28);
+    background-position: 0 0;
   }
 }
 
@@ -1550,6 +1997,8 @@ onMounted(() => {
   .home-page *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }
@@ -1608,6 +2057,11 @@ onMounted(() => {
   .home-page .order-entry {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .home-page .home-back-top {
+    right: 14px;
+    bottom: 18px;
   }
 }
 </style>

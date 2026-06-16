@@ -1,0 +1,9 @@
+{
+  "files": [
+    "lvtu-front/index.html",
+    "lvtu-master-front/index.html"
+  ],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}

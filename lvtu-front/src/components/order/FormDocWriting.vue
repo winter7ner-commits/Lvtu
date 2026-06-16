@@ -228,7 +228,12 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRegionOptions } from './useRegionOptions'
 import { submitOrderForm } from './submitOrder'
 import { applyCurrentUserInfo } from './useCurrentUserInfo'
-import { commonOrderRules } from './validationRules'
+import {
+  commonOrderRules,
+  requiredArrayRule,
+  requiredTrimmedRule,
+  requireAllTermsRule
+} from './validationRules'
 
 const formRef = ref(null)
 const { regionOptions } = useRegionOptions()
@@ -268,23 +273,12 @@ const formData = reactive({
 
 const rules = {
   ...commonOrderRules,
-  region: [{ required: true, message: '请选择所在地区', trigger: 'change' }],
+  region: [requiredArrayRule('请选择所在地区')],
   documentType: [{ required: true, message: '请选择文书类型', trigger: 'change' }],
   documentPurpose: [{ required: true, message: '请选择文书用途', trigger: 'change' }],
-  eventDescription: [{ required: true, message: '请输入事件经过详细描述', trigger: 'blur' }],
-  otherPartyName: [{ required: true, message: '请输入对方姓名/公司名称', trigger: 'blur' }],
-  agreeTerms: [{ 
-    type: 'array', 
-    required: true, 
-    validator: (rule, value, callback) => {
-      if (value.length < 4) {
-        callback(new Error('请阅读并勾选所有的授权与确认项'))
-      } else {
-        callback()
-      }
-    },
-    trigger: 'change' 
-  }]
+  eventDescription: [requiredTrimmedRule('请输入事件经过详细描述')],
+  otherPartyName: [requiredTrimmedRule('请输入对方姓名/公司名称')],
+  agreeTerms: [requireAllTermsRule]
 }
 
 onMounted(() => applyCurrentUserInfo(formData))

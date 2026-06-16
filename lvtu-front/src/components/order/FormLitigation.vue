@@ -237,7 +237,12 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRegionOptions } from './useRegionOptions'
 import { submitOrderForm } from './submitOrder'
 import { applyCurrentUserInfo } from './useCurrentUserInfo'
-import { commonOrderRules } from './validationRules'
+import {
+  commonOrderRules,
+  requiredArrayRule,
+  requiredTrimmedRule,
+  requireAllTermsRule
+} from './validationRules'
 
 const formRef = ref(null)
 const { regionOptions } = useRegionOptions()
@@ -278,34 +283,13 @@ const formData = reactive({
 
 const rules = {
   ...commonOrderRules,
-  region: [{ required: true, message: '请选择所在地区', trigger: 'change' }],
+  region: [requiredArrayRule('请选择所在地区')],
   caseType: [{ required: true, message: '请选择案件类型', trigger: 'change' }],
   currentStage: [{ required: true, message: '请选择当前阶段', trigger: 'change' }],
-  oppositePartyName: [{ required: true, message: '请输入对方姓名/公司名称', trigger: 'blur' }],
-  existingMaterials: [{ 
-    type: 'array', 
-    required: true, 
-    message: '请至少选择一项已有材料',
-    trigger: 'change' 
-  }],
-  expectedService: [{ 
-    type: 'array', 
-    required: true, 
-    message: '请至少选择一项期望的律师服务',
-    trigger: 'change' 
-  }],
-  agreeTerms: [{ 
-    type: 'array', 
-    required: true, 
-    validator: (rule, value, callback) => {
-      if (value.length < 4) {
-        callback(new Error('请阅读并勾选所有的授权与确认项'))
-      } else {
-        callback()
-      }
-    },
-    trigger: 'change' 
-  }]
+  oppositePartyName: [requiredTrimmedRule('请输入对方姓名/公司名称')],
+  existingMaterials: [requiredArrayRule('请至少选择一项已有材料')],
+  expectedService: [requiredArrayRule('请至少选择一项期望的律师服务')],
+  agreeTerms: [requireAllTermsRule]
 }
 
 onMounted(() => applyCurrentUserInfo(formData))

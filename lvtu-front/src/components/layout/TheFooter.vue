@@ -63,7 +63,7 @@
       <div class="footer-bottom">
         <div class="footer-left">
           <p class="copyright">
-            &copy; 2024 LVTU Law Services. All rights reserved.
+            &copy; 2026 LVTU Law Services. All rights reserved.
           </p>
           <div class="footer-policies">
             <a href="#" class="policy-link">隐私政策</a>

@@ -26,7 +26,7 @@ const getCurrentUser = () => {
 
 const normalizeAmount = (budget, serviceTypeId) => {
   const value = Number(budget)
-  if (Number.isFinite(value) && value >= 0) {
+  if (Number.isFinite(value) && value > 0) {
     return value
   }
   return DEFAULT_AMOUNTS[serviceTypeId] || 0

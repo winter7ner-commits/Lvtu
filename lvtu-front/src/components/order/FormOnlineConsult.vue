@@ -218,7 +218,12 @@ import { useRoute } from 'vue-router'
 import { useRegionOptions } from './useRegionOptions'
 import { submitOrderForm } from './submitOrder'
 import { applyCurrentUserInfo } from './useCurrentUserInfo'
-import { commonOrderRules } from './validationRules'
+import {
+  commonOrderRules,
+  requiredArrayRule,
+  requiredTrimmedRule,
+  requireAllTermsRule
+} from './validationRules'
 
 const route = useRoute()
 const formRef = ref(null)
@@ -258,28 +263,12 @@ const formData = reactive({
 
 const rules = {
   ...commonOrderRules,
-  region: [{ required: true, message: '请选择所在地区', trigger: 'change' }],
+  region: [requiredArrayRule('请选择所在地区')],
   consultationType: [{ required: true, message: '请选择咨询类型', trigger: 'change' }],
-  problemTitle: [{ required: true, message: '请输入问题标题', trigger: 'blur' }],
-  problemDescription: [{ required: true, message: '请输入问题详细描述', trigger: 'blur' }],
-  helpExpected: [{ 
-    type: 'array', 
-    required: true, 
-    message: '请至少选择一项希望获得的帮助',
-    trigger: 'change' 
-  }],
-  agreeTerms: [{ 
-    type: 'array', 
-    required: true, 
-    validator: (rule, value, callback) => {
-      if (value.length < 4) {
-        callback(new Error('请阅读并勾选所有的授权与确认项'))
-      } else {
-        callback()
-      }
-    },
-    trigger: 'change' 
-  }]
+  problemTitle: [requiredTrimmedRule('请输入问题标题')],
+  problemDescription: [requiredTrimmedRule('请输入问题详细描述')],
+  helpExpected: [requiredArrayRule('请至少选择一项希望获得的帮助')],
+  agreeTerms: [requireAllTermsRule]
 }
 
 onMounted(() => applyCurrentUserInfo(formData))
