@@ -96,7 +96,7 @@ const router = useRouter()
 const application = ref(null)
 const previewImage = ref(null)
 const loading = ref(false)
-const BASE_URL = 'http://localhost:8080'
+const BASE_URL = ''
 
 const getFullImageUrl = (url) => {
   if (!url) return ''

@@ -164,8 +164,8 @@ const previewUrl = ref(null)
 const getFullImageUrl = (url) => {
   if (!url) return ''
   if (url.startsWith('http://') || url.startsWith('https://')) return url
-  if (url.startsWith('/')) return 'http://localhost:8080' + url
-  return 'http://localhost:8080/' + url
+  if (url.startsWith('/')) return url
+  return '/' + url
 }
 const openPreview = (url) => { previewUrl.value = url }
 const statusTabs = [

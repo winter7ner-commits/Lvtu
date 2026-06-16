@@ -2,7 +2,7 @@
 import axios from 'axios'
 
 // 后端API基础URL
-const baseURL = 'http://localhost:8080/api'
+const baseURL = '/api'
 
 // 法律法规分类API
 const categoryAPI = {
