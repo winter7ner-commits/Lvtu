@@ -13,6 +13,10 @@ const props = defineProps({
 
 const rating = computed(() => Number(props.lawyer.rating || 0))
 const practiceYears = computed(() => Number(props.lawyer.practiceYears || 0))
+const reviewCount = computed(() => Number(props.lawyer.reviewCount || props.lawyer.review_count || 0))
+const latestReviewContent = computed(() => {
+  return props.lawyer.latestReviewContent || props.lawyer.latest_review_content || ''
+})
 
 const specialtyNames = computed(() => {
   return (props.lawyer.specialties || [])
@@ -74,9 +78,17 @@ const goDetail = () => {
           <strong>{{ practiceYears || '-' }} 年</strong>
         </div>
         <div>
-          <span>服务评分</span>
-          <strong>{{ rating.toFixed(1) }} 分</strong>
+          <span>用户评价</span>
+          <strong>{{ reviewCount }} 条</strong>
         </div>
+      </div>
+
+      <div class="review-strip">
+        <div>
+          <span>评分</span>
+          <strong>{{ rating.toFixed(1) }}</strong>
+        </div>
+        <p>{{ latestReviewContent || '暂无用户文字评价，可进入详情页查看评分与服务信息。' }}</p>
       </div>
 
       <p class="description">
@@ -226,6 +238,46 @@ h3 {
   line-height: 1.7;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.review-strip {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.review-strip div {
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+
+.review-strip span {
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.review-strip strong {
+  color: #ea580c;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.review-strip p {
+  margin: 0;
+  color: #7c2d12;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .card-footer {

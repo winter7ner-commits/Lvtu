@@ -1,11 +1,18 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getRevisionLimitConfig, updateRevisionLimitConfig } from '../../api/admin'
+import {
+  getRevisionLimitConfig,
+  updateRevisionLimitConfig,
+  getCancelCoolingDaysConfig,
+  updateCancelCoolingDaysConfig
+} from '../../api/admin'
 
 const loading = ref(false)
 const saving = ref(false)
+const savingCancel = ref(false)
 const maxRevisionRequestCount = ref(2)
+const cancelCoolingDays = ref(7)
 
 const load = async () => {
   loading.value = true
@@ -14,8 +21,32 @@ const load = async () => {
     if (result.code === 200) {
       maxRevisionRequestCount.value = Number(result.data?.maxRevisionRequestCount || 2)
     }
+    const cancelResult = await getCancelCoolingDaysConfig()
+    if (cancelResult.code === 200) {
+      cancelCoolingDays.value = Number(cancelResult.data?.cancelCoolingDays || 7)
+    }
   } finally {
     loading.value = false
+  }
+}
+
+const saveCancelCoolingDays = async () => {
+  const value = Number(cancelCoolingDays.value)
+  if (Number.isNaN(value) || value < 1 || value > 30) {
+    ElMessage.error('注销冷静期需要在 1 到 30 天之间')
+    return
+  }
+  savingCancel.value = true
+  try {
+    const result = await updateCancelCoolingDaysConfig(value)
+    if (result.code === 200) {
+      cancelCoolingDays.value = Number(result.data?.cancelCoolingDays || value)
+      ElMessage.success('注销冷静期已保存')
+    } else {
+      ElMessage.error(result.message || '保存失败')
+    }
+  } finally {
+    savingCancel.value = false
   }
 }
 
@@ -66,6 +97,20 @@ onMounted(load)
         </button>
       </div>
     </section>
+
+    <section class="settings-card">
+      <div class="setting-main">
+        <span>账号注销冷静期</span>
+        <strong>用户申请注销后 {{ cancelCoolingDays }} 天正式生效</strong>
+        <p>冷静期内用户可登录并取消注销；冷静期结束后账号不可恢复，历史订单和评价保留并脱敏展示。</p>
+      </div>
+      <div class="setting-control">
+        <input v-model.number="cancelCoolingDays" type="number" min="1" max="30" :disabled="loading" />
+        <button class="primary-btn" type="button" :disabled="savingCancel || loading" @click="saveCancelCoolingDays">
+          {{ savingCancel ? '保存中' : '保存设置' }}
+        </button>
+      </div>
+    </section>
   </main>
 </template>
 
@@ -77,7 +122,7 @@ onMounted(load)
 .page-head p { margin: 0; color: #64748b; }
 .primary-btn { border: 0; border-radius: 4px; background: #2563eb; color: #fff; padding: 10px 18px; font-weight: 700; cursor: pointer; }
 .primary-btn:disabled { opacity: .6; cursor: not-allowed; }
-.settings-card { display: flex; justify-content: space-between; gap: 28px; align-items: center; background: #fff; border-radius: 8px; padding: 28px 32px; box-shadow: 0 8px 24px rgba(15, 23, 42, .08); }
+.settings-card { display: flex; justify-content: space-between; gap: 28px; align-items: center; background: #fff; border-radius: 8px; padding: 28px 32px; box-shadow: 0 8px 24px rgba(15, 23, 42, .08); margin-bottom: 18px; }
 .setting-main { display: grid; gap: 8px; }
 .setting-main span { color: #64748b; font-weight: 700; }
 .setting-main strong { color: #0f172a; font-size: 22px; }
@@ -85,4 +130,3 @@ onMounted(load)
 .setting-control { display: flex; gap: 12px; align-items: center; }
 .setting-control input { width: 120px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px 12px; font-size: 16px; }
 </style>
-

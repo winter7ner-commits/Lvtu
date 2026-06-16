@@ -8,3 +8,7 @@ dist/
 hs_err_pid*.log
 lvtu-server/hs_err_pid*.log
 lvtu-server/lvtu_uploads/
+*.doc
+*.docx
+__pycache__/
+*.pyc

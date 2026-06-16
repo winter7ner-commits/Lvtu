@@ -18,6 +18,9 @@ public class UserDTO {
     private Integer authStatus;
     private String region;
     private LocalDateTime createdTime;
+    private LocalDateTime cancelRequestedAt;
+    private LocalDateTime cancelEffectiveAt;
+    private Integer cancelCoolingDays;
 
     public static UserDTO from(User user) {
         if (user == null) {
@@ -36,6 +39,9 @@ public class UserDTO {
         dto.setAuthStatus(user.getAuthStatus());
         dto.setRegion(user.getRegion());
         dto.setCreatedTime(user.getCreatedTime());
+        dto.setCancelRequestedAt(user.getCancelRequestedAt());
+        dto.setCancelEffectiveAt(user.getCancelEffectiveAt());
+        dto.setCancelCoolingDays(user.getCancelCoolingDays());
         return dto;
     }
 
@@ -133,6 +139,30 @@ public class UserDTO {
 
     public void setCreatedTime(LocalDateTime createdTime) {
         this.createdTime = createdTime;
+    }
+
+    public LocalDateTime getCancelRequestedAt() {
+        return cancelRequestedAt;
+    }
+
+    public void setCancelRequestedAt(LocalDateTime cancelRequestedAt) {
+        this.cancelRequestedAt = cancelRequestedAt;
+    }
+
+    public LocalDateTime getCancelEffectiveAt() {
+        return cancelEffectiveAt;
+    }
+
+    public void setCancelEffectiveAt(LocalDateTime cancelEffectiveAt) {
+        this.cancelEffectiveAt = cancelEffectiveAt;
+    }
+
+    public Integer getCancelCoolingDays() {
+        return cancelCoolingDays;
+    }
+
+    public void setCancelCoolingDays(Integer cancelCoolingDays) {
+        this.cancelCoolingDays = cancelCoolingDays;
     }
 
     private static String normalizeAdminRole(User user) {

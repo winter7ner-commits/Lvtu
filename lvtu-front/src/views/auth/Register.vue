@@ -2,18 +2,18 @@
   <div class="auth-page">
     <div class="auth-card">
       <h2>注册</h2>
-      <el-form :model="form" label-position="top">
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="form.username" maxlength="6" show-word-limit placeholder="3-6个字符，字母/数字/下划线/连字符" />
         </el-form-item>
-        <el-form-item label="密码">
-          <el-input type="password" v-model="form.password" placeholder="请输入密码" show-password />
+        <el-form-item label="密码" prop="password">
+          <el-input type="password" v-model="form.password" maxlength="16" show-password placeholder="6-16位，含数字、小写字母、大写字母" />
         </el-form-item>
-        <el-form-item label="邮箱">
+        <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" placeholder="请输入邮箱" />
         </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="form.phone" placeholder="请输入手机号" />
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="form.phone" maxlength="11" show-word-limit placeholder="请输入11位手机号" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSubmit" :loading="loading" class="submit-btn">注册</el-button>
@@ -35,12 +35,30 @@ import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const loading = ref(false)
+const formRef = ref(null)
 const form = ref({ username: '', password: '', email: '', phone: '' })
 
+const rules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { pattern: /^[A-Za-z0-9_-]{3,6}$/, message: '用户名需为3-6个字符，只能包含字母、数字、下划线和连字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,16}$/, message: '密码需为6-16位，且包含数字、小写字母和大写字母', trigger: 'blur' }
+  ],
+  email: [
+    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
+  ]
+}
+
 const handleSubmit = async () => {
-  if (!form.value.username || !form.value.password) {
-    return ElMessage.warning('请输入用户名和密码')
-  }
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) return
   loading.value = true
   try {
     const response = await register(form.value)
@@ -51,7 +69,7 @@ const handleSubmit = async () => {
       ElMessage.error(response?.message || '注册失败')
     }
   } catch (error) {
-    ElMessage.error('注册失败，请稍后重试')
+    ElMessage.error(error?.response?.data?.message || '注册失败，请稍后重试')
   } finally {
     loading.value = false
   }

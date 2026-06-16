@@ -109,6 +109,10 @@ const isLoggedIn = computed(() => {
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
   return !!localStorage.getItem('authToken') && !!currentUser
 })
+const isVerifiedUser = computed(() => {
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null')
+  return currentUser?.isVerified === true
+})
 
 const highlights = computed(() => [
   { label: '服务评分', value: rating.value.toFixed(1), suffix: '分' },
@@ -133,6 +137,11 @@ const createConsultOrder = () => {
 
   if (!isLoggedIn.value) {
     promptLogin(router, targetRoute, '登录或注册后，你可以指定该律师发起在线咨询，并跟进订单处理进度。')
+    return
+  }
+  if (!isVerifiedUser.value) {
+    ElMessage.warning('请先完成实名认证后再指定律师发起咨询')
+    router.push('/auth-center')
     return
   }
 

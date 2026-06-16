@@ -18,6 +18,9 @@ public class User {
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
     private String region;
+    private LocalDateTime cancelRequestedAt;
+    private LocalDateTime cancelEffectiveAt;
+    private Integer cancelCoolingDays;
 
     public Long getUserId() {
         return userId;
@@ -129,5 +132,29 @@ public class User {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public LocalDateTime getCancelRequestedAt() {
+        return cancelRequestedAt;
+    }
+
+    public void setCancelRequestedAt(LocalDateTime cancelRequestedAt) {
+        this.cancelRequestedAt = cancelRequestedAt;
+    }
+
+    public LocalDateTime getCancelEffectiveAt() {
+        return cancelEffectiveAt;
+    }
+
+    public void setCancelEffectiveAt(LocalDateTime cancelEffectiveAt) {
+        this.cancelEffectiveAt = cancelEffectiveAt;
+    }
+
+    public Integer getCancelCoolingDays() {
+        return cancelCoolingDays;
+    }
+
+    public void setCancelCoolingDays(Integer cancelCoolingDays) {
+        this.cancelCoolingDays = cancelCoolingDays;
     }
 }

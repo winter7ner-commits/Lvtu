@@ -1,10 +1,16 @@
 package com.bitzh.lvtu.controller;
 
 import com.bitzh.lvtu.common.ApiResponse;
+import com.bitzh.lvtu.dto.UserVerificationDTO;
+import com.bitzh.lvtu.entity.User;
 import com.bitzh.lvtu.service.AdminPermissionService;
+import com.bitzh.lvtu.service.UserService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,10 +23,12 @@ public class AdminDataController {
 
     private final JdbcTemplate jdbcTemplate;
     private final AdminPermissionService adminPermissionService;
+    private final UserService userService;
 
-    public AdminDataController(JdbcTemplate jdbcTemplate, AdminPermissionService adminPermissionService) {
+    public AdminDataController(JdbcTemplate jdbcTemplate, AdminPermissionService adminPermissionService, UserService userService) {
         this.jdbcTemplate = jdbcTemplate;
         this.adminPermissionService = adminPermissionService;
+        this.userService = userService;
     }
 
     @GetMapping("/users")
@@ -48,6 +56,30 @@ public class AdminDataController {
                 ORDER BY a.create_time DESC, a.application_id DESC
                 """;
         return ApiResponse.success(jdbcTemplate.queryForList(sql));
+    }
+
+    @GetMapping("/realname-verifications")
+    public ApiResponse<List<UserVerificationDTO>> realnameVerifications(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "CERT_AUDITOR");
+        return ApiResponse.success(userService.listVerifications());
+    }
+
+    @PostMapping("/realname-verifications/{verificationId}/approve")
+    public ApiResponse<String> approveRealnameVerification(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                                          @PathVariable Long verificationId) {
+        User admin = adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "CERT_AUDITOR");
+        userService.approveVerification(verificationId, admin.getUserId());
+        return ApiResponse.success("实名认证审核通过", null);
+    }
+
+    @PostMapping("/realname-verifications/{verificationId}/reject")
+    public ApiResponse<String> rejectRealnameVerification(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                                         @PathVariable Long verificationId,
+                                                         @RequestBody Map<String, String> body) {
+        User admin = adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "CERT_AUDITOR");
+        String reason = body == null ? null : body.get("rejectReason");
+        userService.rejectVerification(verificationId, admin.getUserId(), reason);
+        return ApiResponse.success("实名认证已驳回", null);
     }
 
     @GetMapping("/orders")

@@ -67,6 +67,8 @@ public class AuthController {
             data.put("token", token);
             data.put("user", UserDTO.from(user));
             return ApiResponse.success(data);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.fail(401, e.getMessage());
         } catch (Exception e) {
             return ApiResponse.fail(500, "登录失败");
         }
@@ -84,6 +86,8 @@ public class AuthController {
             data.put("token", token);
             data.put("user", UserDTO.from(user));
             return ApiResponse.success(data);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.fail(401, e.getMessage());
         } catch (Exception e) {
             return ApiResponse.fail(500, "管理员登录失败");
         }

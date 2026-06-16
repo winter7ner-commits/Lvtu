@@ -10,6 +10,11 @@ public class LegalDocument {
     private String name;
     private Long categoryId;
     private LocalDate publishDate;
+    private String lawLevel;
+    private String effectiveStatus;
+    private String sourceName;
+    private String sourceUrl;
+    private String summary;
     private Integer sortOrder;
     private Integer status;
     private LocalDateTime createdAt;

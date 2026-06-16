@@ -28,6 +28,8 @@ public class LawyerDTO {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private String licenseNo;
+    private Integer reviewCount;
+    private String latestReviewContent;
 
     public Long getLawyerId() {
         return lawyerId;
@@ -155,6 +157,22 @@ public class LawyerDTO {
 
     public void setLicenseNo(String licenseNo) {
         this.licenseNo = licenseNo;
+    }
+
+    public Integer getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(Integer reviewCount) {
+        this.reviewCount = reviewCount;
+    }
+
+    public String getLatestReviewContent() {
+        return latestReviewContent;
+    }
+
+    public void setLatestReviewContent(String latestReviewContent) {
+        this.latestReviewContent = latestReviewContent;
     }
 
 }

@@ -35,6 +35,8 @@
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
         <result property="licenseNo" column="license_no"/>
+        <result property="reviewCount" column="review_count"/>
+        <result property="latestReviewContent" column="latest_review_content"/>
         <!-- 使用自定义TypeHandler处理JSON字符串到List<SpecialtyDTO>的转换 -->
         <result property="specialties" column="specialties" typeHandler="com.bitzh.lvtu.config.SpecialtiesJsonTypeHandler"/>
     </resultMap>
@@ -56,6 +58,8 @@
             u.auth_status AS audit_status,
             NULL AS audit_remark,
             v.real_name,
+            (SELECT COUNT(*) FROM evaluation e WHERE e.lawyer_id = l.lawyer_id AND e.status = 'normal') AS review_count,
+            (SELECT e.content FROM evaluation e WHERE e.lawyer_id = l.lawyer_id AND e.status = 'normal' AND e.content IS NOT NULL AND e.content != '' ORDER BY e.created_time DESC LIMIT 1) AS latest_review_content,
             GROUP_CONCAT(DISTINCT s.name) AS specialty,
             COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
         FROM lawyer l
@@ -86,6 +90,8 @@
             u.auth_status AS audit_status,
             NULL AS audit_remark,
             v.real_name,
+            (SELECT COUNT(*) FROM evaluation e WHERE e.lawyer_id = l.lawyer_id AND e.status = 'normal') AS review_count,
+            (SELECT e.content FROM evaluation e WHERE e.lawyer_id = l.lawyer_id AND e.status = 'normal' AND e.content IS NOT NULL AND e.content != '' ORDER BY e.created_time DESC LIMIT 1) AS latest_review_content,
             GROUP_CONCAT(DISTINCT s.name) AS specialty,
             COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
         FROM lawyer l
@@ -117,6 +123,8 @@
             l.create_time,
             NULL AS update_time,
             l.license_no,
+            (SELECT COUNT(*) FROM evaluation e WHERE e.lawyer_id = l.lawyer_id AND e.status = 'normal') AS review_count,
+            (SELECT e.content FROM evaluation e WHERE e.lawyer_id = l.lawyer_id AND e.status = 'normal' AND e.content IS NOT NULL AND e.content != '' ORDER BY e.created_time DESC LIMIT 1) AS latest_review_content,
             GROUP_CONCAT(DISTINCT s.name) AS specialty,
             COALESCE(JSON_ARRAYAGG(JSON_OBJECT('id', s.specialty_id, 'specialtyId', s.specialty_id, 'name', s.name)), JSON_ARRAY()) AS specialties
         FROM lawyer l

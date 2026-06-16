@@ -1,5 +1,19 @@
 USE lvtu;
 
+CREATE TABLE IF NOT EXISTS system_config (
+    config_key VARCHAR(100) PRIMARY KEY COMMENT '配置键',
+    config_value VARCHAR(100) NOT NULL COMMENT '配置值',
+    description VARCHAR(255) DEFAULT NULL COMMENT '配置说明',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) COMMENT='系统配置表';
+
+INSERT INTO system_config (config_key, config_value, description) VALUES
+    ('order.max_revision_request_count', '2', '订单服务结果最多可申请修改次数'),
+    ('account.cancel_cooling_days', '7', '账号注销冷静期天数')
+ON DUPLICATE KEY UPDATE
+    config_value = VALUES(config_value),
+    description = VALUES(description);
+
 CREATE TABLE IF NOT EXISTS service_result (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '服务结果ID',
     order_id BIGINT NOT NULL COMMENT '订单ID',

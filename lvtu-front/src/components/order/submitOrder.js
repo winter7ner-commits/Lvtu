@@ -76,6 +76,11 @@ export const submitOrderForm = async ({ formRef, formData, serviceTypeId, target
     return null
   }
 
+  if (currentUser?.isVerified !== true) {
+    ElMessage.warning('请先完成实名认证后再发布服务订单')
+    return null
+  }
+
   const userId = getCurrentUserId()
   if (!userId) {
     ElMessage.warning('请先登录后再提交订单')

@@ -53,6 +53,28 @@ public class AdminOrderInterventionController {
         return ApiResponse.success(data);
     }
 
+    @GetMapping("/settings/cancel-cooling-days")
+    public ApiResponse<Map<String, Integer>> getCancelCoolingDays(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN");
+        Map<String, Integer> data = new HashMap<>();
+        data.put("cancelCoolingDays", systemConfigService.getAccountCancelCoolingDays());
+        return ApiResponse.success(data);
+    }
+
+    @PutMapping("/settings/cancel-cooling-days")
+    public ApiResponse<Map<String, Integer>> updateCancelCoolingDays(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                                                    @RequestBody Map<String, Integer> request) {
+        adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN");
+        Integer value = request == null ? null : request.get("cancelCoolingDays");
+        if (value == null) {
+            throw new IllegalArgumentException("注销冷静期天数不能为空");
+        }
+        systemConfigService.updateAccountCancelCoolingDays(value);
+        Map<String, Integer> data = new HashMap<>();
+        data.put("cancelCoolingDays", systemConfigService.getAccountCancelCoolingDays());
+        return ApiResponse.success(data);
+    }
+
     @GetMapping("/interventions")
     public ApiResponse<List<Map<String, Object>>> listInterventions(@RequestHeader(value = "Authorization", required = false) String authorization) {
         adminPermissionService.requireAdmin(authorization, "SUPER_ADMIN", "CUSTOMER_SERVICE");

@@ -110,7 +110,11 @@
           </div>
           <div class="account-item">
             <span class="account-label">账户状态</span>
-            <span class="account-value status-active">正常</span>
+            <span class="account-value" :class="accountStatusClass">{{ accountStatusLabel }}</span>
+          </div>
+          <div v-if="form.status === 3" class="account-item">
+            <span class="account-label">注销生效时间</span>
+            <span class="account-value">{{ formatDateTime(form.cancelEffectiveAt) }}</span>
           </div>
           <div class="account-item">
             <span class="account-label">律师认证</span>
@@ -127,7 +131,8 @@
         <div class="security-actions">
           <button class="security-btn" @click="goChangePassword">修改密码</button>
           <button class="security-btn danger" @click="handleLogout">退出登录</button>
-          <button class="security-btn danger" @click="handleDeactivate">注销账号</button>
+          <button v-if="form.status === 3" class="security-btn" @click="handleCancelDeactivate">取消注销</button>
+          <button v-else class="security-btn danger" @click="handleDeactivate">注销账号</button>
         </div>
       </div>
     </div>
@@ -138,7 +143,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
-import { updateUserProfile, uploadAvatar, deactivateUser } from '../../api/user'
+import { updateUserProfile, uploadAvatar, deactivateUser, cancelDeactivateUser } from '../../api/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
@@ -165,6 +170,10 @@ const form = ref({
   userType: 1,
   authStatus: 0,
   createdTime: '',
+  status: 1,
+  cancelRequestedAt: '',
+  cancelEffectiveAt: '',
+  cancelCoolingDays: null,
 })
 
 const formBackup = ref({})
@@ -189,6 +198,17 @@ const authStatusClass = computed(() => {
   return classes[form.value.authStatus] || ''
 })
 
+const accountStatusLabel = computed(() => {
+  const labels = { 0: '已冻结', 1: '正常', 2: '已封禁', 3: '注销冷静期', 4: '已注销' }
+  return labels[form.value.status] || '未知'
+})
+
+const accountStatusClass = computed(() => {
+  if (form.value.status === 1) return 'status-active'
+  if (form.value.status === 3) return 'status-pending'
+  return 'status-danger'
+})
+
 const loadUserInfo = () => {
   const user = authStore.user
   if (user) {
@@ -202,6 +222,10 @@ const loadUserInfo = () => {
       userType: user.userType || 1,
       authStatus: user.authStatus || 0,
       createdTime: user.createdTime || '',
+      status: user.status ?? 1,
+      cancelRequestedAt: user.cancelRequestedAt || '',
+      cancelEffectiveAt: user.cancelEffectiveAt || '',
+      cancelCoolingDays: user.cancelCoolingDays || null,
     }
   }
 }
@@ -272,7 +296,7 @@ const handleAvatarChange = async (event) => {
 }
 
 const goVerify = () => {
-  ElMessage.info('实名认证功能开发中')
+  router.push('/user/realname')
 }
 
 const goChangePassword = () => {
@@ -290,9 +314,8 @@ const handleLogout = () => {
   }).catch(() => {})
 }
 
-// 新增：注销账号逻辑
 const handleDeactivate = () => {
-  ElMessageBox.confirm('注销账号后数据将无法恢复，确定要注销吗？', '危险操作', {
+  ElMessageBox.confirm('确认后账号将进入注销冷静期。冷静期内可登录并取消注销；冷静期结束后账号不可恢复，历史订单和评价将保留并脱敏展示。', '确认注销账号', {
     confirmButtonText: '确认注销',
     cancelButtonText: '取消',
     type: 'error'
@@ -300,14 +323,35 @@ const handleDeactivate = () => {
     try {
       const res = await deactivateUser()
       if (res?.code === 200) {
-        ElMessage.success('账号已注销')
-        authStore.logout()
-        router.push('/login')
+        ElMessage.success(res.message || '账号已进入注销冷静期')
+        await authStore.initAuth()
+        loadUserInfo()
       } else {
         ElMessage.error(res?.message || '注销失败')
       }
     } catch (error) {
       ElMessage.error('注销请求失败，请稍后重试')
+    }
+  }).catch(() => {})
+}
+
+const handleCancelDeactivate = () => {
+  ElMessageBox.confirm('确定取消账号注销吗？取消后账号将恢复正常使用。', '取消注销', {
+    confirmButtonText: '确定取消',
+    cancelButtonText: '返回',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      const res = await cancelDeactivateUser()
+      if (res?.code === 200) {
+        ElMessage.success('已取消注销')
+        await authStore.initAuth()
+        loadUserInfo()
+      } else {
+        ElMessage.error(res?.message || '取消注销失败')
+      }
+    } catch {
+      ElMessage.error('取消注销请求失败，请稍后重试')
     }
   }).catch(() => {})
 }
@@ -633,6 +677,14 @@ onMounted(() => {
 
 .status-active {
   color: #52c41a;
+}
+
+.status-pending {
+  color: #fa8c16;
+}
+
+.status-danger {
+  color: #ff4d4f;
 }
 
 .auth-none {

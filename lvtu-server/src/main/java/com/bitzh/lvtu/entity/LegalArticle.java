@@ -9,7 +9,10 @@ public class LegalArticle {
     private Long documentId;
     private String articleNumber;
     private String title;
+    private String chapterTitle;
+    private String sectionTitle;
     private String content;
+    private String sourceUrl;
     private Integer sortOrder;
     private Integer status;
     private LocalDateTime createdAt;

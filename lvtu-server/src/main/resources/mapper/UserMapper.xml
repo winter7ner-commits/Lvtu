@@ -20,9 +20,13 @@
         <result property="createdTime" column="created_time"/>
         <result property="updatedTime" column="updated_time"/>
         <result property="region" column="region"/>
+        <result property="cancelRequestedAt" column="cancel_requested_at"/>
+        <result property="cancelEffectiveAt" column="cancel_effective_at"/>
+        <result property="cancelCoolingDays" column="cancel_cooling_days"/>
     </resultMap>
 
     <resultMap id="userVerificationMap" type="com.bitzh.lvtu.dto.UserVerificationDTO">
+        <id property="verificationId" column="verification_id"/>
         <id property="userId" column="user_id"/>
         <result property="username" column="username"/>
         <result property="phone" column="phone"/>
@@ -31,7 +35,14 @@
         <result property="isVerified" column="is_verified"/>
         <result property="realName" column="real_name"/>
         <result property="idCardNumber" column="id_card_number"/>
+        <result property="idCardFrontUrl" column="id_card_front_url"/>
+        <result property="idCardBackUrl" column="id_card_back_url"/>
         <result property="verificationStatus" column="verification_status"/>
+        <result property="rejectReason" column="reject_reason"/>
+        <result property="reviewerId" column="reviewer_id"/>
+        <result property="reviewedTime" column="reviewed_time"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="updatedTime" column="updated_time"/>
     </resultMap>
 
     <select id="selectByUsername" resultMap="userMap">
@@ -44,6 +55,13 @@
 
     <select id="selectByPhone" resultMap="userMap">
         SELECT * FROM users WHERE phone = #{phone} LIMIT 1
+    </select>
+
+    <select id="selectByLoginAccount" resultMap="userMap">
+        SELECT * FROM users
+        WHERE username = #{account} OR phone = #{account}
+        ORDER BY user_id ASC
+        LIMIT 1
     </select>
 
     <select id="selectById" resultMap="userMap">
@@ -60,11 +78,67 @@
             u.is_verified,
             uv.real_name,
             uv.id_card_number,
-            uv.verification_status
+            uv.id_card_front_url,
+            uv.id_card_back_url,
+            uv.verification_status,
+            uv.reject_reason,
+            uv.reviewer_id,
+            uv.reviewed_time,
+            uv.created_time,
+            uv.updated_time
         FROM users u
                  LEFT JOIN users_verfications uv ON u.user_id = uv.user_id
         WHERE u.user_id = #{userId}
         LIMIT 1
+    </select>
+
+    <select id="selectVerificationById" resultMap="userVerificationMap">
+        SELECT
+            uv.verification_id,
+            uv.user_id,
+            u.username,
+            u.phone,
+            u.user_type,
+            u.auth_status,
+            u.is_verified,
+            uv.real_name,
+            uv.id_card_number,
+            uv.id_card_front_url,
+            uv.id_card_back_url,
+            uv.verification_status,
+            uv.reject_reason,
+            uv.reviewer_id,
+            uv.reviewed_time,
+            uv.created_time,
+            uv.updated_time
+        FROM users_verfications uv
+                 LEFT JOIN users u ON uv.user_id = u.user_id
+        WHERE uv.verification_id = #{verificationId}
+        LIMIT 1
+    </select>
+
+    <select id="selectAllVerifications" resultMap="userVerificationMap">
+        SELECT
+            uv.verification_id,
+            uv.user_id,
+            u.username,
+            u.phone,
+            u.user_type,
+            u.auth_status,
+            u.is_verified,
+            uv.real_name,
+            uv.id_card_number,
+            uv.id_card_front_url,
+            uv.id_card_back_url,
+            uv.verification_status,
+            uv.reject_reason,
+            uv.reviewer_id,
+            uv.reviewed_time,
+            uv.created_time,
+            uv.updated_time
+        FROM users_verfications uv
+                 LEFT JOIN users u ON uv.user_id = u.user_id
+        ORDER BY uv.created_time DESC, uv.verification_id DESC
     </select>
 
     <insert id="insertUser" useGeneratedKeys="true" keyProperty="userId">
@@ -72,6 +146,25 @@
             (username, password_hash, phone, email, avatar_url, user_type, admin_role, status, is_verified, auth_status, region)
         VALUES
             (#{username}, #{passwordHash}, #{phone}, #{email}, #{avatarUrl}, #{userType}, #{adminRole}, #{status}, #{isVerified}, #{authStatus}, #{region})
+    </insert>
+
+    <insert id="upsertVerification">
+        INSERT INTO users_verfications
+            (user_id, real_name, id_card_number, id_card_front_url, id_card_back_url,
+             verification_status, reject_reason, reviewer_id, reviewed_time)
+        VALUES
+            (#{userId}, #{realName}, #{idCardNumber}, #{idCardFrontUrl}, #{idCardBackUrl},
+             0, NULL, NULL, NULL)
+        ON DUPLICATE KEY UPDATE
+            real_name = VALUES(real_name),
+            id_card_number = VALUES(id_card_number),
+            id_card_front_url = VALUES(id_card_front_url),
+            id_card_back_url = VALUES(id_card_back_url),
+            verification_status = 0,
+            reject_reason = NULL,
+            reviewer_id = NULL,
+            reviewed_time = NULL,
+            updated_time = CURRENT_TIMESTAMP
     </insert>
 
     <update id="updatePassword">
@@ -83,6 +176,33 @@
     <update id="updateStatus">
         UPDATE users
         SET status = #{status}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateCancelInfo">
+        UPDATE users
+        SET status = #{status},
+            cancel_requested_at = #{cancelRequestedAt},
+            cancel_effective_at = #{cancelEffectiveAt},
+            cancel_cooling_days = #{cancelCoolingDays},
+            updated_time = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="clearCancelInfo">
+        UPDATE users
+        SET status = 1,
+            cancel_requested_at = NULL,
+            cancel_effective_at = NULL,
+            cancel_cooling_days = NULL,
+            updated_time = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateVerified">
+        UPDATE users
+        SET is_verified = #{isVerified},
+            updated_time = NOW()
         WHERE user_id = #{userId}
     </update>
 
@@ -115,9 +235,32 @@
             <if test="status != null">status = #{status},</if>
             <if test="isVerified != null">is_verified = #{isVerified},</if>
             <if test="authStatus != null">auth_status = #{authStatus},</if>
+            <if test="cancelRequestedAt != null">cancel_requested_at = #{cancelRequestedAt},</if>
+            <if test="cancelEffectiveAt != null">cancel_effective_at = #{cancelEffectiveAt},</if>
+            <if test="cancelCoolingDays != null">cancel_cooling_days = #{cancelCoolingDays},</if>
             updated_time = NOW()
         </set>
         WHERE user_id = #{userId}
+    </update>
+
+    <update id="approveVerification">
+        UPDATE users_verfications
+        SET verification_status = 1,
+            reject_reason = NULL,
+            reviewer_id = #{reviewerId},
+            reviewed_time = NOW(),
+            updated_time = NOW()
+        WHERE verification_id = #{verificationId}
+    </update>
+
+    <update id="rejectVerification">
+        UPDATE users_verfications
+        SET verification_status = 2,
+            reject_reason = #{rejectReason},
+            reviewer_id = #{reviewerId},
+            reviewed_time = NOW(),
+            updated_time = NOW()
+        WHERE verification_id = #{verificationId}
     </update>
 
     <update id="updateAuthStatus">

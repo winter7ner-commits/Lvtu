@@ -5,7 +5,7 @@
 
     <div class="toolbar">
       <div>
-        <h1>律师认证审核</h1>
+        <h1>{{ activeMode === 'realname' ? '实名认证审核' : '律师认证审核' }}</h1>
       </div>
       <button class="refresh-btn" @click="load" :disabled="loading">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -18,6 +18,11 @@
 
 
     <div class="content-container">
+      <div class="audit-type-tabs">
+        <button :class="{ active: activeMode === 'realname' }" @click="activeMode = 'realname'">实名认证</button>
+        <button :class="{ active: activeMode === 'lawyer' }" @click="activeMode = 'lawyer'">律师认证</button>
+      </div>
+
       <div class="filter-tabs">
         <button
             v-for="tab in statusTabs"
@@ -35,7 +40,7 @@
         <p>暂无申请</p>
       </div>
 
-      <div v-else class="audit-list">
+      <div v-else-if="activeMode === 'lawyer'" class="audit-list">
         <div v-for="item in filteredList" :key="item.applicationId" class="audit-card">
           <!-- 卡片内容保持不变 -->
           <div class="card-head">
@@ -87,6 +92,49 @@
           <div v-else-if="item.auditTime" class="audit-time">审核于 {{ formatDate(item.auditTime) }}</div>
         </div>
       </div>
+
+      <div v-else class="audit-list">
+        <div v-for="item in filteredList" :key="item.verificationId" class="audit-card">
+          <div class="card-head">
+            <div class="applicant-info">
+              <div class="avatar"><span>{{ getInitial(item.realName || item.username) }}</span></div>
+              <div>
+                <p class="applicant-name">{{ item.realName || item.username || `用户 #${item.userId}` }}</p>
+                <p class="applicant-sub">认证ID #{{ item.verificationId }} · {{ formatDate(item.createdTime) }}</p>
+              </div>
+            </div>
+            <span class="status-badge" :class="statusBadgeClass(item.status)">{{ statusLabel(item.status) }}</span>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item"><span>用户名</span><strong>{{ item.username || '—' }}</strong></div>
+            <div class="info-item"><span>手机号</span><strong>{{ item.phone || '—' }}</strong></div>
+            <div class="info-item"><span>真实姓名</span><strong>{{ item.realName || '—' }}</strong></div>
+            <div class="info-item"><span>身份证号</span><strong>{{ maskIdCard(item.idCardNumber) }}</strong></div>
+          </div>
+
+          <div class="license-preview image-row">
+            <template v-if="item.idCardFrontUrl">
+              <span>身份证正面</span>
+              <img :src="getFullImageUrl(item.idCardFrontUrl)" class="license-thumb" @click="openPreview(getFullImageUrl(item.idCardFrontUrl))" />
+            </template>
+            <template v-if="item.idCardBackUrl">
+              <span>身份证反面</span>
+              <img :src="getFullImageUrl(item.idCardBackUrl)" class="license-thumb" @click="openPreview(getFullImageUrl(item.idCardBackUrl))" />
+            </template>
+          </div>
+
+          <div v-if="item.status === 2 && item.rejectReason" class="reject-info">
+            <span class="reject-label">驳回原因：</span>{{ item.rejectReason }}
+          </div>
+
+          <div v-if="item.status === 0" class="card-actions">
+            <button class="btn-success" :disabled="processingId === item.verificationId" @click="approveRealname(item)">通过</button>
+            <button class="btn-danger" :disabled="processingId === item.verificationId" @click="rejectRealname(item)">驳回</button>
+          </div>
+          <div v-else-if="item.reviewedTime" class="audit-time">审核于 {{ formatDate(item.reviewedTime) }}</div>
+        </div>
+      </div>
     </div>
 
     <div v-if="loading" class="loading-wrap">加载中...</div>
@@ -104,10 +152,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { getApplicationList, approveApplication, rejectApplication } from '../../api/application'
-const list = ref([])
+import { getRealnameVerifications, approveRealnameVerification, rejectRealnameVerification } from '../../api/admin'
+const lawyerList = ref([])
+const realnameList = ref([])
 const loading = ref(false)
 const processingId = ref(null)
 const activeTab = ref(-1)
+const activeMode = ref('realname')
 const previewUrl = ref(null)
 
 const getFullImageUrl = (url) => {
@@ -124,20 +175,25 @@ const statusTabs = [
   { label: '已驳回', value: 2 }
 ]
 const filteredList = computed(() => {
+  const source = activeMode.value === 'lawyer' ? lawyerList.value : realnameList.value
   const val = activeTab.value
-  if (val === -1) return list.value
-  return list.value.filter(item => item.status === val)
+  if (val === -1) return source
+  return source.filter(item => item.status === val)
 })
 const countByStatus = (status) => {
-  if (status === -1) return list.value.length
-  return list.value.filter(i => i.status === status).length
+  const source = activeMode.value === 'lawyer' ? lawyerList.value : realnameList.value
+  if (status === -1) return source.length
+  return source.filter(i => i.status === status).length
 }
 const load = async () => {
   loading.value = true
   try {
-    const res = await getApplicationList()
-    let data = res?.data?.data || res?.data || []
-    list.value = data.map(item => ({
+    const [lawyerRes, realnameRes] = await Promise.all([
+      getApplicationList(),
+      getRealnameVerifications()
+    ])
+    let data = lawyerRes?.data?.data || lawyerRes?.data || []
+    lawyerList.value = data.map(item => ({
       applicationId: item.applicationId || item.application_id,
       userId: item.userId || item.user_id,
       licenseNo: item.licenseNo || item.license_no,
@@ -153,19 +209,73 @@ const load = async () => {
       realname: item.realname,
       avatarUrl: item.avatarUrl
     }))
+    const verificationData = realnameRes?.data || []
+    realnameList.value = verificationData.map(item => ({
+      verificationId: item.verificationId || item.verification_id,
+      userId: item.userId || item.user_id,
+      username: item.username,
+      phone: item.phone,
+      realName: item.realName || item.real_name,
+      idCardNumber: item.idCardNumber || item.id_card_number,
+      idCardFrontUrl: item.idCardFrontUrl || item.id_card_front_url,
+      idCardBackUrl: item.idCardBackUrl || item.id_card_back_url,
+      status: item.verificationStatus ?? item.verification_status,
+      rejectReason: item.rejectReason || item.reject_reason,
+      reviewerId: item.reviewerId || item.reviewer_id,
+      reviewedTime: item.reviewedTime || item.reviewed_time,
+      createdTime: item.createdTime || item.created_time,
+      updatedTime: item.updatedTime || item.updated_time
+    }))
   } catch (err) {
     ElMessage.error('加载失败')
   } finally {
     loading.value = false
   }
 }
+const maskIdCard = (value) => value ? String(value).replace(/^(.{6}).+(.{4})$/, '$1********$2') : '—'
 const approve = async (item) => {
-  await ElMessageBox.confirm('通过该申请？', '确认', { type: 'success' }).catch(() => null)
+  const confirmed = await ElMessageBox.confirm('通过该申请？', '确认', { type: 'success' }).then(() => true).catch(() => false)
+  if (!confirmed) return
   processingId.value = item.applicationId
   try {
     await approveApplication(item.applicationId)
     ElMessage.success('已通过')
     await load()
+  } catch { ElMessage.error('操作失败') }
+  finally { processingId.value = null }
+}
+const approveRealname = async (item) => {
+  const confirmed = await ElMessageBox.confirm('通过该实名认证申请？', '确认', { type: 'success' }).then(() => true).catch(() => false)
+  if (!confirmed) return
+  processingId.value = item.verificationId
+  try {
+    const result = await approveRealnameVerification(item.verificationId)
+    if (result.code === 200) {
+      ElMessage.success('已通过')
+      await load()
+    } else {
+      ElMessage.error(result.message || '操作失败')
+    }
+  } catch { ElMessage.error('操作失败') }
+  finally { processingId.value = null }
+}
+const rejectRealname = async (item) => {
+  let reason = ''
+  try {
+    const { value } = await ElMessageBox.prompt('请输入驳回原因', '驳回', {
+      inputValidator: (val) => !!val?.trim() || '原因不能为空'
+    })
+    reason = value
+  } catch { return }
+  processingId.value = item.verificationId
+  try {
+    const result = await rejectRealnameVerification(item.verificationId, reason)
+    if (result.code === 200) {
+      ElMessage.success('已驳回')
+      await load()
+    } else {
+      ElMessage.error(result.message || '操作失败')
+    }
   } catch { ElMessage.error('操作失败') }
   finally { processingId.value = null }
 }
@@ -260,6 +370,31 @@ onMounted(load)
   margin: 0 auto;
   position: relative;
   z-index: 1;
+}
+
+.audit-type-tabs {
+  display: inline-flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 6px;
+  background: #eaf0f8;
+  border-radius: 8px;
+}
+
+.audit-type-tabs button {
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 18px;
+  background: transparent;
+  color: #42566e;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.audit-type-tabs button.active {
+  background: #ffffff;
+  color: #1a73e8;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, .12);
 }
 
 .filter-tabs {
@@ -397,6 +532,10 @@ onMounted(load)
   gap: 16px;
   margin-bottom: 16px;
   padding: 8px 0;
+}
+
+.image-row {
+  flex-wrap: wrap;
 }
 .license-thumb {
   width: 80px;

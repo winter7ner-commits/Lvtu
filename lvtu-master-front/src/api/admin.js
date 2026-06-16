@@ -8,6 +8,18 @@ export const getAuthApplications = () => {
   return request.get('/api/admin/auth-applications').then((res) => res.data)
 }
 
+export const getRealnameVerifications = () => {
+  return request.get('/api/admin/realname-verifications').then((res) => res.data)
+}
+
+export const approveRealnameVerification = (verificationId) => {
+  return request.post(`/api/admin/realname-verifications/${verificationId}/approve`).then((res) => res.data)
+}
+
+export const rejectRealnameVerification = (verificationId, rejectReason) => {
+  return request.post(`/api/admin/realname-verifications/${verificationId}/reject`, { rejectReason }).then((res) => res.data)
+}
+
 export const getOrders = () => {
   return request.get('/api/admin/orders').then((res) => res.data)
 }
@@ -34,6 +46,14 @@ export const getRevisionLimitConfig = () => {
 
 export const updateRevisionLimitConfig = (maxRevisionRequestCount) => {
   return request.put('/api/admin/settings/revision-limit', { maxRevisionRequestCount }).then((res) => res.data)
+}
+
+export const getCancelCoolingDaysConfig = () => {
+  return request.get('/api/admin/settings/cancel-cooling-days').then((res) => res.data)
+}
+
+export const updateCancelCoolingDaysConfig = (cancelCoolingDays) => {
+  return request.put('/api/admin/settings/cancel-cooling-days', { cancelCoolingDays }).then((res) => res.data)
 }
 
 export const getInterventions = () => {

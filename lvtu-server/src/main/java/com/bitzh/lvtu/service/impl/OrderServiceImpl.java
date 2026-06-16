@@ -3,9 +3,11 @@ package com.bitzh.lvtu.service.impl;
 import com.bitzh.lvtu.entity.Order;
 import com.bitzh.lvtu.entity.Payment;
 import com.bitzh.lvtu.entity.LawyerProfile;
+import com.bitzh.lvtu.entity.User;
 import com.bitzh.lvtu.mapper.LawyerProfileMapper;
 import com.bitzh.lvtu.mapper.OrderMapper;
 import com.bitzh.lvtu.mapper.PaymentMapper;
+import com.bitzh.lvtu.mapper.UserMapper;
 import com.bitzh.lvtu.service.OrderService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,9 @@ public class OrderServiceImpl implements OrderService {
     @Resource
     private LawyerProfileMapper lawyerProfileMapper;
 
+    @Resource
+    private UserMapper userMapper;
+
     @Override
     @Transactional
     public Order createOrder(Order order) {
@@ -38,6 +43,19 @@ public class OrderServiceImpl implements OrderService {
         }
         if (order.getServiceTypeId() == null) {
             throw new IllegalArgumentException("服务类型不能为空");
+        }
+        User user = userMapper.selectById(order.getUserId());
+        if (user == null) {
+            throw new IllegalArgumentException("用户不存在");
+        }
+        if (user.getStatus() == null || user.getStatus() != 1) {
+            throw new IllegalArgumentException("账号状态异常，无法发布订单");
+        }
+        if (!Boolean.TRUE.equals(user.getIsVerified())) {
+            throw new IllegalArgumentException("请先完成实名认证后再发布服务订单");
+        }
+        if (user.getAuthStatus() != null && user.getAuthStatus() == 2) {
+            throw new IllegalArgumentException("律师账号不能发布用户订单，请使用律师端接单与处理订单");
         }
         normalizeAssignment(order);
         order.setStatus("待支付");

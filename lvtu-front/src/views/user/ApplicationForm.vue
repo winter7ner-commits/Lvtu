@@ -89,6 +89,7 @@ import { reactive, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { submitApplication, uploadLicenseImage, getMyApplication } from '@/api/application'
+import { me } from '@/api/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -281,6 +282,19 @@ const goBack = () => {
 }
 
 onMounted(async () => {
+  try {
+    const userRes = await me()
+    const currentUser = userRes?.data
+    if (currentUser?.isVerified !== true) {
+      ElMessage.warning('请先完成实名认证后再申请律师认证')
+      router.push('/auth-center')
+      return
+    }
+  } catch {
+    ElMessage.warning('请先登录后再申请律师认证')
+    router.push('/login')
+    return
+  }
   // 1. 获取当前登录用户ID
   form.userId = getCurrentUserId()
   // 2. 先重置表单（清除上一个用户的残留数据）

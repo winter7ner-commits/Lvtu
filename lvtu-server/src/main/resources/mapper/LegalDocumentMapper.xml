@@ -7,6 +7,11 @@
         <result column="name" property="name"/>
         <result column="category_id" property="categoryId"/>
         <result column="publish_date" property="publishDate"/>
+        <result column="law_level" property="lawLevel"/>
+        <result column="effective_status" property="effectiveStatus"/>
+        <result column="source_name" property="sourceName"/>
+        <result column="source_url" property="sourceUrl"/>
+        <result column="summary" property="summary"/>
         <result column="sort_order" property="sortOrder"/>
         <result column="status" property="status"/>
         <result column="created_at" property="createdAt"/>
@@ -14,7 +19,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, name, category_id, publish_date, sort_order, status, created_at, updated_at
+        id, name, category_id, publish_date, law_level, effective_status, source_name, source_url, summary,
+        sort_order, status, created_at, updated_at
     </sql>
 
     <select id="findAll" resultMap="BaseResultMap">
@@ -30,8 +36,14 @@
     </select>
 
     <insert id="insert" parameterType="com.bitzh.lvtu.entity.LegalDocument" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO legal_document (name, category_id, publish_date, sort_order, status, created_at, updated_at)
-        VALUES (#{name}, #{categoryId}, #{publishDate}, #{sortOrder}, #{status}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        INSERT INTO legal_document (
+            name, category_id, publish_date, law_level, effective_status, source_name, source_url, summary,
+            sort_order, status, created_at, updated_at
+        )
+        VALUES (
+            #{name}, #{categoryId}, #{publishDate}, #{lawLevel}, #{effectiveStatus}, #{sourceName}, #{sourceUrl}, #{summary},
+            #{sortOrder}, #{status}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
     </insert>
 
     <update id="update" parameterType="com.bitzh.lvtu.entity.LegalDocument">
@@ -40,6 +52,11 @@
             <if test="name != null">name = #{name},</if>
             <if test="categoryId != null">category_id = #{categoryId},</if>
             <if test="publishDate != null">publish_date = #{publishDate},</if>
+            <if test="lawLevel != null">law_level = #{lawLevel},</if>
+            <if test="effectiveStatus != null">effective_status = #{effectiveStatus},</if>
+            <if test="sourceName != null">source_name = #{sourceName},</if>
+            <if test="sourceUrl != null">source_url = #{sourceUrl},</if>
+            <if test="summary != null">summary = #{summary},</if>
             <if test="sortOrder != null">sort_order = #{sortOrder},</if>
             <if test="status != null">status = #{status},</if>
             updated_at = CURRENT_TIMESTAMP

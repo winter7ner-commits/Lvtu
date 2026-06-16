@@ -35,6 +35,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (user == null) {
             throw new RuntimeException("用户不存在");
         }
+        if (user.getStatus() == null || user.getStatus() != 1) {
+            throw new RuntimeException("账号状态异常，无法申请律师认证");
+        }
         // 2. 检查是否已实名认证
         if (user.getIsVerified() == null || !user.getIsVerified()) {
             throw new RuntimeException("请先完成实名认证");

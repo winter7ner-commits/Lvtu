@@ -10,6 +10,7 @@ import ForgotPassword from '../views/auth/ForgotPassword.vue'
 import ChangePassword from '../views/auth/ChangePassword.vue'
 import Settings from '../views/Settings.vue'
 import AuthCenter from '../views/user/AuthCenter.vue'
+import RealName from '../views/user/RealName.vue'
 import ApplicationForm from '../views/user/ApplicationForm.vue'
 import ApplicationStatus from '../views/user/ApplicationStatus.vue'
 import OrderCreate from '../views/order/OrderCreate.vue'
@@ -50,6 +51,7 @@ const router = createRouter({
     { path: '/change-password', component: ChangePassword, name: 'ChangePassword' },
     { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
     { path: '/auth-center', component: AuthCenter, name: 'AuthCenter', meta: { requiresAuth: true } },
+    { path: '/user/realname', component: RealName, name: 'RealName', meta: { requiresAuth: true } },
     { path: '/apply', component: ApplicationForm, name: 'ApplicationForm', meta: { requiresAuth: true } },
     { path: '/application-status', component: ApplicationStatus, name: 'ApplicationStatus', meta: { requiresAuth: true } },
     { path: '/order-create', component: OrderCreate, name: 'OrderCreate', meta: { requiresAuth: true } },

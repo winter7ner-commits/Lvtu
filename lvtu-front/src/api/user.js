@@ -15,9 +15,31 @@ export const deactivateUser = () => {
   return request.delete('/api/user/deactivate').then((res) => res.data)
 }
 
+export const cancelDeactivateUser = () => {
+  return request.post('/api/user/deactivate/cancel').then((res) => res.data)
+}
+
 // 获取用户认证信息
 export const getUserVerification = (userId) => {
   return request.get(`/api/user/verification/${userId}`).then((res) => res.data)
+}
+
+export const submitUserVerification = (data) => {
+  return request.post('/api/user/verification/submit', data).then((res) => res.data)
+}
+
+export const uploadVerificationImage = (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request({
+    url: '/api/user/verification/upload',
+    method: 'post',
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    data: formData,
+    timeout: 30000
+  }).then((res) => res.data)
 }
 
 // 上传头像

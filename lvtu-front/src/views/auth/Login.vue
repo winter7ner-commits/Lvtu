@@ -18,7 +18,7 @@
           <el-form-item prop="username">
             <el-input
               v-model="loginForm.username"
-              placeholder="请输入用户名"
+              placeholder="请输入用户名或手机号"
               :prefix-icon="User"
               clearable
               @keyup.enter="handleLogin"
@@ -84,8 +84,8 @@ const loginForm = reactive({
 
 const loginRules = {
   username: [
-    { required: true, message: '请输入用户名或邮箱', trigger: 'blur' },
-    { min: 3, message: '用户名至少3个字符', trigger: 'blur' }
+    { required: true, message: '请输入用户名或手机号', trigger: 'blur' },
+    { min: 3, message: '至少3个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -120,7 +120,11 @@ const handleLogin = async () => {
         localStorage.removeItem('rememberMe')
       }
 
-      ElMessage.success('登录成功！')
+      if (Number(user.status) === 3) {
+        ElMessage.warning('账号处于注销冷静期，可在个人资料中取消注销')
+      } else {
+        ElMessage.success('登录成功！')
+      }
       const redirectPath = route.query.redirect ? String(route.query.redirect) : '/'
       setTimeout(() => {
         router.push(redirectPath)

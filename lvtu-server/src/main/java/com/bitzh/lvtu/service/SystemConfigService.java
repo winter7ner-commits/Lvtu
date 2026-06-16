@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 public class SystemConfigService {
 
     public static final String MAX_REVISION_REQUEST_COUNT_KEY = "order.max_revision_request_count";
+    public static final String ACCOUNT_CANCEL_COOLING_DAYS_KEY = "account.cancel_cooling_days";
     private static final int DEFAULT_MAX_REVISION_REQUEST_COUNT = 2;
+    private static final int DEFAULT_ACCOUNT_CANCEL_COOLING_DAYS = 7;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -26,6 +28,17 @@ public class SystemConfigService {
             throw new IllegalArgumentException("修改次数上限必须在0到10之间");
         }
         upsert(MAX_REVISION_REQUEST_COUNT_KEY, String.valueOf(value), "订单服务结果最多可申请修改次数");
+    }
+
+    public int getAccountCancelCoolingDays() {
+        return getInt(ACCOUNT_CANCEL_COOLING_DAYS_KEY, DEFAULT_ACCOUNT_CANCEL_COOLING_DAYS);
+    }
+
+    public void updateAccountCancelCoolingDays(int value) {
+        if (value < 1 || value > 30) {
+            throw new IllegalArgumentException("账号注销冷静期必须在1到30天之间");
+        }
+        upsert(ACCOUNT_CANCEL_COOLING_DAYS_KEY, String.valueOf(value), "账号注销冷静期天数");
     }
 
     private int getInt(String key, int defaultValue) {

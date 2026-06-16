@@ -27,14 +27,28 @@
 | avatar_url | varchar | 255 | - | 可 | - | 头像地址 |
 | user_type | tinyint | - | - | 否 | - | 用户类型：1普通用户，2律师，3管理员 |
 | admin_role | varchar | 32 | - | 可 | - | 后台角色：SUPER_ADMIN超级管理员，CERT_AUDITOR认证审核员，OPERATOR运营管理员，CUSTOMER_SERVICE客服专员 |
-| status | tinyint | - | - | 否 | - | 用户状态：0冻结，1正常，2封禁 |
+| status | tinyint | - | - | 否 | - | 用户状态：0冻结，1正常，2封禁，3注销冷静期，4已注销 |
 | is_verified | boolean | - | - | 可 | - | 是否实名认证 |
 | auth_status | tinyint | - | - | 可 | - | 律师认证状态：0未申请，1审核中，2通过，3拒绝 |
+| cancel_requested_at | datetime | - | - | 可 | - | 注销申请时间 |
+| cancel_effective_at | datetime | - | - | 可 | - | 注销正式生效时间 |
+| cancel_cooling_days | int | - | - | 可 | - | 本次注销冷静期天数 |
 | created_time | timestamp | - | - | 可 | - | 注册时间 |
 | updated_time | timestamp | - | - | 可 | - | 更新时间 |
 | region | varchar | 255 | - | 可 | - | 所在地区 |
 
-默认后台测试账号密码均为 `test123456`：
+默认测试账号密码均为 `Test123456`。普通用户测试账号：
+
+| 账号 | 说明 |
+| ---- | ---- |
+| user01 | 未实名认证普通用户 |
+| user02 | 未实名认证普通用户 |
+| user03 | 未实名认证普通用户 |
+| user04 | 已实名认证普通用户 |
+| user05 | 已实名认证普通用户 |
+| user06 | 已实名认证普通用户 |
+
+默认后台测试账号：
 
 | 账号 | 角色 |
 | ---- | ---- |
@@ -55,7 +69,7 @@
 | id_card_back_url | varchar | 255 | - | 可 | - | 身份证反面照URL |
 | verification_status | tinyint | - | - | 否 | - | 认证状态：0待审核，1已通过，2被拒绝 |
 | reject_reason | varchar | 255 | - | 可 | - | 审核拒绝原因 |
-| reviewer_id | bigint | - | - | 可 | 唯一键 | 审核管理员ID |
+| reviewer_id | bigint | - | - | 可 | - | 审核管理员ID |
 | reviewed_time | datetime | - | - | 可 | - | 审核时间 |
 | created_time | timestamp | - | - | 可 | - | 认证提交时间 |
 | updated_time | timestamp | - | - | 可 | - | 更新时间 |
@@ -97,6 +111,11 @@
 | name | varchar | 200 | - | 否 | - | 文件名称 |
 | category_id | bigint | - | - | 否 | 外键 | 所属分类ID |
 | publish_date | datetime | - | - | 可 | - | 发布日期 |
+| law_level | varchar | 50 | - | 可 | - | 法律层级：宪法/法律/行政法规/司法解释等 |
+| effective_status | varchar | 50 | - | 可 | - | 效力状态 |
+| source_name | varchar | 100 | - | 可 | - | 来源名称 |
+| source_url | varchar | 512 | - | 可 | - | 来源链接 |
+| summary | varchar | 500 | - | 可 | - | 文件简介 |
 | status | tinyint | - | - | 否 | - | 状态：1启用，0禁用 |
 | sort_order | int | - | - | 否 | - | 排序号 |
 | created_at | datetime | - | - | 否 | - | 创建时间 |
@@ -109,8 +128,11 @@
 | id | bigint | - | - | 否 | 主键 | 法条ID |
 | document_id | bigint | - | - | 否 | 外键 | 所属法规文件ID |
 | article_number | varchar | 50 | - | 否 | - | 条文编号，如第一条、第二条 |
-| title | varchar | 200 | - | 可 | - | 章节标题 |
+| title | varchar | 200 | - | 可 | - | 章节标题，兼容旧前端展示 |
+| chapter_title | varchar | 200 | - | 可 | - | 章标题 |
+| section_title | varchar | 200 | - | 可 | - | 节标题 |
 | content | text | - | - | 否 | - | 条文内容 |
+| source_url | varchar | 512 | - | 可 | - | 条文来源链接 |
 | sort_order | int | - | - | 否 | - | 条文排序 |
 | status | tinyint | - | - | 否 | - | 状态：1启用，0禁用 |
 | created_at | datetime | - | - | 否 | - | 创建时间 |
@@ -324,11 +346,9 @@
 
 | 列名 | 数据类型 | 长度 | 小数点 | 是否可空 | 键 | 注释 |
 | ---- | -------- | ---- | ------ | -------- | -- | ---- |
-| id | bigint | - | - | 否 | 主键 | 配置ID |
-| config_key | varchar | 100 | - | 否 | 唯一键 | 配置键 |
-| config_value | varchar | 255 | - | 否 | - | 配置值 |
+| config_key | varchar | 100 | - | 否 | 主键 | 配置键 |
+| config_value | varchar | 100 | - | 否 | - | 配置值 |
 | description | varchar | 255 | - | 可 | - | 配置说明 |
-| created_at | datetime | - | - | 否 | - | 创建时间 |
 | updated_at | datetime | - | - | 否 | - | 更新时间 |
 
 ### 表名: order_intervention_action (平台介入处理记录表)

@@ -62,14 +62,14 @@ CREATE TABLE IF NOT EXISTS order_service_detail (
 INSERT INTO order_service_detail (detail_id, order_id, form_data) VALUES
     (850001, 800001, JSON_OBJECT(
         'contactName', '张三',
-        'contactPhone', '13800000001',
+        'contactPhone', '13800000004',
         'caseType', '离婚财产分割',
         'summary', '用户希望咨询婚后共同财产和孩子抚养权分配问题。',
         'expectedGoal', '明确诉讼和协议离婚方案差异'
     )),
     (850002, 800002, JSON_OBJECT(
         'contactName', '李四',
-        'contactPhone', '13800000002',
+        'contactPhone', '13800000005',
         'contractName', '房屋租赁合同',
         'summary', '希望律师审核租赁合同中违约责任和押金退还条款。',
         'expectedGoal', '出具风险提示和修改建议'
@@ -98,7 +98,7 @@ INSERT INTO order_service_detail (detail_id, order_id, form_data) VALUES
     )),
     (850007, 800007, JSON_OBJECT(
         'contactName', '张三',
-        'contactPhone', '13800000001',
+        'contactPhone', '13800000004',
         'consultMode', '电话咨询',
         'summary', '用户提交电话咨询后取消订单，尚未进入接单流程。'
     ));

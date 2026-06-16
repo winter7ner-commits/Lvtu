@@ -10,9 +10,12 @@ create table users (
     avatar_url varchar(255) default null comment '头像地址',
     user_type tinyint not null default 1 comment '用户类型：1.普通用户，2.律师，3.管理员',
     admin_role varchar(32) default null comment '后台角色：SUPER_ADMIN超级管理员，CERT_AUDITOR认证审核员，OPERATOR运营管理员，CUSTOMER_SERVICE客服专员',
-    `status` tinyint not null default 1 comment '用户状态：0.冻结，1.正常，2.封禁',
+    `status` tinyint not null default 1 comment '用户状态：0.冻结，1.正常，2.封禁，3.注销冷静期，4.已注销',
     is_verified boolean default false comment '是否实名认证',
     auth_status tinyint default 0 comment '律师认证状态：0.未申请，1.审核中，2.通过，3.拒绝',
+    cancel_requested_at datetime default null comment '注销申请时间',
+    cancel_effective_at datetime default null comment '注销正式生效时间',
+    cancel_cooling_days int default null comment '本次注销冷静期天数',
     created_time timestamp default current_timestamp comment '注册时间',
     updated_time timestamp default current_timestamp on update current_timestamp comment '更新时间',
     region varchar(255) default 0 comment '所在地区',
@@ -20,24 +23,28 @@ create table users (
     index idx_phone(phone)
 ) engine=InnoDB default charset=utf8mb4 comment='用户基本信息表';
 
--- 测试用户数据（所有密码均为: test123456）
+-- 测试用户数据（所有密码均为: Test123456）
 INSERT INTO users (
     user_id, username, password_hash, phone, email, avatar_url, user_type, admin_role,
     `status`, is_verified, auth_status, created_time, updated_time, region
 ) VALUES
-    -- 用户1: user_order_a (普通用户)
-    (500001, 'user_order_a', '$2b$10$jq2QdT9WGxb55eluNSi6qOzb4mndZdVYO.PRTZ.JmNuhggqctolWC', '13800000001', 'user_order_a@lvtu.test', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
-    -- 用户2: user_order_b (普通用户)
-    (500002, 'user_order_b', '$2b$10$z.6RcrDaZKgE/ihtf8F4Rei0yaQmKYGRoGgE1uPVWAmkhf9fkDaoO', '13800000002', 'user_order_b@lvtu.test', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '北京'),
-    -- 用户3: lawyer_alpha_user (律师)
-    (500003, 'lawyer_alpha_user', '$2b$10$FCJo2M.Jzeio4jYqqh2ndex/Pg1WR4ll7DF8IBspQXvHp2tOl8U5S', '13800000003', 'lawyer_alpha@lvtu.test', NULL, 2, NULL, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
-    -- 用户4: lawyer_beta_user (律师)
-    (500004, 'lawyer_beta_user', '$2b$10$gzfDpedOuG.6EO09UJAUZuXyt2LUAD4dhFIb0U0139LwPCW6LNIzu', '13800000004', 'lawyer_beta@lvtu.test', NULL, 2, NULL, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '深圳'),
-    -- 后台账号（所有密码均为: test123456）
-    (500005, 'admin_super', '$2b$10$1RTvAJcWLmV/fBshcTFf/OgOAHJhigOeo6xTUk0gI6p1Flno78aDu', '13800000005', 'admin_super@lvtu.test', NULL, 3, 'SUPER_ADMIN', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
-    (500006, 'admin_audit', '$2b$10$1RTvAJcWLmV/fBshcTFf/OgOAHJhigOeo6xTUk0gI6p1Flno78aDu', '13800000006', 'admin_audit@lvtu.test', NULL, 3, 'CERT_AUDITOR', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
-    (500007, 'admin_operator', '$2b$10$1RTvAJcWLmV/fBshcTFf/OgOAHJhigOeo6xTUk0gI6p1Flno78aDu', '13800000007', 'admin_operator@lvtu.test', NULL, 3, 'OPERATOR', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
-    (500008, 'admin_service', '$2b$10$1RTvAJcWLmV/fBshcTFf/OgOAHJhigOeo6xTUk0gI6p1Flno78aDu', '13800000008', 'admin_service@lvtu.test', NULL, 3, 'CUSTOMER_SERVICE', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州');
+    -- 已实名认证普通用户：用于订单流程演示
+    (500001, 'user04', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000004', 'user04@lvtu.test', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
+    (500002, 'user05', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000005', 'user05@lvtu.test', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '北京'),
+    -- 律师账号
+    (500003, 'lawyA', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800001003', 'lawyer_alpha@lvtu.test', NULL, 2, NULL, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
+    (500004, 'lawyB', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800001004', 'lawyer_beta@lvtu.test', NULL, 2, NULL, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '深圳'),
+    -- 后台账号
+    (500005, 'admin_super', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000005', 'admin_super@lvtu.test', NULL, 3, 'SUPER_ADMIN', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
+    (500006, 'admin_audit', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000006', 'admin_audit@lvtu.test', NULL, 3, 'CERT_AUDITOR', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
+    (500007, 'admin_operator', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000007', 'admin_operator@lvtu.test', NULL, 3, 'OPERATOR', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
+    (500008, 'admin_service', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000008', 'admin_service@lvtu.test', NULL, 3, 'CUSTOMER_SERVICE', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
+    -- 未实名认证普通用户：用于权限拦截演示
+    (500009, 'user01', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000001', 'user01@lvtu.test', NULL, 1, NULL, 1, FALSE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '广州'),
+    (500010, 'user02', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000002', 'user02@lvtu.test', NULL, 1, NULL, 1, FALSE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '成都'),
+    (500011, 'user03', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000003', 'user03@lvtu.test', NULL, 1, NULL, 1, FALSE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '南京'),
+    -- 已实名认证普通用户：用于实名功能演示
+    (500012, 'user06', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000006', 'user06@lvtu.test', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州');
 
 create table users_verfications (
 	verification_id bigint auto_increment primary key comment '实名认证记录ID',
@@ -48,7 +55,7 @@ create table users_verfications (
     id_card_back_url varchar(255) default null comment '身份证反面照URL',
     verification_status tinyint not null default 0 comment '认证状态：0.待审核，1.已通过，2.被拒绝',
     reject_reason varchar(255) default null comment '审核拒绝原因',
-    reviewer_id bigint unique comment '审核管理员ID',
+    reviewer_id bigint comment '审核管理员ID',
     reviewed_time datetime default null comment '审核时间',
     created_time timestamp default current_timestamp comment '认证提交时间',
     updated_time timestamp default current_timestamp on update current_timestamp comment '更新时间',
@@ -65,7 +72,8 @@ INSERT INTO users_verfications (
     (300001, 500001, '张三', '310101199001011234', '/mock/idcards/500001-front.jpg', '/mock/idcards/500001-back.jpg', 1, NULL, NULL, '2026-04-20 10:00:00', '2026-04-20 09:30:00', '2026-04-20 10:00:00'),
     (300002, 500002, '李四', '110101199202021234', '/mock/idcards/500002-front.jpg', '/mock/idcards/500002-back.jpg', 1, NULL, NULL, '2026-04-20 10:05:00', '2026-04-20 09:35:00', '2026-04-20 10:05:00'),
     (300003, 500003, '王律师', '310101198805053456', '/mock/idcards/500003-front.jpg', '/mock/idcards/500003-back.jpg', 1, NULL, NULL, '2026-04-18 15:00:00', '2026-04-18 14:20:00', '2026-04-18 15:00:00'),
-    (300004, 500004, '赵律师', '440301199003033456', '/mock/idcards/500004-front.jpg', '/mock/idcards/500004-back.jpg', 1, NULL, NULL, '2026-04-18 15:10:00', '2026-04-18 14:30:00', '2026-04-18 15:10:00');
+    (300004, 500004, '赵律师', '440301199003033456', '/mock/idcards/500004-front.jpg', '/mock/idcards/500004-back.jpg', 1, NULL, NULL, '2026-04-18 15:10:00', '2026-04-18 14:30:00', '2026-04-18 15:10:00'),
+    (300005, 500012, '王五', '110101199303030033', '/mock/idcards/500012-front.jpg', '/mock/idcards/500012-back.jpg', 1, NULL, NULL, '2026-04-20 10:10:00', '2026-04-20 09:40:00', '2026-04-20 10:10:00');
 
 create table if not exists user_notification (
     id bigint primary key auto_increment comment '消息ID',
