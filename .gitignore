@@ -12,3 +12,4 @@ lvtu-server/lvtu_uploads/
 *.docx
 __pycache__/
 *.pyc
+tools/
