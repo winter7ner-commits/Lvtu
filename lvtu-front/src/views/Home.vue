@@ -1,5 +1,8 @@
 <template>
-  <main class="home-page">
+  <main
+    ref="homePageRef"
+    :class="['home-page', { 'wave-active': waveAnimationActive, 'reveal-ready': revealMotionReady }]"
+  >
     <section class="hero-section">
       <div class="hero-copy">
         <p class="eyebrow">律途法律服务平台</p>
@@ -408,7 +411,10 @@ const feedbackReturnFocusElement = ref(null)
 const previousBodyOverflow = ref('')
 const previousBodyPaddingRight = ref('')
 const bodyScrollLocked = ref(false)
+const homePageRef = ref(null)
 const lawBandRef = ref(null)
+const waveAnimationActive = ref(false)
+const revealMotionReady = ref(false)
 const legalLoadStarted = ref(false)
 const visibleArticleLimit = ref(8)
 const ARTICLE_BATCH_SIZE = 8
@@ -416,6 +422,9 @@ const ARTICLE_BATCH_SIZE = 8
 const documentCache = new Map()
 const articleCache = new Map()
 let legalObserver = null
+let revealObserver = null
+let revealTargets = []
+let waveScrollFrame = 0
 let currentCategoryRequestId = 0
 let currentDocumentRequestId = 0
 let currentArticleRequestId = 0
@@ -651,6 +660,85 @@ const setupLegalObserver = () => {
   }, { rootMargin: '220px 0px' })
 
   legalObserver.observe(lawBandRef.value)
+}
+
+const revealVisibleTargets = () => {
+  if (typeof window === 'undefined' || !revealMotionReady.value) return
+  const triggerLine = window.innerHeight * 0.84
+
+  revealTargets.forEach((target) => {
+    if (target.classList.contains('is-visible')) return
+    const rect = target.getBoundingClientRect()
+    if (rect.top < triggerLine && rect.bottom > 0) {
+      target.classList.add('is-visible')
+      revealObserver?.unobserve(target)
+    }
+  })
+}
+
+const enableRevealMotion = () => {
+  if (revealMotionReady.value || prefersReducedMotion()) return
+  revealMotionReady.value = true
+
+  nextTick(() => {
+    window.requestAnimationFrame(revealVisibleTargets)
+  })
+}
+
+const setupHomeRevealObserver = () => {
+  if (
+    typeof window === 'undefined'
+    || prefersReducedMotion()
+    || !homePageRef.value
+    || typeof window.IntersectionObserver !== 'function'
+  ) {
+    return
+  }
+
+  revealTargets = Array.from(
+    homePageRef.value.querySelectorAll('.service-band, .advisor-band, .law-band, .home-columns')
+  )
+  if (!revealTargets.length) return
+
+  revealObserver = new window.IntersectionObserver((entries) => {
+    if (!revealMotionReady.value) return
+
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return
+      entry.target.classList.add('is-visible')
+      revealObserver?.unobserve(entry.target)
+    })
+  }, {
+    rootMargin: '0px 0px -16% 0px',
+    threshold: 0.12
+  })
+
+  revealTargets.forEach((target) => {
+    target.classList.remove('is-visible')
+    revealObserver.observe(target)
+  })
+}
+
+const updateWaveAnimationState = () => {
+  if (typeof window === 'undefined' || prefersReducedMotion()) return
+
+  const shouldActivateWave = window.scrollY > 12
+  if (waveAnimationActive.value !== shouldActivateWave) {
+    waveAnimationActive.value = shouldActivateWave
+  }
+  if (shouldActivateWave) {
+    enableRevealMotion()
+  }
+}
+
+const handleHomeScrollMotion = () => {
+  if (waveScrollFrame || typeof window === 'undefined') return
+
+  waveScrollFrame = window.requestAnimationFrame(() => {
+    waveScrollFrame = 0
+    updateWaveAnimationState()
+    revealVisibleTargets()
+  })
 }
 
 const showMoreLegalArticles = () => {
@@ -964,12 +1052,28 @@ watch([detailVisible, feedbackVisible], updateBodyScrollLock)
 
 onMounted(() => {
   scheduleIdleTask(loadHotLawyers, 500)
-  nextTick(setupLegalObserver)
+  nextTick(() => {
+    setupLegalObserver()
+    setupHomeRevealObserver()
+    if (typeof window !== 'undefined' && !prefersReducedMotion()) {
+      window.addEventListener('scroll', handleHomeScrollMotion, { passive: true })
+    }
+  })
 })
 
 onBeforeUnmount(() => {
   legalObserver?.disconnect()
   legalObserver = null
+  revealObserver?.disconnect()
+  revealObserver = null
+  revealTargets = []
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('scroll', handleHomeScrollMotion)
+    if (waveScrollFrame) {
+      window.cancelAnimationFrame(waveScrollFrame)
+      waveScrollFrame = 0
+    }
+  }
   if (typeof document !== 'undefined' && bodyScrollLocked.value) {
     document.body.style.overflow = previousBodyOverflow.value
     document.body.style.paddingRight = previousBodyPaddingRight.value
@@ -979,6 +1083,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .home-page {
+  --home-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --home-ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   min-height: 100vh;
   padding: 0 20px 56px;
   background: #f5f7fb;
@@ -1043,7 +1149,7 @@ onBeforeUnmount(() => {
   min-height: clamp(540px, calc(70svh - 90px), 720px);
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  padding: 92px max(32px, calc((100vw - 1320px) / 2 + 48px)) 190px;
+  padding: calc(92px + var(--home-header-overlap, 0px)) max(32px, calc((100vw - 1320px) / 2 + 48px)) 190px;
   border-radius: 0;
   background:
     linear-gradient(180deg, #2f6edf 0%, #2f6edf 5%, rgba(47, 110, 223, 0.88) 24%, rgba(37, 99, 235, 0.56) 60%, rgba(245, 247, 251, 0.38) 88%, #f5f7fb 100%),
@@ -1051,16 +1157,42 @@ onBeforeUnmount(() => {
     url('/Home_court.png') center 43% / cover no-repeat;
 }
 
+.home-page .hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 42% at 50% -8%, rgba(255, 255, 255, 0.34), transparent 72%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 44%),
+    linear-gradient(105deg, transparent 0 22%, rgba(255, 255, 255, 0.13) 29%, transparent 38% 100%);
+  opacity: 0.55;
+  transform: translate3d(0, 0, 0);
+}
+
 .home-page .hero-section::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
+  left: -7vw;
+  right: -7vw;
   bottom: -1px;
   z-index: 0;
-  height: 190px;
+  height: 204px;
+  pointer-events: none;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 220' preserveAspectRatio='none'%3E%3Cpath d='M0 68 C130 120 240 150 380 142 C520 134 625 88 758 74 C903 59 1025 103 1166 113 C1288 122 1372 98 1440 78 L1440 220 L0 220 Z' fill='%23f5f7fb'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 220' preserveAspectRatio='none'%3E%3Cpath d='M0 68 C130 120 240 150 380 142 C520 134 625 88 758 74 C903 59 1025 103 1166 113 C1288 122 1372 98 1440 78 L1440 220 L0 220 Z' fill='%23f5f7fb'/%3E%3C/svg%3E") center bottom / 108% 100% no-repeat;
+  transform: translate3d(0, 0, 0);
+}
+
+.home-page.wave-active .hero-section::before {
+  animation: heroWaterSweep 1200ms var(--home-ease-expo) both;
+}
+
+.home-page.wave-active .hero-section::after {
+  animation:
+    heroWaveRise 1080ms var(--home-ease-expo) both,
+    heroWaveDrift 9800ms ease-in-out 1080ms infinite alternate;
 }
 
 .home-page .law-band,
@@ -1084,6 +1216,39 @@ onBeforeUnmount(() => {
   max-width: 560px;
   padding: 0;
   align-self: center;
+}
+
+.home-page .hero-copy > .eyebrow,
+.home-page .hero-copy > h1,
+.home-page .hero-copy > .subtext,
+.home-page .hero-search,
+.home-page .quick-tags,
+.home-page .hero-panel {
+  animation: homeTopFloatIn 880ms var(--home-ease-out) both;
+}
+
+.home-page .hero-copy > .eyebrow {
+  animation-delay: 120ms;
+}
+
+.home-page .hero-copy > h1 {
+  animation-delay: 210ms;
+}
+
+.home-page .hero-copy > .subtext {
+  animation-delay: 300ms;
+}
+
+.home-page .hero-search {
+  animation-delay: 420ms;
+}
+
+.home-page .quick-tags {
+  animation-delay: 540ms;
+}
+
+.home-page .hero-panel {
+  animation-delay: 340ms;
 }
 
 .home-page .eyebrow {
@@ -1275,6 +1440,62 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 38px 0 44px;
   background: transparent;
+}
+
+.home-page.reveal-ready .service-band,
+.home-page.reveal-ready .advisor-band,
+.home-page.reveal-ready .law-band,
+.home-page.reveal-ready .home-columns {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition:
+    opacity 0.76s var(--home-ease-out),
+    transform 0.76s var(--home-ease-out);
+}
+
+.home-page.reveal-ready .service-band.is-visible,
+.home-page.reveal-ready .advisor-band.is-visible,
+.home-page.reveal-ready .law-band.is-visible,
+.home-page.reveal-ready .home-columns.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.home-page.reveal-ready .service-band .section-head,
+.home-page.reveal-ready .service-band .service-tile,
+.home-page.reveal-ready .home-columns .home-panel {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 0.62s var(--home-ease-out),
+    transform 0.62s var(--home-ease-out);
+}
+
+.home-page.reveal-ready .service-band.is-visible .section-head,
+.home-page.reveal-ready .service-band.is-visible .service-tile,
+.home-page.reveal-ready .home-columns.is-visible .home-panel {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.home-page.reveal-ready .service-band.is-visible .service-tile:nth-child(1) {
+  transition-delay: 120ms;
+}
+
+.home-page.reveal-ready .service-band.is-visible .service-tile:nth-child(2) {
+  transition-delay: 190ms;
+}
+
+.home-page.reveal-ready .service-band.is-visible .service-tile:nth-child(3) {
+  transition-delay: 260ms;
+}
+
+.home-page.reveal-ready .service-band.is-visible .service-tile:nth-child(4) {
+  transition-delay: 330ms;
+}
+
+.home-page.reveal-ready .home-columns.is-visible .home-panel:nth-child(2) {
+  transition-delay: 140ms;
 }
 
 .home-page .advisor-visual {
@@ -2358,6 +2579,52 @@ onBeforeUnmount(() => {
   }
 }
 
+@keyframes heroWaterSweep {
+  from {
+    opacity: 0.2;
+    transform: translate3d(0, -18%, 0);
+  }
+
+  to {
+    opacity: 0.55;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes heroWaveRise {
+  from {
+    opacity: 0.92;
+    transform: translate3d(0, 26px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes heroWaveDrift {
+  from {
+    background-position: 46% bottom;
+  }
+
+  to {
+    background-position: 54% bottom;
+  }
+}
+
+@keyframes homeTopFloatIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @keyframes homeSkeleton {
   0%,
   100% {
@@ -2379,6 +2646,27 @@ onBeforeUnmount(() => {
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
+
+  .home-page .hero-copy > .eyebrow,
+  .home-page .hero-copy > h1,
+  .home-page .hero-copy > .subtext,
+  .home-page .hero-search,
+  .home-page .quick-tags,
+  .home-page .hero-panel {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .home-page.reveal-ready .service-band,
+  .home-page.reveal-ready .advisor-band,
+  .home-page.reveal-ready .law-band,
+  .home-page.reveal-ready .home-columns,
+  .home-page.reveal-ready .service-band .section-head,
+  .home-page.reveal-ready .service-band .service-tile,
+  .home-page.reveal-ready .home-columns .home-panel {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -2391,7 +2679,7 @@ onBeforeUnmount(() => {
 
   .home-page .hero-section {
     min-height: clamp(500px, calc(68svh - 84px), 660px);
-    padding: 72px 38px 150px;
+    padding: calc(72px + var(--home-header-overlap, 0px)) 38px 150px;
   }
 
   .home-page .hero-section h1 {
@@ -2489,7 +2777,7 @@ onBeforeUnmount(() => {
 
   .home-page .hero-section {
     min-height: clamp(480px, calc(64svh - 70px), 620px);
-    padding: 54px 20px 124px;
+    padding: calc(54px + var(--home-header-overlap, 0px)) 20px 124px;
   }
 
   .home-page .hero-copy,

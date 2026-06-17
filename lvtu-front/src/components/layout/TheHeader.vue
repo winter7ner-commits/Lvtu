@@ -480,11 +480,11 @@ const handleLogout = () => {
 }
 
 .user-menu-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: transparent;
+  border: 1px solid transparent;
   color: #ffffff;
   min-height: 38px;
-  padding: 0 12px;
+  padding: 0 6px;
   border-radius: 4px;
   font-size: 14px;
   line-height: 1;
@@ -496,8 +496,16 @@ const handleLogout = () => {
   transition: all 0.3s ease;
 }
 
-.user-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+.user-menu-btn:hover,
+.user-menu-btn:focus-visible,
+.user-menu-dropdown.is-active .user-menu-btn {
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.user-menu-btn:hover .dropdown-icon,
+.user-menu-btn:focus-visible .dropdown-icon,
+.user-menu-dropdown.is-active .dropdown-icon {
+  background-color: transparent;
 }
 
 .user-avatar {
