@@ -68,6 +68,7 @@ import { useAuthStore } from '@/store/auth'
 import { getMyApplication } from '@/api/application'
 import { me } from '@/api/auth'
 import { ElMessage } from 'element-plus'
+import { goBack } from '@/utils/navigation'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -132,7 +133,7 @@ const goToApply = () => {
 }
 const goToModify = () => router.push({ path: '/apply', query: { apply_type: 1 } })
 const goToDetail = () => router.push('/application-status')
-const goToSettings = () => router.push('/settings')
+const goToSettings = () => goBack(router, '/settings')
 </script>
 
 <style scoped>

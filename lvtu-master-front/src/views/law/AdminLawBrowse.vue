@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getArticleDetail, getArticlesByDocument, getCategories, getDocumentsByCategory } from '../../api/law'
 
@@ -16,13 +16,87 @@ const selectedArticle = ref(null)
 const selectedArticleDetail = ref(null)
 const loading = ref(false)
 const detailLoading = ref(false)
+const articlePage = ref(1)
 
-onMounted(() => {
-  loadCategories()
+const BROWSE_PAGE_SIZE = 6
+const DEFAULT_CATEGORY_NAME = '宪法及宪法相关法'
+const DEFAULT_DOCUMENT_NAME = '中华人民共和国宪法'
+
+const pageCount = (total) => Math.max(1, Math.ceil(total / BROWSE_PAGE_SIZE))
+const paginationItems = (current, total) => {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, index) => ({
+      key: `page-${index + 1}`,
+      type: 'page',
+      page: index + 1
+    }))
+  }
+
+  const items = [{ key: 'page-1', type: 'page', page: 1 }]
+  const start = Math.max(2, current - 1)
+  const end = Math.min(total - 1, current + 1)
+
+  if (start > 2) {
+    items.push({
+      key: 'ellipsis-prev',
+      type: 'ellipsis',
+      direction: 'prev',
+      page: Math.max(1, current - 5)
+    })
+  }
+
+  for (let page = start; page <= end; page += 1) {
+    items.push({ key: `page-${page}`, type: 'page', page })
+  }
+
+  if (end < total - 1) {
+    items.push({
+      key: 'ellipsis-next',
+      type: 'ellipsis',
+      direction: 'next',
+      page: Math.min(total, current + 5)
+    })
+  }
+
+  items.push({ key: `page-${total}`, type: 'page', page: total })
+  return items
+}
+
+const articlePageCount = computed(() => pageCount(articles.value.length))
+const pagedArticles = computed(() => {
+  const start = (articlePage.value - 1) * BROWSE_PAGE_SIZE
+  return articles.value.slice(start, start + BROWSE_PAGE_SIZE)
+})
+
+const setArticlePage = (page) => {
+  articlePage.value = Math.min(Math.max(page, 1), articlePageCount.value)
+}
+
+watch(articles, () => {
+  articlePage.value = 1
+})
+
+const findByName = (items, targetName) => {
+  if (!targetName) return null
+  return items.find((item) => item.name === targetName)
+    || items.find((item) => String(item.name || '').includes(targetName))
+}
+
+const selectDefaultLegalDocument = async () => {
+  if (!categories.value.length) return
+  const targetCategory = findByName(categories.value, DEFAULT_CATEGORY_NAME) || categories.value[0]
+  await selectCategory(targetCategory.id, null, DEFAULT_DOCUMENT_NAME)
+}
+
+onMounted(async () => {
+  await loadCategories()
   if (route.query.category) {
-    setTimeout(() => {
-      selectCategory(Number(route.query.category))
-    }, 100)
+    await selectCategory(
+      Number(route.query.category),
+      route.query.document ? Number(route.query.document) : null
+    )
+  } else {
+    await selectDefaultLegalDocument()
   }
 })
 
@@ -37,10 +111,11 @@ const loadCategories = async () => {
   loading.value = false
 }
 
-const selectCategory = async (categoryId) => {
+const selectCategory = async (categoryId, preferredDocumentId = null, preferredDocumentName = '') => {
   selectedCategory.value = categoryId
   selectedDocument.value = null
   articles.value = []
+  articlePage.value = 1
   selectedDocumentName.value = ''
   loading.value = true
 
@@ -53,7 +128,10 @@ const selectCategory = async (categoryId) => {
   }
 
   if (documents.value.length > 0) {
-    selectDocument(documents.value[0].id)
+    const targetDocument = documents.value.find((item) => item.id === preferredDocumentId)
+      || findByName(documents.value, preferredDocumentName)
+      || documents.value[0]
+    await selectDocument(targetDocument.id)
   }
   loading.value = false
 }
@@ -62,6 +140,7 @@ const selectDocument = async (documentId) => {
   selectedDocument.value = documentId
   const document = documents.value.find((item) => item.id === documentId)
   if (document) selectedDocumentName.value = document.name
+  articlePage.value = 1
   loading.value = true
 
   try {
@@ -138,7 +217,7 @@ const openArticleModal = async (article) => {
         </div>
         <div v-if="articles.length > 0" class="article-list">
           <div
-            v-for="article in articles"
+            v-for="article in pagedArticles"
             :key="article.id"
             class="article-item"
             @click="openArticleModal(article)"
@@ -148,6 +227,31 @@ const openArticleModal = async (article) => {
               <span v-if="article.title" class="article-title">{{ article.title }}</span>
             </div>
             <p class="article-content">{{ truncateContent(article.content) }}</p>
+          </div>
+        </div>
+        <div v-if="articles.length > 0" class="pagination-bar">
+          <div class="pagination-actions" aria-label="法条浏览分页">
+            <button class="pager-arrow" type="button" :disabled="articlePage === 1" @click="setArticlePage(articlePage - 1)">&lt;</button>
+            <template v-for="item in paginationItems(articlePage, articlePageCount)" :key="item.key">
+              <button
+                v-if="item.type === 'page'"
+                type="button"
+                class="pager-page"
+                :class="{ active: item.page === articlePage }"
+                @click="setArticlePage(item.page)"
+              >
+                {{ item.page }}
+              </button>
+              <button
+                v-else
+                type="button"
+                :class="['pager-ellipsis', `is-${item.direction}`]"
+                @click="setArticlePage(item.page)"
+              >
+                <span>...</span>
+              </button>
+            </template>
+            <button class="pager-arrow" type="button" :disabled="articlePage === articlePageCount" @click="setArticlePage(articlePage + 1)">&gt;</button>
           </div>
         </div>
         <div v-else class="empty-state">
@@ -209,151 +313,232 @@ const openArticleModal = async (article) => {
 
 <style scoped>
 .law-article-container {
-  min-height: calc(100vh - 70px);
-  padding: 1rem;
   position: relative;
+  height: 100vh;
+  min-height: 640px;
+  overflow: hidden;
+  padding: 18px 20px;
 }
 
 .loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.8);
+  z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  background: rgba(245, 247, 251, 0.72);
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #1e88e5;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  background: conic-gradient(var(--admin-primary), rgba(37, 99, 235, 0));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 0);
+  animation: spin 0.9s linear infinite;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
 .three-tier-layout {
   display: grid;
-  grid-template-columns: 200px 250px 1fr;
-  gap: 1rem;
-  height: calc(100vh - 110px);
-  max-width: 1400px;
-  margin: 0 auto;
+  grid-template-columns: 250px 300px minmax(0, 1fr);
+  gap: 14px;
+  height: 100%;
+  max-width: none;
+  margin: 0;
 }
 
 .tier {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  background: #ffffff;
 }
 
 .tier h3 {
-  padding: 1rem;
-  background: #f5f7fa;
-  border-bottom: 1px solid #e4e7ed;
+  flex: 0 0 auto;
   margin: 0;
-  font-size: 1rem;
-  color: #303133;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--admin-divider);
+  background: var(--admin-panel);
+  color: var(--admin-text);
+  font-size: 16px;
+  font-weight: 800;
 }
 
 .category-list,
 .document-list {
   flex: 1;
-  list-style: none;
-  padding: 0.5rem;
+  min-height: 0;
+  margin: 0;
+  padding: 14px;
   overflow-y: auto;
+  list-style: none;
 }
 
 .category-list li,
 .document-list li {
-  padding: 0.75rem;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+  border-radius: var(--admin-radius-sm);
+  color: var(--admin-text-secondary);
   cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.2s;
-  font-size: 0.9rem;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.category-list li + li,
+.document-list li + li {
+  margin-top: 6px;
 }
 
 .category-list li:hover,
 .document-list li:hover {
-  background: #f5f7fa;
+  background: var(--admin-panel);
+  color: var(--admin-primary-text);
 }
 
 .category-list li.active,
 .document-list li.active {
-  background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
-  color: white;
+  background: var(--admin-primary);
+  color: #ffffff;
 }
 
 .tier-articles {
-  display: flex;
-  flex-direction: column;
+  min-width: 0;
 }
 
 .document-header {
-  padding: 1rem;
-  background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
-  border-bottom: 1px solid #1565c0;
+  flex: 0 0 auto;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--admin-primary-deep);
+  background: var(--admin-primary);
 }
 
 .document-title {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: white;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 900;
 }
 
 .article-list {
   flex: 1;
-  padding: 1rem;
+  min-height: 0;
   overflow-y: auto;
+  padding: 16px;
+  background: #ffffff;
 }
 
 .article-item {
-  background: #fafafa;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  padding: 16px 18px;
+  border: 1px solid var(--admin-divider);
+  border-radius: var(--admin-radius-md);
+  background: #ffffff;
   cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #e4e7ed;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.article-item + .article-item {
+  margin-top: 12px;
 }
 
 .article-item:hover {
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  transform: translateX(5px);
+  border-color: var(--admin-soft-blue-border);
+  background: #fbfdff;
 }
 
 .article-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
+  gap: 14px;
+  margin-bottom: 8px;
 }
 
 .article-no {
-  font-weight: bold;
-  color: #1e88e5;
-  font-size: 1rem;
+  color: var(--admin-primary-text);
+  font-size: 16px;
+  font-weight: 900;
 }
 
 .article-title {
-  font-size: 0.85rem;
-  color: #67c23a;
+  color: var(--admin-success);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .article-content {
   margin: 0;
-  color: #666;
-  font-size: 0.9rem;
-  line-height: 1.6;
+  color: var(--admin-text-secondary);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.pagination-bar {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--admin-divider);
+  background: #ffffff;
+}
+
+.pagination-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.pagination-actions button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pagination-actions button:hover:not(:disabled),
+.pagination-actions button.active {
+  background: var(--admin-soft-blue);
+  color: var(--admin-primary-text);
+}
+
+.pagination-actions button:disabled {
+  color: var(--admin-text-disabled);
+  cursor: not-allowed;
+}
+
+.pager-ellipsis span {
+  display: inline-block;
+}
+
+.pager-ellipsis:hover span {
+  font-size: 0;
+}
+
+.pager-ellipsis.is-prev:hover::after {
+  content: '《';
+  font-size: 14px;
+}
+
+.pager-ellipsis.is-next:hover::after {
+  content: '》';
+  font-size: 14px;
 }
 
 .empty-state {
@@ -361,130 +546,145 @@ const openArticleModal = async (article) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  padding: 24px;
+  color: var(--admin-text-muted);
 }
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
 }
 
 .modal-content {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 760px;
-  max-height: 80vh;
+  width: min(760px, 92vw);
+  max-height: 82vh;
   overflow-y: auto;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  background: #ffffff;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
 }
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e4e7ed;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--admin-divider);
 }
 
 .modal-header h2 {
   margin: 0;
-  color: #1e88e5;
+  color: var(--admin-text);
+  font-size: 21px;
+  font-weight: 800;
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-sm);
+  background: #ffffff;
+  color: var(--admin-text-secondary);
   cursor: pointer;
-  color: #666;
+  font-size: 20px;
 }
 
 .article-detail {
-  padding: 1.5rem;
+  padding: 20px;
 }
 
 .detail-row {
-  margin-bottom: 1rem;
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .detail-label {
-  font-weight: bold;
-  color: #666;
   min-width: 90px;
+  color: var(--admin-text-muted);
+  font-weight: 800;
 }
 
 .detail-value {
-  color: #333;
-}
-
-.content-row {
-  flex-direction: column;
+  color: var(--admin-text-secondary);
 }
 
 .content-value {
-  white-space: pre-wrap;
-  word-break: break-all;
-  color: #333;
+  color: var(--admin-text-secondary);
   line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .readonly-section {
-  margin-top: 1.2rem;
-  padding: 1rem;
-  border: 1px solid #e5eaf3;
-  border-radius: 8px;
-  background: #f8fbff;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--admin-divider);
+  border-radius: var(--admin-radius-md);
+  background: var(--admin-panel);
 }
 
 .section-title {
-  margin-bottom: 0.75rem;
-  color: #172033;
+  margin-bottom: 10px;
+  color: var(--admin-text);
   font-weight: 800;
 }
 
 .empty-line {
-  color: #909399;
+  color: var(--admin-text-muted);
   line-height: 1.7;
 }
 
 .admin-comment-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 10px;
 }
 
 .admin-comment-item {
-  padding: 0.8rem;
-  border: 1px solid #edf1f7;
-  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid var(--admin-divider);
+  border-radius: var(--admin-radius-md);
   background: #ffffff;
 }
 
 .comment-meta {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-  color: #667085;
-  font-size: 0.85rem;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--admin-text-muted);
+  font-size: 12px;
 }
 
 .comment-meta strong {
-  color: #172033;
+  color: var(--admin-text);
 }
 
 .admin-comment-item p {
   margin: 0;
-  color: #344054;
+  color: var(--admin-text-secondary);
   line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+@media (max-width: 1100px) {
+  .law-article-container {
+    overflow-x: auto;
+  }
+
+  .three-tier-layout {
+    min-width: 980px;
+  }
 }
 </style>

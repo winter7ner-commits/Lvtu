@@ -62,7 +62,7 @@
           </div>
           <div class="item-content">
             <h3>账号安全</h3>
-            <p>修改密码、绑定手机</p>
+            <p>修改密码、登录安全</p>
           </div>
           <div class="item-arrow">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -129,8 +129,10 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useAuthStore } from '../store/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const goToAuthCenter = () => {
   router.push('/auth-center')
@@ -141,8 +143,7 @@ const goToApplicationStatus = () => {
 }
 
 const goToSecurity = () => {
-  ElMessage.info('功能开发中，敬请期待')
-  // router.push('/security')
+  router.push('/change-password')
 }
 
 const goToNotification = () => {
@@ -151,7 +152,7 @@ const goToNotification = () => {
 }
 
 const goToAbout = () => {
-  ElMessage.info('律途 v1.0.0 — 法律服务平台')
+  router.push('/about')
 }
 
 const handleLogout = async () => {
@@ -161,9 +162,7 @@ const handleLogout = async () => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    // 清除本地存储的登录信息
-    localStorage.removeItem('userId')
-    localStorage.removeItem('token')
+    authStore.logout()
     ElMessage.success('已退出登录')
     router.push('/')
   } catch {

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getOrders } from '../../api/admin'
 import { getPendingSettlements, paySettlement } from '../../api/settlement'
 
 const loading = ref(false)
@@ -13,12 +14,26 @@ const totalAmount = computed(() => {
 
 const formatMoney = (value) => `¥${Number(value || 0).toFixed(2)}`
 const formatTime = (value) => (value ? String(value).replace('T', ' ').slice(0, 16) : '-')
+const rowValue = (row, camelKey, snakeKey = camelKey) => row?.[camelKey] ?? row?.[snakeKey]
+const lawyerDisplayName = (row) => rowValue(row, 'lawyerName', 'lawyer_name') || '-'
 
 const loadSettlements = async () => {
   loading.value = true
   try {
-    const response = await getPendingSettlements()
-    settlements.value = response?.code === 200 ? response.data || [] : []
+    const [response, orderResponse] = await Promise.all([
+      getPendingSettlements(),
+      getOrders().catch(() => null)
+    ])
+    const orderRows = orderResponse?.code === 200 ? orderResponse.data || [] : []
+    const orderMap = new Map(orderRows.map((order) => [String(order.order_id), order]))
+    const rows = response?.code === 200 ? response.data || [] : []
+    settlements.value = rows.map((item) => {
+      const order = orderMap.get(String(rowValue(item, 'orderId', 'order_id')))
+      return {
+        ...item,
+        lawyerName: rowValue(item, 'lawyerName', 'lawyer_name') || order?.lawyer_name || ''
+      }
+    })
   } catch (error) {
     ElMessage.error(error?.response?.data?.message || '结算记录加载失败')
   } finally {
@@ -28,7 +43,7 @@ const loadSettlements = async () => {
 
 const handlePay = async (settlement) => {
   try {
-    await ElMessageBox.confirm(`确认向律师 #${settlement.lawyerId} 结算 ${formatMoney(settlement.amount)} 吗？`, '确认结算', {
+    await ElMessageBox.confirm(`确认向律师 ${lawyerDisplayName(settlement)} #${settlement.lawyerId} 结算 ${formatMoney(settlement.amount)} 吗？`, '确认结算', {
       confirmButtonText: '确认结算',
       cancelButtonText: '取消',
       type: 'warning'
@@ -80,6 +95,9 @@ onMounted(loadSettlements)
       <el-table v-else :data="settlements" style="width: 100%">
         <el-table-column prop="id" label="结算ID" min-width="100" />
         <el-table-column prop="orderId" label="订单ID" min-width="110" />
+        <el-table-column label="律师姓名" min-width="130">
+          <template #default="{ row }">{{ lawyerDisplayName(row) }}</template>
+        </el-table-column>
         <el-table-column prop="lawyerId" label="律师ID" min-width="110" />
         <el-table-column label="金额" min-width="120">
           <template #default="{ row }">{{ formatMoney(row.amount) }}</template>

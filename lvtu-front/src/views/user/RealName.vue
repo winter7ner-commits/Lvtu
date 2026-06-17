@@ -60,7 +60,7 @@
           <input ref="backInput" type="file" accept="image/jpeg,image/jpg,image/png" hidden @change="handleFileChange($event, 'back')" />
 
           <div class="actions">
-            <button type="button" class="ghost-btn" @click="router.push('/auth-center')">返回</button>
+            <button type="button" class="ghost-btn" @click="handleBack">返回</button>
             <button type="button" class="primary-btn" :disabled="submitting || uploading || verification?.verificationStatus === 0" @click="submit">
               {{ verification?.verificationStatus === 0 ? '审核中' : submitting ? '提交中' : '提交认证' }}
             </button>
@@ -77,6 +77,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/store/auth'
 import { getUserVerification, submitUserVerification, uploadVerificationImage } from '@/api/user'
+import { goBack } from '@/utils/navigation'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -218,6 +219,10 @@ const submit = async () => {
   } finally {
     submitting.value = false
   }
+}
+
+const handleBack = () => {
+  goBack(router, '/auth-center')
 }
 
 onMounted(load)

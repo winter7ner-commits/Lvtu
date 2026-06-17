@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   getCategories,
   getDocuments,
@@ -24,6 +24,10 @@ const modalVisible = ref(false)
 const modalType = ref('category')
 const isEditing = ref(false)
 const form = ref({})
+const documentPage = ref(1)
+const articlePage = ref(1)
+
+const PAGE_SIZE = 9
 
 const panelTitle = computed(() => {
   if (activePanel.value === 'documents') return `法律文件（${documents.value.length}个）`
@@ -33,6 +37,85 @@ const panelTitle = computed(() => {
 
 const documentName = (id) => documents.value.find((item) => item.id === id)?.name || '-'
 const categoryName = (id) => categories.value.find((item) => item.id === id)?.name || '-'
+const pageCount = (total) => Math.max(1, Math.ceil(total / PAGE_SIZE))
+const paginationItems = (current, total) => {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, index) => ({
+      key: `page-${index + 1}`,
+      type: 'page',
+      page: index + 1
+    }))
+  }
+
+  const items = [{ key: 'page-1', type: 'page', page: 1 }]
+  const start = Math.max(2, current - 1)
+  const end = Math.min(total - 1, current + 1)
+
+  if (start > 2) {
+    items.push({
+      key: 'ellipsis-prev',
+      type: 'ellipsis',
+      direction: 'prev',
+      page: Math.max(1, current - 5)
+    })
+  }
+
+  for (let page = start; page <= end; page += 1) {
+    items.push({ key: `page-${page}`, type: 'page', page })
+  }
+
+  if (end < total - 1) {
+    items.push({
+      key: 'ellipsis-next',
+      type: 'ellipsis',
+      direction: 'next',
+      page: Math.min(total, current + 5)
+    })
+  }
+
+  items.push({ key: `page-${total}`, type: 'page', page: total })
+  return items
+}
+const pageRange = (total, page) => {
+  if (!total) return { start: 0, end: 0 }
+  return {
+    start: (page - 1) * PAGE_SIZE + 1,
+    end: Math.min(page * PAGE_SIZE, total)
+  }
+}
+
+const documentPageCount = computed(() => pageCount(documents.value.length))
+const articlePageCount = computed(() => pageCount(articles.value.length))
+const pagedDocuments = computed(() => {
+  const start = (documentPage.value - 1) * PAGE_SIZE
+  return documents.value.slice(start, start + PAGE_SIZE)
+})
+const pagedArticles = computed(() => {
+  const start = (articlePage.value - 1) * PAGE_SIZE
+  return articles.value.slice(start, start + PAGE_SIZE)
+})
+const documentRange = computed(() => pageRange(documents.value.length, documentPage.value))
+const articleRange = computed(() => pageRange(articles.value.length, articlePage.value))
+
+const setActivePanel = (panel) => {
+  activePanel.value = panel
+}
+
+const setPage = (type, page) => {
+  if (type === 'documents') {
+    documentPage.value = Math.min(Math.max(page, 1), documentPageCount.value)
+  } else {
+    articlePage.value = Math.min(Math.max(page, 1), articlePageCount.value)
+  }
+}
+
+watch(documents, () => {
+  documentPage.value = Math.min(documentPage.value, documentPageCount.value)
+})
+
+watch(articles, () => {
+  articlePage.value = Math.min(articlePage.value, articlePageCount.value)
+})
 
 const loadData = async () => {
   loading.value = true
@@ -98,83 +181,170 @@ const removeItem = async (type, id) => {
 
 <template>
   <main class="page-shell">
-    <div class="page-head">
-      <h1>法律法规管理</h1>
+    <section class="page-head">
+      <div>
+        <h1>法律法规管理</h1>
+        <p>维护法律分类、文件目录和条文内容，保持前台法条检索数据准确。</p>
+      </div>
       <div class="actions">
         <router-link class="action-link browse" to="/law-browse">浏览条文</router-link>
-        <button class="action-btn blue" @click="openAdd('category')">添加分类</button>
-        <button class="action-btn green" @click="openAdd('document')">添加文件</button>
-        <button class="action-btn yellow" @click="openAdd('article')">添加条文</button>
+        <button class="action-btn blue" type="button" @click="openAdd('category')">添加分类</button>
+        <button class="action-btn green" type="button" @click="openAdd('document')">添加文件</button>
+        <button class="action-btn yellow" type="button" @click="openAdd('article')">添加条文</button>
       </div>
-    </div>
+    </section>
 
-    <section class="content-card">
-      <div class="card-title">
-        <span>📁 {{ panelTitle }}</span>
+    <section class="content-card law-manage-card">
+      <div class="law-card-head">
+        <div>
+          <div class="card-title">{{ panelTitle }}</div>
+          <p v-if="activePanel === 'categories'" class="panel-desc">用于组织法律文件的基础目录。</p>
+          <p v-else-if="activePanel === 'documents'" class="panel-desc">每页显示 9 个法律文件，可在下方翻页。</p>
+          <p v-else class="panel-desc">每页显示 9 条法律条文，可在下方翻页。</p>
+        </div>
         <div class="segment">
-          <button :class="{ active: activePanel === 'categories' }" @click="activePanel = 'categories'">分类</button>
-          <button :class="{ active: activePanel === 'documents' }" @click="activePanel = 'documents'">文件</button>
-          <button :class="{ active: activePanel === 'articles' }" @click="activePanel = 'articles'">条文</button>
+          <button type="button" :class="{ active: activePanel === 'categories' }" @click="setActivePanel('categories')">分类</button>
+          <button type="button" :class="{ active: activePanel === 'documents' }" @click="setActivePanel('documents')">文件</button>
+          <button type="button" :class="{ active: activePanel === 'articles' }" @click="setActivePanel('articles')">条文</button>
         </div>
       </div>
 
       <div v-if="loading" class="loading">加载中...</div>
 
-      <table v-else-if="activePanel === 'categories'" class="data-table">
-        <thead>
-          <tr><th>ID</th><th>分类名称</th><th>排序</th><th>操作</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in categories" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ item.name }}</td>
-            <td>{{ item.sortOrder }}</td>
-            <td>
-              <button class="edit-btn" @click="openEdit('category', item)">编辑</button>
-              <button class="delete-btn" @click="removeItem('category', item.id)">删除</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <template v-else-if="activePanel === 'categories'">
+        <div class="table-wrap">
+          <table class="data-table law-data-table">
+            <thead>
+              <tr><th>ID</th><th>分类名称</th><th>排序</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr v-if="categories.length === 0">
+                <td colspan="4" class="empty">暂无分类</td>
+              </tr>
+              <template v-else>
+                <tr v-for="item in categories" :key="item.id">
+                  <td>{{ item.id }}</td>
+                  <td class="name-cell">{{ item.name }}</td>
+                  <td>{{ item.sortOrder }}</td>
+                  <td class="action-cell">
+                    <button class="edit-btn" type="button" @click="openEdit('category', item)">编辑</button>
+                    <button class="delete-btn" type="button" @click="removeItem('category', item.id)">删除</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </template>
 
-      <table v-else-if="activePanel === 'documents'" class="data-table">
-        <thead>
-          <tr><th>ID</th><th>文件名称</th><th>所属分类</th><th>发布日期</th><th>排序</th><th>操作</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in documents" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ item.name }}</td>
-            <td>{{ categoryName(item.categoryId) }}</td>
-            <td>{{ item.publishDate || '-' }}</td>
-            <td>{{ item.sortOrder }}</td>
-            <td>
-              <button class="edit-btn" @click="openEdit('document', item)">编辑</button>
-              <button class="delete-btn" @click="removeItem('document', item.id)">删除</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <template v-else-if="activePanel === 'documents'">
+        <div class="table-wrap">
+          <table class="data-table law-data-table">
+            <thead>
+              <tr><th>ID</th><th>文件名称</th><th>所属分类</th><th>发布日期</th><th>排序</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr v-if="documents.length === 0">
+                <td colspan="6" class="empty">暂无法律文件</td>
+              </tr>
+              <template v-else>
+                <tr v-for="item in pagedDocuments" :key="item.id">
+                  <td>{{ item.id }}</td>
+                  <td class="name-cell">{{ item.name }}</td>
+                  <td>{{ categoryName(item.categoryId) }}</td>
+                  <td>{{ item.publishDate || '-' }}</td>
+                  <td>{{ item.sortOrder }}</td>
+                  <td class="action-cell">
+                    <button class="edit-btn" type="button" @click="openEdit('document', item)">编辑</button>
+                    <button class="delete-btn" type="button" @click="removeItem('document', item.id)">删除</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination-bar">
+          <div class="pagination-actions" aria-label="法律文件分页">
+            <button class="pager-arrow" type="button" :disabled="documentPage === 1" @click="setPage('documents', documentPage - 1)">&lt;</button>
+            <template v-for="item in paginationItems(documentPage, documentPageCount)" :key="item.key">
+              <button
+                v-if="item.type === 'page'"
+                type="button"
+                class="pager-page"
+                :class="{ active: item.page === documentPage }"
+                @click="setPage('documents', item.page)"
+              >
+                {{ item.page }}
+              </button>
+              <button
+                v-else
+                type="button"
+                :class="['pager-ellipsis', `is-${item.direction}`]"
+                @click="setPage('documents', item.page)"
+              >
+                <span>...</span>
+              </button>
+            </template>
+            <button class="pager-arrow" type="button" :disabled="documentPage === documentPageCount" @click="setPage('documents', documentPage + 1)">&gt;</button>
+          </div>
+          <span class="pagination-summary">第 {{ documentRange.start }}-{{ documentRange.end }} 条，共 {{ documents.length }} 条</span>
+        </div>
+      </template>
 
-      <table v-else class="data-table">
-        <thead>
-          <tr><th>ID</th><th>所属文件</th><th>条文编号</th><th>章节</th><th>内容</th><th>排序</th><th>操作</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in articles" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ documentName(item.documentId) }}</td>
-            <td>{{ item.articleNumber }}</td>
-            <td>{{ item.title || '-' }}</td>
-            <td class="ellipsis">{{ item.content }}</td>
-            <td>{{ item.sortOrder }}</td>
-            <td>
-              <button class="edit-btn" @click="openEdit('article', item)">编辑</button>
-              <button class="delete-btn" @click="removeItem('article', item.id)">删除</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <template v-else>
+        <div class="table-wrap">
+          <table class="data-table law-data-table article-table">
+            <thead>
+              <tr><th>ID</th><th>所属文件</th><th>条文编号</th><th>章节</th><th>内容</th><th>排序</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr v-if="articles.length === 0">
+                <td colspan="7" class="empty">暂无法律条文</td>
+              </tr>
+              <template v-else>
+                <tr v-for="item in pagedArticles" :key="item.id">
+                  <td>{{ item.id }}</td>
+                  <td>{{ documentName(item.documentId) }}</td>
+                  <td>{{ item.articleNumber }}</td>
+                  <td>{{ item.title || '-' }}</td>
+                  <td class="ellipsis">{{ item.content }}</td>
+                  <td>{{ item.sortOrder }}</td>
+                  <td class="action-cell">
+                    <button class="edit-btn" type="button" @click="openEdit('article', item)">编辑</button>
+                    <button class="delete-btn" type="button" @click="removeItem('article', item.id)">删除</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination-bar">
+          <div class="pagination-actions" aria-label="法律条文分页">
+            <button class="pager-arrow" type="button" :disabled="articlePage === 1" @click="setPage('articles', articlePage - 1)">&lt;</button>
+            <template v-for="item in paginationItems(articlePage, articlePageCount)" :key="item.key">
+              <button
+                v-if="item.type === 'page'"
+                type="button"
+                class="pager-page"
+                :class="{ active: item.page === articlePage }"
+                @click="setPage('articles', item.page)"
+              >
+                {{ item.page }}
+              </button>
+              <button
+                v-else
+                type="button"
+                :class="['pager-ellipsis', `is-${item.direction}`]"
+                @click="setPage('articles', item.page)"
+              >
+                <span>...</span>
+              </button>
+            </template>
+            <button class="pager-arrow" type="button" :disabled="articlePage === articlePageCount" @click="setPage('articles', articlePage + 1)">&gt;</button>
+          </div>
+          <span class="pagination-summary">第 {{ articleRange.start }}-{{ articleRange.end }} 条，共 {{ articles.length }} 条</span>
+        </div>
+      </template>
     </section>
 
     <div v-if="modalVisible" class="modal-mask" @click.self="modalVisible = false">
@@ -207,35 +377,243 @@ const removeItem = async (type, id) => {
 </template>
 
 <style scoped>
-.page-shell { padding: 48px 46px; }
-.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 38px; }
-.page-head h1 { margin: 0; color: #1d8fd6; font-size: 31px; font-weight: 800; }
-.actions { display: flex; gap: 18px; }
-.action-btn, .action-link { border: 0; border-radius: 6px; color: #fff; padding: 17px 40px; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12); text-decoration: none; line-height: 1; }
-.browse { background: linear-gradient(135deg, #64748b, #334155); }
-.blue { background: linear-gradient(135deg, #1d94e8, #086bc1); }
-.green { background: linear-gradient(135deg, #67c83d, #35a619); }
-.yellow { background: linear-gradient(135deg, #f4bd4b, #eea733); }
-.content-card { background: #fff; border-radius: 6px; padding: 42px; box-shadow: 0 5px 18px rgba(30, 55, 90, 0.08); }
-.card-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; font-size: 23px; font-weight: 800; }
-.segment { display: flex; gap: 8px; }
-.segment button { border: 1px solid #d6e1f0; background: #fff; border-radius: 4px; padding: 8px 14px; cursor: pointer; }
-.segment button.active { color: #fff; background: #1d8fd6; border-color: #1d8fd6; }
-.data-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.data-table th { background: #f7f7fb; font-size: 19px; text-align: left; padding: 20px; }
-.data-table td { border-top: 1px solid #e6e8ef; padding: 18px 20px; font-size: 17px; }
-.ellipsis { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.edit-btn, .delete-btn { border: 0; color: #fff; border-radius: 4px; padding: 10px 18px; margin-right: 10px; cursor: pointer; font-size: 15px; }
-.edit-btn { background: #409eff; }
-.delete-btn { background: #ef6b6b; }
-.loading { padding: 36px; color: #666; text-align: center; }
-.modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 200; }
-.modal { width: 560px; max-height: 86vh; overflow: auto; background: #fff; border-radius: 8px; padding: 24px; }
-.modal h2 { margin: 0 0 18px; color: #1d8fd6; }
-.modal label { display: block; margin-bottom: 14px; font-weight: 700; }
-.modal input, .modal select, .modal textarea { width: 100%; margin-top: 8px; padding: 10px; border: 1px solid #d7dce5; border-radius: 4px; font: inherit; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
-.cancel-btn, .save-btn { border: 0; border-radius: 4px; color: #fff; padding: 10px 20px; cursor: pointer; }
-.cancel-btn { background: #909399; }
-.save-btn { background: #1d8fd6; }
+.page-head p {
+  margin: 8px 0 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.action-btn,
+.action-link {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--admin-radius-sm);
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.browse {
+  border: 1px solid var(--admin-border);
+  background: #ffffff;
+  color: var(--admin-text-secondary);
+}
+
+.blue,
+.green,
+.yellow {
+  border: 1px solid var(--admin-primary);
+  background: var(--admin-primary);
+  color: #ffffff;
+}
+
+.law-manage-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.law-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--admin-divider);
+  background: #ffffff;
+}
+
+.card-title {
+  margin: 0;
+}
+
+.panel-desc {
+  margin: 6px 0 0;
+  color: var(--admin-text-muted);
+}
+
+.segment {
+  margin: 0;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.law-data-table {
+  min-width: 960px;
+  table-layout: fixed;
+}
+
+.article-table {
+  min-width: 1120px;
+}
+
+.law-data-table th,
+.law-data-table td {
+  white-space: nowrap;
+}
+
+.law-data-table th:first-child,
+.law-data-table td:first-child {
+  width: 86px;
+}
+
+.action-cell {
+  width: 150px;
+}
+
+.name-cell {
+  color: var(--admin-text);
+  font-weight: 800;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edit-btn,
+.delete-btn {
+  margin-right: 8px;
+}
+
+.empty,
+.loading {
+  padding: 36px;
+  color: var(--admin-text-muted);
+  text-align: center;
+}
+
+.pagination-bar {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 16px 22px 18px;
+  border-top: 1px solid var(--admin-divider);
+  background: #ffffff;
+}
+
+.pagination-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.pagination-actions button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pagination-actions button:hover:not(:disabled),
+.pagination-actions button.active {
+  background: var(--admin-soft-blue);
+  color: var(--admin-primary-text);
+}
+
+.pagination-actions button:disabled {
+  color: var(--admin-text-disabled);
+  cursor: not-allowed;
+}
+
+.pager-ellipsis span {
+  display: inline-block;
+}
+
+.pager-ellipsis:hover span {
+  font-size: 0;
+}
+
+.pager-ellipsis.is-prev:hover::after {
+  content: '《';
+  font-size: 14px;
+}
+
+.pager-ellipsis.is-next:hover::after {
+  content: '》';
+  font-size: 14px;
+}
+
+.pagination-summary {
+  color: var(--admin-text-muted);
+  font-size: 12px;
+}
+
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.modal {
+  width: min(560px, 92vw);
+  max-height: 86vh;
+  overflow: auto;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  background: #ffffff;
+  padding: 22px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
+}
+
+.modal h2 {
+  margin: 0 0 18px;
+  color: var(--admin-text);
+  font-size: 21px;
+}
+
+.modal label {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--admin-text-secondary);
+  font-weight: 800;
+}
+
+.modal input,
+.modal select,
+.modal textarea {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid #d8dee9;
+  border-radius: var(--admin-radius-sm);
+  font: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+  .law-card-head,
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
 </style>

@@ -6,6 +6,31 @@ const orders = ref([])
 const selected = ref(null)
 const statusFilter = ref('')
 const keyword = ref('')
+const loading = ref(false)
+
+const ORDER_STATUS_CLASSES = {
+  待支付: 'badge-warning',
+  待接单: 'badge-warning',
+  处理中: 'badge-default',
+  待客户确认: 'badge-warning',
+  待评价: 'badge-warning',
+  已完成: 'badge-success',
+  已取消: 'badge-danger',
+  平台介入: 'badge-danger'
+}
+
+const ORDER_STATUS_ORDER = ['待支付', '待接单', '处理中', '待客户确认', '待评价', '已完成', '已取消', '平台介入']
+
+const ORDER_STATUS_CARD_CLASSES = {
+  待支付: 'status-waiting',
+  待接单: 'status-waiting',
+  处理中: 'status-running',
+  待客户确认: 'status-review',
+  待评价: 'status-review',
+  已完成: 'status-done',
+  已取消: 'status-closed',
+  平台介入: 'status-risk'
+}
 
 const filteredOrders = computed(() => {
   const key = keyword.value.trim().toLowerCase()
@@ -18,9 +43,27 @@ const filteredOrders = computed(() => {
   })
 })
 
-const statusOptions = computed(() => [...new Set(orders.value.map((item) => item.order_status).filter(Boolean))])
+const statusSummary = computed(() =>
+  ORDER_STATUS_ORDER.map((status) => ({
+    label: status,
+    value: status,
+    className: ORDER_STATUS_CARD_CLASSES[status] || 'status-default',
+    count: orders.value.filter((item) => item.order_status === status).length
+  }))
+)
 
 const formatMoney = (value) => value == null ? '-' : `￥${Number(value).toFixed(2)}`
+
+const orderStatusClass = (status) => ORDER_STATUS_CLASSES[status] || 'badge-default'
+const paymentStatusClass = (status) => {
+  if (status === '已支付') return 'badge-success'
+  if (status === '已取消') return 'badge-danger'
+  if (status) return 'badge-warning'
+  return 'badge-default'
+}
+
+const evaluationText = (item) => item.total_score ? `${Number(item.total_score).toFixed(1)}分` : '未评价'
+const evaluationClass = (item) => item.total_score ? 'badge-success' : 'badge-default'
 
 const parseFormData = (value) => {
   if (!value) return {}
@@ -31,49 +74,98 @@ const parseFormData = (value) => {
   }
 }
 
-onMounted(async () => {
-  const result = await getOrders()
-  orders.value = result.code === 200 ? result.data || [] : []
-})
+const loadOrders = async () => {
+  loading.value = true
+  try {
+    const result = await getOrders()
+    orders.value = result.code === 200 ? result.data || [] : []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadOrders)
 </script>
 
 <template>
   <main class="page-shell">
-    <div class="page-head">
-      <h1>订单查询</h1>
-      <div class="filters">
-        <select v-model="statusFilter">
-          <option value="">全部状态</option>
-          <option v-for="item in statusOptions" :key="item" :value="item">{{ item }}</option>
-        </select>
-        <input v-model="keyword" placeholder="搜索订单、用户、律师、服务" />
+    <section class="page-head">
+      <div>
+        <h1>订单查询</h1>
+        <p>查看订单状态、支付情况、评价状态和订单表单详情。</p>
       </div>
-    </div>
+      <button class="primary-btn" type="button" :disabled="loading" @click="loadOrders">
+        {{ loading ? '刷新中' : '刷新' }}
+      </button>
+    </section>
 
-    <section class="content-card">
-      <div class="card-title">订单列表（{{ filteredOrders.length }}个）</div>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>订单ID</th><th>用户</th><th>律师</th><th>服务</th><th>订单状态</th><th>订单金额</th><th>支付状态</th><th>支付金额</th><th>评价</th><th>创建时间</th><th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in filteredOrders" :key="item.order_id">
-            <td>{{ item.order_id }}</td>
-            <td>{{ item.user_name || item.user_id }}</td>
-            <td>{{ item.lawyer_name || '-' }}</td>
-            <td>{{ item.service_name }}</td>
-            <td>{{ item.order_status }}</td>
-            <td>{{ formatMoney(item.total_amount) }}</td>
-            <td>{{ item.payment_status || '-' }}</td>
-            <td>{{ formatMoney(item.payment_amount) }}</td>
-            <td>{{ item.total_score ? `${item.total_score}分` : '未评价' }}</td>
-            <td>{{ item.created_time }}</td>
-            <td><button class="detail-btn" @click="selected = item">详情</button></td>
-          </tr>
-        </tbody>
-      </table>
+    <section class="summary-band order-summary">
+      <button
+        v-for="item in statusSummary"
+        :key="item.label"
+        type="button"
+        :class="[item.className, { active: statusFilter === item.value }]"
+        @click="statusFilter = statusFilter === item.value ? '' : item.value"
+      >
+        <span>{{ item.label }}</span>
+        <strong>{{ item.count }}</strong>
+      </button>
+    </section>
+
+    <section class="content-card order-card">
+      <div class="order-list-head">
+        <div class="card-title">订单列表（{{ filteredOrders.length }}个）</div>
+        <input v-model="keyword" class="order-search" placeholder="搜索订单、用户、律师、服务" />
+      </div>
+
+      <div v-if="loading" class="empty">加载中...</div>
+      <div v-else class="order-table-frame">
+        <table class="data-table order-table">
+          <thead>
+            <tr>
+              <th class="sticky-col">订单ID</th>
+              <th>用户</th>
+              <th>律师</th>
+              <th>服务</th>
+              <th>订单状态</th>
+              <th>订单金额</th>
+              <th>支付状态</th>
+              <th>支付金额</th>
+              <th>评价</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="filteredOrders.length === 0">
+              <td colspan="11" class="empty">暂无匹配订单</td>
+            </tr>
+            <tr v-for="item in filteredOrders" :key="item.order_id">
+              <td class="sticky-col strong-cell">#{{ item.order_id }}</td>
+              <td>
+                <div class="entity-cell">
+                  <strong>{{ item.user_name || item.user_id || '-' }}</strong>
+                  <small>用户ID {{ item.user_id || '-' }}</small>
+                </div>
+              </td>
+              <td>
+                <div class="entity-cell">
+                  <strong>{{ item.lawyer_name || '-' }}</strong>
+                  <small>律师ID {{ item.lawyer_id || '-' }}</small>
+                </div>
+              </td>
+              <td>{{ item.service_name }}</td>
+              <td><span :class="['status-badge', orderStatusClass(item.order_status)]">{{ item.order_status || '-' }}</span></td>
+              <td>{{ formatMoney(item.total_amount) }}</td>
+              <td><span :class="['status-badge', paymentStatusClass(item.payment_status)]">{{ item.payment_status || '-' }}</span></td>
+              <td>{{ formatMoney(item.payment_amount) }}</td>
+              <td><span :class="['status-badge', evaluationClass(item)]">{{ evaluationText(item) }}</span></td>
+              <td>{{ item.created_time }}</td>
+              <td><button class="detail-btn" @click="selected = item">详情</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <div v-if="selected" class="modal-mask" @click.self="selected = null">
@@ -121,18 +213,173 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.page-shell { padding: 48px 46px; }
-.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
-h1 { margin: 0; color: #1d8fd6; font-size: 31px; font-weight: 800; }
-.filters { display: flex; gap: 12px; }
-.filters input, .filters select { border: 1px solid #d8dee9; border-radius: 4px; padding: 12px 14px; font-size: 15px; }
-.filters input { width: 300px; }
-.content-card { background: #fff; border-radius: 6px; padding: 34px 42px; box-shadow: 0 5px 18px rgba(30, 55, 90, 0.08); overflow-x: auto; }
-.card-title { margin-bottom: 24px; font-size: 23px; font-weight: 800; }
-.data-table { min-width: 1420px; width: 100%; border-collapse: collapse; }
-.data-table th { background: #f7f7fb; font-size: 16px; text-align: left; padding: 18px; }
-.data-table td { border-top: 1px solid #e6e8ef; padding: 16px 18px; font-size: 15px; }
-.detail-btn { border: 0; color: #fff; background: #409eff; border-radius: 4px; padding: 9px 16px; cursor: pointer; }
+.page-head p { margin: 8px 0 0; }
+:global(#app .admin-main .summary-band.order-summary) {
+  grid-template-columns: repeat(8, minmax(84px, 1fr));
+  align-items: stretch;
+  gap: 8px;
+}
+.order-summary {
+  gap: 8px;
+}
+:global(#app .admin-main .summary-band.order-summary button) {
+  min-height: 58px;
+  min-width: 0;
+  padding: 9px 10px;
+}
+.order-summary button {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  border: 1px solid var(--status-border, #e5eaf3);
+  border-radius: 8px;
+  background: var(--status-bg, #ffffff);
+  color: var(--status-text, #1d4ed8);
+  cursor: pointer;
+}
+.order-summary button.active {
+  border-color: var(--status-text, #1d4ed8);
+  box-shadow: inset 0 0 0 1px var(--status-text, #1d4ed8);
+}
+.order-summary span {
+  color: var(--status-label, #344054);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.order-summary strong {
+  color: var(--status-text, #1d4ed8);
+  font-size: 20px;
+  line-height: 1.1;
+}
+.status-waiting { --status-bg: #fff7ed; --status-border: #fed7aa; --status-text: #c2410c; --status-label: #7c2d12; }
+.status-running { --status-bg: #eff6ff; --status-border: #bfcefa; --status-text: #1d4ed8; --status-label: #1e3a8a; }
+.status-review { --status-bg: #fef3c7; --status-border: #fde68a; --status-text: #92400e; --status-label: #78350f; }
+.status-done { --status-bg: #f0fdf4; --status-border: #bbf7d0; --status-text: #15803d; --status-label: #14532d; }
+.status-closed { --status-bg: #f8fafc; --status-border: #d0d5dd; --status-text: #475467; --status-label: #344054; }
+.status-risk { --status-bg: #fff1f0; --status-border: #ffd1cf; --status-text: #b42318; --status-label: #7a271a; }
+.order-card {
+  overflow: hidden;
+}
+.order-list-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -22px -22px 0;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--admin-divider);
+  background: #ffffff;
+}
+.order-list-head .card-title {
+  margin: 0;
+}
+.order-search {
+  width: min(340px, 100%);
+  padding: 10px 12px;
+}
+.order-table-frame {
+  width: 100%;
+  max-height: calc(100vh - 390px);
+  min-height: 320px;
+  overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.order-table-frame::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.order-table {
+  width: max-content;
+  min-width: 1520px;
+  table-layout: auto;
+}
+.order-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  min-height: 50px;
+  box-sizing: border-box;
+  padding: 16px 10px 13px;
+  line-height: 1.5;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.order-table td {
+  padding: 12px 10px;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+.order-table th:nth-child(1),
+.order-table td:nth-child(1) {
+  min-width: 110px;
+}
+.order-table th:nth-child(2),
+.order-table td:nth-child(2) {
+  min-width: 190px;
+}
+.order-table th:nth-child(3),
+.order-table td:nth-child(3) {
+  min-width: 190px;
+}
+.order-table th:nth-child(4),
+.order-table td:nth-child(4) {
+  min-width: 150px;
+}
+.order-table th:nth-child(5),
+.order-table td:nth-child(5) {
+  min-width: 120px;
+}
+.order-table th:nth-child(7),
+.order-table td:nth-child(7) {
+  min-width: 120px;
+}
+.order-table th:nth-child(6),
+.order-table td:nth-child(6) {
+  min-width: 116px;
+}
+.order-table th:nth-child(8),
+.order-table td:nth-child(8) {
+  min-width: 116px;
+}
+.order-table th:nth-child(9),
+.order-table td:nth-child(9) {
+  min-width: 88px;
+}
+.order-table th:nth-child(10),
+.order-table td:nth-child(10) {
+  min-width: 184px;
+}
+.order-table th:nth-child(11),
+.order-table td:nth-child(11) {
+  min-width: 80px;
+}
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 110px;
+  background: #ffffff;
+  box-shadow: 1px 0 0 #edf1f7;
+}
+.order-table th.sticky-col {
+  z-index: 5;
+  background: var(--admin-panel);
+}
+.strong-cell { color: var(--admin-text); font-weight: 900; }
+.entity-cell { display: grid; gap: 2px; min-width: max-content; }
+.entity-cell strong { color: var(--admin-text); font-weight: 800; }
+.entity-cell small { color: var(--admin-text-muted); font-size: 12px; }
+.entity-cell strong,
+.entity-cell small {
+  white-space: nowrap;
+}
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 200; }
 .modal { width: min(920px, 92vw); max-height: 86vh; overflow: auto; background: #fff; border-radius: 8px; padding: 24px; }
 .modal-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf0f5; margin-bottom: 18px; }
@@ -145,4 +392,18 @@ h1 { margin: 0; color: #1d8fd6; font-size: 31px; font-weight: 800; }
 .mini-table th, .mini-table td { border: 1px solid #e6e8ef; padding: 10px 12px; text-align: left; }
 .mini-table th { width: 180px; background: #f7f7fb; }
 .empty { color: #909399; }
+@media (max-width: 900px) {
+  :global(#app .admin-main .summary-band.order-summary) {
+    grid-template-columns: repeat(4, minmax(104px, 1fr));
+    overflow-x: auto;
+  }
+  .order-list-head {
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .order-table-frame {
+    max-height: none;
+  }
+}
 </style>

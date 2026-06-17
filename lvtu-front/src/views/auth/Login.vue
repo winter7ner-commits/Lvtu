@@ -78,7 +78,7 @@ const isLoading = ref(false)
 const rememberMe = ref(true)
 
 const loginForm = reactive({
-  username: '',
+  username: typeof route.query.account === 'string' ? route.query.account : '',
   password: ''
 })
 
@@ -146,7 +146,10 @@ const handleLogin = async () => {
 }
 
 const handleForgotPassword = () => {
-  router.push('/forgot-password')
+  router.push({
+    path: '/forgot-password',
+    query: loginForm.username ? { account: loginForm.username } : {}
+  })
 }
 
 const goToSignup = () => {

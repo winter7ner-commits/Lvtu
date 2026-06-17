@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getOrderById } from '@/api/order'
 import { confirmOrderComplete, getOrderResultForUser, requestServiceResultRevision } from '@/api/lawyerOrder'
 import { useRegionOptions } from '@/components/order/useRegionOptions'
+import { goBack } from '@/utils/navigation'
 
 const route = useRoute()
 const router = useRouter()
@@ -566,9 +567,9 @@ onMounted(loadOrder)
         <p class="subtext">查看订单需求、律师处理结果，并确认服务完成。</p>
       </div>
       <div class="head-actions">
-        <el-button class="back-order-btn" @click="router.push('/orders')">
+        <el-button class="back-order-btn" @click="goBack(router, '/orders')">
           <span class="back-icon">‹</span>
-          返回订单
+          返回
         </el-button>
       </div>
     </section>

@@ -10,6 +10,7 @@
       <!-- Navigation Menu -->
       <nav class="nav-menu">
         <router-link to="/" class="nav-item">首页</router-link>
+        <router-link to="/laws" class="nav-item">法律法规</router-link>
 
         <template v-if="isLawyerAccount">
           <router-link v-if="canAccessLawyerOrders" to="/lawyer/orders/available" class="nav-item">接单大厅</router-link>
@@ -19,9 +20,9 @@
         <template v-else>
           <router-link to="/lawyer-list" class="nav-item">律师查询</router-link>
           <div class="nav-item-dropdown">
-            <button class="nav-item dropdown-toggle">
+            <button type="button" class="nav-item dropdown-toggle">
               发布服务
-              <i class="dropdown-icon">▼</i>
+              <span class="dropdown-icon" aria-hidden="true"></span>
             </button>
             <div class="dropdown-menu">
               <button type="button" class="dropdown-item dropdown-button" @click="goProtected({ name: 'OrderCreate', query: { type: 'ONLINE_CONSULT' } })">在线法律咨询</button>
@@ -33,9 +34,9 @@
             </div>
           </div>
           <div class="nav-item-dropdown">
-            <button class="nav-item dropdown-toggle">
+            <button type="button" class="nav-item dropdown-toggle">
               我的订单
-              <i class="dropdown-icon">▼</i>
+              <span class="dropdown-icon" aria-hidden="true"></span>
             </button>
             <div class="dropdown-menu">
               <button type="button" class="dropdown-item dropdown-button" @click="goProtected({ name: 'ClientOrderList' })">全部订单</button>
@@ -60,10 +61,6 @@
 
       <!-- Right Actions -->
       <div class="header-right">
-        <button class="search-btn" @click="toggleSearch">
-          <i class="icon-search">🔍</i>
-        </button>
-        
         <!-- Not Logged In -->
         <template v-if="!isLoggedIn">
           <router-link to="/login" class="login-btn auth-action">登录</router-link>
@@ -72,10 +69,10 @@
 
         <!-- Logged In - User Menu (Click Trigger) -->
         <div v-else class="user-menu-dropdown" :class="{ 'is-active': showUserMenu }">
-          <button class="user-menu-btn" @click="toggleUserMenu">
+          <button type="button" class="user-menu-btn" @click="toggleUserMenu">
             <img :src="userAvatar" :alt="userName" class="user-avatar" />
             <span>{{ userName }}</span>
-            <i class="dropdown-icon">▼</i>
+            <span class="dropdown-icon" aria-hidden="true"></span>
           </button>
           <div class="dropdown-menu user-dropdown">
             <router-link to="/notifications" class="dropdown-item user-notification-item" @click="showUserMenu = false">
@@ -90,18 +87,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Search Bar (Hidden by default) -->
-    <div v-if="showSearch" class="search-bar">
-      <input 
-        type="text" 
-        placeholder="搜索律师..." 
-        class="search-input"
-        v-model="searchQuery"
-        @keyup.enter="handleSearch"
-      />
-      <button class="search-submit" @click="handleSearch">搜索</button>
-    </div>
   </header>
 </template>
 
@@ -115,8 +100,6 @@ import { goWithLogin } from '@/utils/loginPrompt'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const showSearch = ref(false)
-const searchQuery = ref('')
 const showUserMenu = ref(false)
 const lawyerProfileStatus = ref(null)
 const unreadCount = ref(0)
@@ -174,22 +157,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('notifications-updated', loadUnreadCount)
 })
 
-const toggleSearch = () => {
-  showSearch.value = !showSearch.value
-}
-
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
-}
-
-const handleSearch = () => {
-  if (searchQuery.value.trim()) {
-    router.push({
-      name: 'LawyerList',
-      query: { keyword: searchQuery.value }
-    })
-    showSearch.value = false
-  }
 }
 
 const goProtected = (targetRoute) => {
@@ -209,62 +178,77 @@ const handleLogout = () => {
 
 <style scoped>
 .header {
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  box-shadow: none;
   position: sticky;
   top: 0;
   z-index: 100;
+  padding: 22px 15px 0;
 }
 
 .header-container {
-  max-width: 1400px;
+  max-width: 1450px;
   margin: 0 auto;
-  padding: 0 20px;
-  height: 70px;
+  padding: 0 12px 0 18px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 /* Logo */
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   flex-shrink: 0;
+  min-width: 210px;
+  height: 100%;
 }
 
 .logo-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  border-radius: 0;
+  object-fit: contain;
 }
 
 .logo-text {
-  font-size: 24px;
+  font-size: 25px;
+  line-height: 1;
   font-weight: bold;
   color: #ffffff;
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
 }
 
 /* Navigation Menu */
 .nav-menu {
   display: flex;
-  gap: 5px;
+  gap: 16px;
   flex: 1;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
-  margin-left: 40px;
+  min-width: 0;
+  height: 100%;
+  margin-left: 26px;
 }
 
 .nav-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1;
   font-weight: 500;
   transition: all 0.3s ease;
-  padding: 8px 16px;
+  min-height: 34px;
+  padding: 0 6px;
   border-radius: 4px;
   white-space: nowrap;
   border: none;
@@ -286,6 +270,9 @@ const handleLogout = () => {
 /* Dropdown Menu */
 .nav-item-dropdown {
   position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .nav-item-dropdown::after,
@@ -294,8 +281,8 @@ const handleLogout = () => {
   position: absolute;
   left: 0;
   right: 0;
-  top: 100%;
-  height: 12px;
+  top: calc(100% - 2px);
+  height: 18px;
 }
 
 .dropdown-toggle {
@@ -305,9 +292,35 @@ const handleLogout = () => {
 }
 
 .dropdown-icon {
-  font-size: 12px;
-  display: inline-block;
-  transition: transform 0.3s ease;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: currentColor;
+  opacity: 0.86;
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.dropdown-icon::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 1.8px solid currentColor;
+  border-bottom: 1.8px solid currentColor;
+  border-radius: 1px;
+  transform: translateY(-1px) rotate(45deg);
+}
+
+.dropdown-toggle:hover .dropdown-icon,
+.user-menu-btn:hover .dropdown-icon {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.16);
 }
 
 /* 导航栏下拉菜单 - 悬停显示 */
@@ -326,7 +339,7 @@ const handleLogout = () => {
 /* 下拉菜单基础样式 */
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 6px);
   left: 0;
   background: #ffffff;
   border-radius: 8px;
@@ -387,24 +400,10 @@ const handleLogout = () => {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 15px;
+  justify-content: flex-end;
+  gap: 10px;
   flex-shrink: 0;
-}
-
-.search-btn {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 18px;
-  cursor: pointer;
-  transition: color 0.3s ease;
-  padding: 8px;
-  border-radius: 4px;
-}
-
-.search-btn:hover {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.2);
+  min-width: 150px;
 }
 
 .notification-nav-item {
@@ -431,12 +430,17 @@ const handleLogout = () => {
 }
 
 .login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 2px solid rgba(255, 255, 255, 0.8);
   color: rgba(255, 255, 255, 0.9);
-  padding: 8px 20px;
+  min-height: 34px;
+  padding: 0 18px;
   border-radius: 4px;
   font-size: 14px;
+  line-height: 1;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -449,12 +453,17 @@ const handleLogout = () => {
 }
 
 .signup-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #ffffff;
   border: none;
   color: #1e40af;
-  padding: 8px 20px;
+  min-height: 34px;
+  padding: 0 18px;
   border-radius: 4px;
   font-size: 14px;
+  line-height: 1;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -474,9 +483,11 @@ const handleLogout = () => {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: #ffffff;
-  padding: 6px 12px;
-  border-radius: 20px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 4px;
   font-size: 14px;
+  line-height: 1;
   font-weight: 500;
   cursor: pointer;
   display: flex;
@@ -490,8 +501,8 @@ const handleLogout = () => {
 }
 
 .user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -541,82 +552,64 @@ const handleLogout = () => {
   background-color: #fee2e2;
 }
 
-/* Search Bar */
-.search-bar {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 15px 20px;
-  display: flex;
-  gap: 10px;
-  max-width: 1400px;
-  margin: 0 auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.search-input {
-  flex: 1;
-  padding: 10px 15px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.3s ease;
-}
-
-.search-input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.search-submit {
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.search-submit:hover {
-  background: #1e40af;
-  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.2);
-}
-
 /* Responsive */
 @media (max-width: 1024px) {
+  .header {
+    padding: 16px 12px 0;
+  }
+
+  .header-container {
+    max-width: calc(100% - 0px);
+    padding: 0 10px 0 14px;
+  }
+
+  .logo {
+    min-width: 150px;
+  }
+
+  .logo-img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .logo-text {
+    font-size: 21px;
+  }
+
   .nav-menu {
-    gap: 0;
-    margin-left: 20px;
+    gap: 4px;
+    margin-left: 12px;
   }
 
   .nav-item {
-    padding: 8px 12px;
+    padding: 0 8px;
     font-size: 13px;
   }
 }
 
 @media (max-width: 768px) {
+  .header {
+    padding: 10px 10px 0;
+  }
+
   .nav-menu {
     display: none;
   }
 
   .header-container {
     height: 60px;
-    padding: 0 15px;
-  }
-
-  .search-bar {
-    flex-direction: column;
+    padding: 0 10px 0 12px;
   }
 
   .header-right {
-    gap: 10px;
+    min-width: 0;
+    gap: 8px;
   }
 
   .login-btn,
   .signup-btn {
-    padding: 6px 12px;
+    min-height: 32px;
+    padding: 0 12px;
     font-size: 12px;
   }
 }

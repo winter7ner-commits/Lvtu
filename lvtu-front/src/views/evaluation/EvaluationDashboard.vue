@@ -9,7 +9,7 @@
       <div class="head-actions">
         <button class="back-order-btn" @click="goBack">
           <span class="back-icon">‹</span>
-          返回订单
+          返回
         </button>
       </div>
     </div>

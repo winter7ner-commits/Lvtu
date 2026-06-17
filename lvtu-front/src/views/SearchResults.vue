@@ -1,11 +1,11 @@
 <template>
   <main class="search-page">
     <section class="search-header">
-      <el-button class="back-btn" @click="router.push('/')">返回首页</el-button>
+      <el-button class="back-btn" @click="handleBack">返回</el-button>
       <div class="header-copy">
         <p class="eyebrow">全站搜索</p>
         <h1>搜索结果</h1>
-        <p>按关键词检索律师、法条与个人订单。</p>
+        <p>按关键词检索律师、个人订单与法条。</p>
       </div>
       <div class="search-bar">
         <el-input
@@ -33,7 +33,7 @@
 
       <el-empty v-if="!activeKeyword && !searching" description="请输入关键词开始搜索" />
 
-      <div v-else class="result-grid">
+      <div v-else class="result-stack">
         <article class="result-panel">
           <div class="panel-title">
             <h3>律师</h3>
@@ -53,27 +53,6 @@
             </button>
           </div>
           <el-empty v-else description="暂无律师结果" />
-        </article>
-
-        <article class="result-panel">
-          <div class="panel-title">
-            <h3>法条</h3>
-            <el-tag effect="plain">{{ articleResults.length }}</el-tag>
-          </div>
-          <div v-if="articleResults.length" class="result-list">
-            <button
-              v-for="article in articleResults"
-              :key="article.id"
-              type="button"
-              class="result-item"
-              @click="openArticle(article)"
-            >
-              <span class="item-title">{{ article.articleNumber || `法条 ${article.id}` }}</span>
-              <small>{{ article.title || '法律条文' }}</small>
-              <p>{{ truncate(article.content, 92) }}</p>
-            </button>
-          </div>
-          <el-empty v-else description="暂无法条结果" />
         </article>
 
         <article class="result-panel">
@@ -100,6 +79,27 @@
           </div>
           <el-empty v-else description="暂无订单结果" />
         </article>
+
+        <article class="result-panel">
+          <div class="panel-title">
+            <h3>法条</h3>
+            <el-tag effect="plain">{{ articleResults.length }}</el-tag>
+          </div>
+          <div v-if="articleResults.length" class="result-list">
+            <button
+              v-for="article in articleResults"
+              :key="article.id"
+              type="button"
+              class="result-item"
+              @click="openArticle(article)"
+            >
+              <span class="item-title">{{ article.articleNumber || `法条 ${article.id}` }}</span>
+              <small>{{ article.title || '法律条文' }}</small>
+              <p>{{ truncate(article.content, 92) }}</p>
+            </button>
+          </div>
+          <el-empty v-else description="暂无法条结果" />
+        </article>
       </div>
     </section>
 
@@ -120,6 +120,7 @@ import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
 import { getLawyerList } from '@/api/lawyer'
 import { getUserOrders } from '@/api/order'
+import { goBack } from '@/utils/navigation'
 
 const route = useRoute()
 const router = useRouter()
@@ -316,6 +317,10 @@ const submitSearch = () => {
   })
 }
 
+const handleBack = () => {
+  goBack(router, '/')
+}
+
 const goToLawyerDetail = (id) => {
   if (!id) return
   router.push(`/lawyer/${id}`)
@@ -345,7 +350,9 @@ onMounted(runSearchFromRoute)
 .search-page {
   min-height: 100vh;
   padding: 32px 20px 56px;
-  background: #f5f7fb;
+  background:
+    linear-gradient(180deg, rgba(37, 99, 235, 0.1) 0, rgba(245, 247, 251, 0) 260px),
+    #f5f7fb;
   color: #172033;
   text-align: left;
 }
@@ -364,7 +371,7 @@ onMounted(runSearchFromRoute)
   border: 1px solid #e5eaf3;
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.08);
 }
 
 .search-header {
@@ -457,18 +464,18 @@ h3 {
   font-weight: 800;
 }
 
-.result-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+.result-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .result-panel {
-  min-height: 320px;
-  padding: 16px;
-  border: 1px solid #edf1f7;
+  min-height: 220px;
+  padding: 18px;
+  border: 1px solid #dbeafe;
   border-radius: 8px;
-  background: #fbfdff;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
 }
 
 .panel-title {
@@ -494,7 +501,7 @@ h3 {
 
 .result-item:hover {
   border-color: #93c5fd;
-  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.12);
   transform: translateY(-1px);
 }
 
@@ -545,8 +552,7 @@ h3 {
 }
 
 @media (max-width: 1024px) {
-  .search-header,
-  .result-grid {
+  .search-header {
     grid-template-columns: 1fr;
   }
 }

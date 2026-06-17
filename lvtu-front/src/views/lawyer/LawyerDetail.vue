@@ -5,6 +5,7 @@ import { ElMessage } from 'element-plus'
 import { getLawyerDetail, getLawyerList } from '@/api/lawyer'
 import EvaluationList from '@/components/evaluation/EvaluationList.vue'
 import { promptLogin } from '@/utils/loginPrompt'
+import { goBack as goBackToPrevious } from '@/utils/navigation'
 
 const route = useRoute()
 const router = useRouter()
@@ -121,7 +122,7 @@ const highlights = computed(() => [
 ])
 
 const goBack = () => {
-  router.push({ name: 'LawyerList' })
+  goBackToPrevious(router, '/lawyer-list')
 }
 
 const createConsultOrder = () => {
@@ -165,7 +166,7 @@ watch(
         <div class="toolbar">
           <el-button class="back-order-btn" @click="goBack">
             <span class="back-icon">‹</span>
-            返回律师列表
+            返回
           </el-button>
           <el-button v-if="!isLawyerAccount" type="primary" size="large" @click="createConsultOrder">发起在线咨询</el-button>
         </div>
@@ -253,7 +254,7 @@ watch(
         class="empty-state"
         description="未找到该律师信息"
       >
-        <el-button type="primary" @click="goBack">返回律师列表</el-button>
+        <el-button type="primary" @click="goBack">返回</el-button>
       </el-empty>
     </section>
   </main>

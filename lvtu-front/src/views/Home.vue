@@ -2,9 +2,9 @@
   <main class="home-page">
     <section class="hero-section">
       <div class="hero-copy">
-        <p class="eyebrow">律途法律服务</p>
-        <h1>把法律问题交给更合适的专业支持</h1>
-        <p class="subtext">检索律师、法条与个人订单，快速进入咨询、查询和跟进流程。</p>
+        <p class="eyebrow">律途法律服务平台</p>
+        <h1>让每一个法律问题都有清晰路径</h1>
+        <p class="subtext">从律师匹配、法规查询到咨询下单与订单跟进，律途帮助你更快找到可信赖的专业支持。</p>
 
         <div class="hero-search">
           <el-input
@@ -32,24 +32,49 @@
         </div>
       </div>
 
-      <div class="hero-panel">
+      <div class="hero-panel" aria-label="平台服务概览">
         <div class="logo-stage">
           <img src="/icons/logo.png" alt="律途" width="320" height="213" fetchpriority="high" decoding="async" />
         </div>
-        <div class="hero-metrics">
-          <div>
-            <strong>{{ hotLawyers.length || '-' }}</strong>
-            <span>热门律师</span>
-          </div>
-          <div>
-            <strong>6</strong>
-            <span>服务类型</span>
-          </div>
-          <div>
-            <strong>24h</strong>
-            <span>需求流转</span>
-          </div>
+      </div>
+    </section>
+
+    <section v-if="!isLawyerAccount" class="service-band">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">常见法律需求</p>
+          <h2>梳理<span class="service-title-accent">常见法律场景</span>，按需匹配专业支持</h2>
         </div>
+      </div>
+
+      <div class="service-grid">
+        <article
+          v-for="service in services"
+          :key="service.key"
+          class="service-tile"
+        >
+          <span v-if="service.common" class="service-badge">常用</span>
+          <span class="service-initial">{{ service.short }}</span>
+          <strong>{{ service.name }}</strong>
+          <small>{{ service.desc }}</small>
+        </article>
+      </div>
+    </section>
+
+    <div v-if="!isLawyerAccount" class="home-section-divider" aria-hidden="true"></div>
+
+    <section v-if="!isLawyerAccount" class="advisor-band" aria-labelledby="advisor-band-title">
+      <div class="advisor-visual">
+        <img src="/Home_pic2.png" alt="在线咨询、电话咨询、文书代写、合同审核等法律服务方式" loading="lazy" decoding="async" />
+      </div>
+
+      <div class="advisor-copy">
+        <p class="eyebrow">专业法律支持</p>
+        <h2 id="advisor-band-title">连接合适的<span>法律顾问</span></h2>
+        <p>
+          无论是在线咨询、电话沟通、文书代写还是合同审核，都可以先发布服务需求，让律师基于问题背景给出处理建议。
+        </p>
+        <el-button class="advisor-cta" type="primary" @click="router.push('/order-create')">去发布服务</el-button>
       </div>
     </section>
 
@@ -59,14 +84,15 @@
           <p class="eyebrow">法律法规</p>
           <h2>按领域快速查看常用法条</h2>
         </div>
-        <el-button class="soft-btn" :loading="loadingLegal" @click="refreshLegalCategories">刷新法规</el-button>
+        <el-button class="soft-btn" @click="router.push('/laws')">所有法规</el-button>
       </div>
 
-      <div class="law-browser" v-loading="loadingLegal" :aria-busy="loadingLegal || loadingLegalDocuments || loadingLegalArticles">
+      <!-- 三栏共用一个浏览器容器，通过细分隔线表达从概览进入工具区的层级。 -->
+      <div class="law-browser" :aria-busy="loadingLegal || loadingLegalDocuments || loadingLegalArticles">
         <div class="law-column category-column">
           <div class="law-column-title">法律分类</div>
           <div class="law-scroll">
-            <div v-if="!legalLoadStarted" class="law-skeleton" aria-hidden="true">
+            <div v-if="!legalLoadStarted || loadingLegal" class="law-skeleton" aria-hidden="true">
               <span v-for="item in 5" :key="item"></span>
             </div>
             <template v-else>
@@ -84,10 +110,10 @@
           </div>
         </div>
 
-        <div class="law-column document-column" v-loading="loadingLegalDocuments">
+        <div class="law-column document-column">
           <div class="law-column-title">法律</div>
           <div class="law-scroll">
-            <div v-if="!legalLoadStarted" class="law-skeleton" aria-hidden="true">
+            <div v-if="!legalLoadStarted || loadingLegal || loadingLegalDocuments" class="law-skeleton" aria-hidden="true">
               <span v-for="item in 4" :key="item"></span>
             </div>
             <template v-else>
@@ -105,10 +131,10 @@
           </div>
         </div>
 
-        <div class="law-column article-column" v-loading="loadingLegalArticles">
+        <div class="law-column article-column">
           <div class="law-column-title">法条</div>
           <div class="article-scroll">
-            <div v-if="!legalLoadStarted" class="law-skeleton article" aria-hidden="true">
+            <div v-if="!legalLoadStarted || loadingLegal || loadingLegalArticles" class="law-skeleton article" aria-hidden="true">
               <span v-for="item in 3" :key="item"></span>
             </div>
             <template v-else>
@@ -116,7 +142,7 @@
                 v-for="article in visibleLegalArticles"
                 :key="article.id"
                 type="button"
-                class="article-row"
+                :class="['article-row', { active: selectedLegalArticle === article.id }]"
                 @click="openArticleDetail(article)"
               >
                 <strong>{{ article.articleNumber }}</strong>
@@ -133,38 +159,14 @@
       </div>
     </section>
 
-    <section v-if="!isLawyerAccount" class="service-band">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">常用服务</p>
-          <h2>从问题到订单的快速入口</h2>
-        </div>
-        <el-button class="soft-btn" @click="router.push('/order-create')">创建订单</el-button>
-      </div>
-
-      <div class="service-grid">
-        <button
-          v-for="service in services"
-          :key="service.type"
-          type="button"
-          class="service-tile"
-          @click="router.push({ name: 'OrderCreate', query: { type: service.type } })"
-        >
-          <span>{{ service.short }}</span>
-          <strong>{{ service.name }}</strong>
-          <small>{{ service.desc }}</small>
-        </button>
-      </div>
-    </section>
-
     <section class="home-columns">
-      <article class="home-panel" v-loading="loadingHotLawyers">
-        <div class="section-head compact">
+      <article class="home-panel" :aria-busy="loadingHotLawyers">
+        <div class="section-head panel-head compact">
           <div>
             <p class="eyebrow">律师推荐</p>
             <h2>高评分律师</h2>
           </div>
-          <el-button link type="primary" @click="router.push('/lawyer-list')">全部律师</el-button>
+          <el-button link type="primary" @click="router.push('/lawyer-list')">查看更多</el-button>
         </div>
         <div v-if="hotLawyers.length" class="lawyer-list">
           <button
@@ -189,19 +191,27 @@
       </article>
 
       <article v-if="!isLawyerAccount" class="home-panel">
-        <div class="section-head compact">
+        <div class="section-head panel-head compact">
           <div>
             <p class="eyebrow">办事进度</p>
             <h2>个人订单</h2>
           </div>
-          <el-button link type="primary" @click="router.push('/orders')">我的订单</el-button>
+          <el-button link type="primary" @click="goToOrders">查看订单</el-button>
         </div>
-        <div class="order-entry">
+        <div v-if="currentUserId" class="order-entry">
           <div>
             <strong>跟进咨询、支付、服务结果与评价</strong>
-            <p>登录后可在首页搜索自己的订单号、状态和业务类型。</p>
+            <p>可在首页搜索自己的订单号、状态和业务类型。</p>
           </div>
-          <el-button type="primary" plain @click="router.push('/orders')">查看订单</el-button>
+          <el-button type="primary" plain @click="goToOrders">查看订单</el-button>
+        </div>
+        <!-- 未登录时保留订单模块位置，避免登录前后双栏布局跳动。 -->
+        <div v-else class="order-entry order-entry-placeholder">
+          <div>
+            <strong>登录后查看个人订单进度</strong>
+            <p>可跟进咨询、支付、服务结果与评价，也可以用订单号快速检索。</p>
+          </div>
+          <el-button type="primary" plain @click="goToOrders">登录查看</el-button>
         </div>
       </article>
     </section>
@@ -227,53 +237,51 @@
             <span>{{ selectedLawDocumentName }}</span>
             <h2 id="article-detail-title">{{ detailArticle?.articleNumber || '法条详情' }}</h2>
           </div>
-          <button
-            :class="['favorite-btn', { active: isFavorited }]"
-            type="button"
-            :aria-pressed="isFavorited"
-            :aria-label="isFavorited ? '取消收藏当前法条' : '收藏当前法条'"
-            @click="handleToggleFavorite"
-          >
-            <span>{{ isFavorited ? '★' : '☆' }}</span>
-            收藏
-          </button>
         </header>
 
         <div v-if="detailArticle" class="detail-scroll">
-          <section class="article-full-text">
+          <section class="article-full-text detail-primary">
             <div class="section-label">条文原文</div>
             <h3 v-if="detailArticle.title">{{ detailArticle.title }}</h3>
             <p>{{ detailArticle.content }}</p>
           </section>
 
-          <section class="explanation-block">
-            <div class="section-label">解释</div>
-            <p v-if="selectedDetail?.explanation?.content">{{ selectedDetail.explanation.content }}</p>
-            <el-empty v-else description="暂无解释" />
-            <div class="explanation-feedback-actions">
-              <button type="button" @click="openFeedback(true)">有帮助</button>
-              <button type="button" @click="openFeedback(false)">无帮助</button>
-            </div>
-          </section>
+          <aside class="detail-secondary">
+            <section class="explanation-block">
+              <div class="section-label">解释</div>
+              <p v-if="selectedDetail?.explanation?.content">{{ selectedDetail.explanation.content }}</p>
+              <el-empty v-else description="暂无解释" />
+              <div class="explanation-feedback-actions">
+                <button type="button" @click="openFeedback(true)">
+                  <span aria-hidden="true">👍</span>
+                  有帮助
+                </button>
+                <button type="button" @click="openFeedback(false)">
+                  <span aria-hidden="true">👎</span>
+                  无帮助
+                </button>
+              </div>
+            </section>
 
-          <section class="comment-block">
-            <div class="comment-head">
-              <h3 aria-live="polite">全部评论（{{ commentCount }}）</h3>
-            </div>
-            <div v-if="detailComments.length" class="comment-list">
-              <article v-for="comment in detailComments" :key="comment.id" class="comment-item">
-                <div class="comment-avatar">{{ (comment.username || '用').slice(0, 1) }}</div>
-                <div>
-                  <div class="comment-meta">
-                    <strong>{{ comment.username || `用户${comment.userId}` }}</strong>
-                    <span>{{ formatTime(comment.createdAt) }}</span>
+            <section class="comment-block">
+              <div class="comment-head">
+                <h3 aria-live="polite">全部评论（{{ commentCount }}）</h3>
+              </div>
+              <div v-if="detailComments.length" class="comment-list">
+                <article v-for="comment in detailComments" :key="comment.id" class="comment-item">
+                  <div class="comment-avatar">{{ (comment.username || '用').slice(0, 1) }}</div>
+                  <div>
+                    <div class="comment-meta">
+                      <strong>{{ comment.username || `用户${comment.userId}` }}</strong>
+                      <span>{{ formatTime(comment.createdAt) }}</span>
+                    </div>
+                    <p>{{ comment.content }}</p>
                   </div>
-                  <p>{{ comment.content }}</p>
-                </div>
-              </article>
-            </div>
-            <el-empty v-else description="还没有评论" />
-          </section>
+                </article>
+              </div>
+              <el-empty v-else description="还没有评论" />
+            </section>
+          </aside>
         </div>
 
         <footer class="detail-actions">
@@ -337,7 +345,13 @@
           ></textarea>
           <span id="feedback-count" aria-live="polite">{{ feedbackContent.length }}/140</span>
         </div>
-        <button class="feedback-submit" type="button" :disabled="feedbackSubmitting" :aria-busy="feedbackSubmitting" @click="submitFeedback">
+        <button
+          class="feedback-submit"
+          type="button"
+          :disabled="feedbackSubmitting || !feedbackReason"
+          :aria-busy="feedbackSubmitting"
+          @click="submitFeedback"
+        >
           {{ feedbackSubmitting ? '提交中' : '提交' }}
         </button>
       </section>
@@ -376,6 +390,7 @@ const legalDocuments = ref([])
 const legalArticles = ref([])
 const selectedLawCategory = ref(null)
 const selectedLawDocument = ref(null)
+const selectedLegalArticle = ref(null)
 const selectedDetail = ref(null)
 const detailVisible = ref(false)
 const detailLoading = ref(false)
@@ -391,6 +406,7 @@ const feedbackPanelRef = ref(null)
 const detailReturnFocusElement = ref(null)
 const feedbackReturnFocusElement = ref(null)
 const previousBodyOverflow = ref('')
+const previousBodyPaddingRight = ref('')
 const bodyScrollLocked = ref(false)
 const lawBandRef = ref(null)
 const legalLoadStarted = ref(false)
@@ -496,7 +512,15 @@ const updateBodyScrollLock = () => {
   const shouldLock = detailVisible.value || feedbackVisible.value
 
   if (shouldLock && !bodyScrollLocked.value) {
+    const scrollbarWidth = typeof window !== 'undefined'
+      ? window.innerWidth - document.documentElement.clientWidth
+      : 0
     previousBodyOverflow.value = document.body.style.overflow
+    previousBodyPaddingRight.value = document.body.style.paddingRight
+    if (scrollbarWidth > 0) {
+      const currentPaddingRight = Number.parseFloat(window.getComputedStyle(document.body).paddingRight) || 0
+      document.body.style.paddingRight = `${currentPaddingRight + scrollbarWidth}px`
+    }
     document.body.style.overflow = 'hidden'
     bodyScrollLocked.value = true
     return
@@ -504,6 +528,7 @@ const updateBodyScrollLock = () => {
 
   if (!shouldLock && bodyScrollLocked.value) {
     document.body.style.overflow = previousBodyOverflow.value
+    document.body.style.paddingRight = previousBodyPaddingRight.value
     bodyScrollLocked.value = false
   }
 }
@@ -534,12 +559,35 @@ const visibleLegalArticles = computed(() => legalArticles.value.slice(0, visible
 const hiddenLegalArticleCount = computed(() => Math.max(legalArticles.value.length - visibleArticleLimit.value, 0))
 
 const services = [
-  { short: '咨', name: '在线法律咨询', type: 'ONLINE_CONSULT', desc: '图文沟通' },
-  { short: '电', name: '电话法律咨询', type: 'PHONE_CONSULT', desc: '预约通话' },
-  { short: '文', name: '文书代写', type: 'DOCUMENT_WRITING', desc: '起草修改' },
-  { short: '合', name: '合同审核', type: 'CONTRACT_REVIEW', desc: '风险排查' },
-  { short: '家', name: '婚姻家事', type: 'MARRIAGE_FAMILY', desc: '家事纠纷' },
-  { short: '诉', name: '诉讼代理', type: 'LITIGATION_AGENT', desc: '案件代理' }
+  {
+    key: 'labor-dispute',
+    short: '劳',
+    name: '劳动争议',
+    type: 'ONLINE_CONSULT',
+    desc: '围绕劳动合同、工资社保、工伤认定和仲裁维权梳理方案。',
+    common: true
+  },
+  {
+    key: 'marriage-family',
+    short: '婚',
+    name: '婚姻家事',
+    type: 'MARRIAGE_FAMILY',
+    desc: '处理离婚、抚养、继承、财产分割等家庭法律问题。'
+  },
+  {
+    key: 'contract-dispute',
+    short: '合',
+    name: '合同纠纷',
+    type: 'CONTRACT_REVIEW',
+    desc: '协助审查合同风险、违约责任、款项追偿和争议处理路径。'
+  },
+  {
+    key: 'intellectual-property',
+    short: '知',
+    name: '知识产权',
+    type: 'ONLINE_CONSULT',
+    desc: '支持商标、著作权、专利保护及侵权线索的初步判断。'
+  }
 ]
 
 const unwrapData = (res) => {
@@ -634,6 +682,7 @@ const loadLegalCategories = async ({ force = false } = {}) => {
       legalArticles.value = []
       selectedLawCategory.value = null
       selectedLawDocument.value = null
+      selectedLegalArticle.value = null
     }
     const list = unwrapData(await getCategories())
     if (requestId !== currentCategoryRequestId) return
@@ -645,6 +694,7 @@ const loadLegalCategories = async ({ force = false } = {}) => {
       legalArticles.value = []
       selectedLawCategory.value = null
       selectedLawDocument.value = null
+      selectedLegalArticle.value = null
     }
   } catch (error) {
     if (requestId !== currentCategoryRequestId) return
@@ -653,6 +703,7 @@ const loadLegalCategories = async ({ force = false } = {}) => {
     legalArticles.value = []
     selectedLawCategory.value = null
     selectedLawDocument.value = null
+    selectedLegalArticle.value = null
     ElMessage.error(error?.response?.data?.message || '法规加载失败，请稍后重试')
   } finally {
     if (requestId === currentCategoryRequestId) {
@@ -674,6 +725,7 @@ const selectLawCategory = async (categoryId, options = {}) => {
   const requestId = ++currentDocumentRequestId
   selectedLawCategory.value = categoryId
   selectedLawDocument.value = null
+  selectedLegalArticle.value = null
   legalDocuments.value = []
   legalArticles.value = []
   visibleArticleLimit.value = ARTICLE_BATCH_SIZE
@@ -702,6 +754,7 @@ const selectLawCategory = async (categoryId, options = {}) => {
     legalDocuments.value = []
     legalArticles.value = []
     selectedLawDocument.value = null
+    selectedLegalArticle.value = null
     ElMessage.error(error?.response?.data?.message || '法律列表加载失败')
   } finally {
     if (requestId === currentDocumentRequestId) {
@@ -716,6 +769,7 @@ const selectLawDocument = async (documentId, options = {}) => {
 
   const requestId = ++currentArticleRequestId
   selectedLawDocument.value = documentId
+  selectedLegalArticle.value = null
   legalArticles.value = []
   visibleArticleLimit.value = ARTICLE_BATCH_SIZE
 
@@ -765,6 +819,7 @@ const openArticleDetail = async (article, options = {}) => {
     selectedDetail.value = null
   }
   detailVisible.value = true
+  selectedLegalArticle.value = article.id
   detailLoading.value = true
   commentDraft.value = ''
   closeFeedback({ restoreFocus: false })
@@ -865,7 +920,7 @@ const closeFeedback = (options = {}) => {
 }
 
 const submitFeedback = async () => {
-  if (feedbackSubmitting.value) return
+  if (feedbackSubmitting.value || !feedbackReason.value) return
   if (!currentUserId.value) {
     promptLogin(router, router.currentRoute.value.fullPath, '登录或注册后，你可以反馈法条解释质量，帮助平台优化内容。')
     return
@@ -895,6 +950,14 @@ const goToLawyerDetail = (id) => {
   router.push(`/lawyer/${id}`)
 }
 
+const goToOrders = () => {
+  if (!currentUserId.value) {
+    promptLogin(router, router.currentRoute.value.fullPath, '登录或注册后，你可以查看个人订单进度。')
+    return
+  }
+  router.push('/orders')
+}
+
 const getInitials = (name = '律师') => name.slice(-2)
 
 watch([detailVisible, feedbackVisible], updateBodyScrollLock)
@@ -909,6 +972,7 @@ onBeforeUnmount(() => {
   legalObserver = null
   if (typeof document !== 'undefined' && bodyScrollLocked.value) {
     document.body.style.overflow = previousBodyOverflow.value
+    document.body.style.paddingRight = previousBodyPaddingRight.value
   }
 })
 </script>
@@ -916,7 +980,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .home-page {
   min-height: 100vh;
-  padding: 32px 20px 56px;
+  padding: 0 20px 56px;
   background: #f5f7fb;
   color: #172033;
   text-align: left;
@@ -932,23 +996,26 @@ onBeforeUnmount(() => {
 .home-page button:focus-visible,
 .home-page input:focus-visible,
 .home-page textarea:focus-visible,
+.home-page a:focus-visible,
 .home-page [tabindex]:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.28);
+  outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
 
 .home-page :deep(.el-button:focus-visible) {
-  outline: 3px solid rgba(37, 99, 235, 0.28);
+  outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
 
 .home-page :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  box-shadow: 0 0 0 2px #2563eb;
 }
 
 .home-page .hero-section,
 .home-page .law-band,
 .home-page .service-band,
+.home-page .home-section-divider,
+.home-page .advisor-band,
 .home-page .home-columns {
   width: min(1180px, 100%);
   margin-left: auto;
@@ -956,21 +1023,46 @@ onBeforeUnmount(() => {
 }
 
 .home-page .law-band,
-.home-page .service-band,
+.home-page .advisor-band,
 .home-page .home-columns {
   content-visibility: auto;
   contain-intrinsic-size: 420px;
 }
 
 .home-page .hero-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-  gap: 28px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 560px) minmax(420px, 560px);
+  gap: clamp(44px, 6vw, 92px);
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  max-width: none;
+  min-height: clamp(540px, calc(70svh - 90px), 720px);
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 92px max(32px, calc((100vw - 1320px) / 2 + 48px)) 190px;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, #2f6edf 0%, #2f6edf 5%, rgba(47, 110, 223, 0.88) 24%, rgba(37, 99, 235, 0.56) 60%, rgba(245, 247, 251, 0.38) 88%, #f5f7fb 100%),
+    linear-gradient(90deg, rgba(24, 64, 175, 0.94) 0%, rgba(37, 99, 235, 0.76) 52%, rgba(30, 64, 175, 0.66) 100%),
+    url('/Home_court.png') center 43% / cover no-repeat;
 }
 
-.home-page .hero-copy,
-.home-page .hero-panel,
+.home-page .hero-section::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  z-index: 0;
+  height: 190px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 220' preserveAspectRatio='none'%3E%3Cpath d='M0 68 C130 120 240 150 380 142 C520 134 625 88 758 74 C903 59 1025 103 1166 113 C1288 122 1372 98 1440 78 L1440 220 L0 220 Z' fill='%23f5f7fb'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+}
+
 .home-page .law-band,
 .home-page .service-band,
 .home-page .home-panel {
@@ -983,10 +1075,15 @@ onBeforeUnmount(() => {
 .home-page .hero-copy,
 .home-page .hero-panel {
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .home-page .hero-copy {
-  padding: 34px;
+  width: min(100%, 560px);
+  max-width: 560px;
+  padding: 0;
+  align-self: center;
 }
 
 .home-page .eyebrow {
@@ -1007,16 +1104,31 @@ onBeforeUnmount(() => {
 .home-page h1 {
   max-width: 720px;
   color: #172033;
-  font-size: 38px;
-  font-weight: 700;
-  line-height: 1.18;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.2;
   letter-spacing: 0;
+}
+
+.home-page .hero-section .eyebrow {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.home-page .hero-section h1 {
+  color: #ffffff;
+  font-size: 42px;
+  line-height: 1.16;
+}
+
+.home-page .hero-section .subtext {
+  max-width: 540px;
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .home-page h2 {
   color: #172033;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0;
 }
 
@@ -1046,41 +1158,64 @@ onBeforeUnmount(() => {
 
 .home-page .quick-tags {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10px;
+  max-width: 100%;
   margin-top: 16px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.home-page .quick-tags::-webkit-scrollbar {
+  display: none;
 }
 
 .home-page .quick-tags button {
+  flex: 0 0 auto;
   min-height: 44px;
   padding: 8px 12px;
-  border: 1px solid #dbe4f0;
+  border: 1px solid rgba(255, 255, 255, 0.38);
   border-radius: 999px;
-  background: #f8fafc;
-  color: #475467;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .home-page .quick-tags button:hover {
-  border-color: #cbd5e1;
-  color: #334155;
-  background: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.72);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .home-page .quick-tags button:active {
-  background: #e5eaf3;
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .home-page .hero-panel {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: stretch;
-  padding: 24px;
-  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  justify-self: center;
+  width: min(100%, 540px);
+  max-width: 540px;
+  margin-left: 0;
+  padding: 0;
+  gap: 0;
+  border-radius: 8px;
+  background: transparent;
+  overflow: visible;
   contain: paint;
+  transform: none;
 }
 
 .home-page .logo-stage {
@@ -1088,64 +1223,111 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 236px;
-  padding: 14px;
+  width: 500px;
+  aspect-ratio: 1;
+  min-height: 500px;
+  padding: 0;
   isolation: isolate;
 }
 
 .home-page .logo-stage::before {
-  content: '';
-  position: absolute;
-  inset: 18px;
-  border: 1px solid #e5eaf3;
-  border-radius: 8px;
-  background: #f8fafc;
-  z-index: -1;
+  content: none;
 }
 
 .home-page .hero-panel img {
   display: block;
-  width: min(100%, 320px);
+  width: 500px;
   max-width: 100%;
-  height: auto;
-  max-height: 210px;
+  height: 500px;
   margin: 0 auto;
   object-fit: contain;
 }
 
-.home-page .hero-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.home-page .hero-metrics div {
-  padding: 12px 10px;
-  border-radius: 8px;
-  background: #f8fafc;
-  text-align: center;
-}
-
-.home-page .hero-metrics strong {
-  display: block;
-  color: #334155;
-  font-size: 22px;
-}
-
-.home-page .hero-metrics span {
-  color: #667085;
-  font-size: 12px;
-}
-
 .home-page .service-band {
-  margin-top: 20px;
-  padding: 22px;
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(250px, 0.78fr) minmax(0, 1.22fr);
+  gap: 28px;
+  align-items: center;
+  margin-top: -92px;
+  padding: 0 0 10px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .home-page .law-band {
-  margin-top: 20px;
+  margin-top: 28px;
   padding: 22px;
+}
+
+.home-page .home-section-divider {
+  height: 1px;
+  margin-top: 34px;
+  background: #d8dee8;
+}
+
+.home-page .advisor-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+  gap: clamp(38px, 6vw, 84px);
+  align-items: center;
+  padding: 38px 0 44px;
+  background: transparent;
+}
+
+.home-page .advisor-visual {
+  min-width: 0;
+}
+
+.home-page .advisor-visual img {
+  display: block;
+  width: min(100%, 560px);
+  height: auto;
+  object-fit: contain;
+}
+
+.home-page .advisor-copy {
+  min-width: 0;
+  max-width: 430px;
+}
+
+.home-page .advisor-copy h2 {
+  margin-top: 6px;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.18;
+}
+
+.home-page .advisor-copy h2 span {
+  display: block;
+  color: #e11d2e;
+  font-size: 40px;
+  font-weight: 800;
+}
+
+.home-page .advisor-copy p:not(.eyebrow) {
+  max-width: 42ch;
+  margin-top: 18px;
+  color: #475467;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.home-page .advisor-cta {
+  --el-button-bg-color: #2563eb;
+  --el-button-border-color: #2563eb;
+  --el-button-text-color: #ffffff;
+  --el-button-hover-bg-color: #1e40af;
+  --el-button-hover-border-color: #1e40af;
+  --el-button-active-bg-color: #1d4ed8;
+  --el-button-active-border-color: #1d4ed8;
+  min-width: 148px;
+  min-height: 48px;
+  margin-top: 24px;
+  border-radius: 6px;
+  font-weight: 700;
 }
 
 .home-page .section-head {
@@ -1168,12 +1350,28 @@ onBeforeUnmount(() => {
 }
 
 .home-page .section-head > span {
-  color: #475467;
+  color: #667085;
   font-weight: 700;
 }
 
 .home-page .compact {
   margin-bottom: 16px;
+}
+
+.home-page .service-band .section-head {
+  display: block;
+  margin-bottom: 0;
+  padding: 28px 8px 28px 0;
+}
+
+.home-page .service-band .section-head h2 {
+  max-width: 410px;
+  font-size: 34px;
+  line-height: 1.18;
+}
+
+.home-page .service-title-accent {
+  color: #e11d2e;
 }
 
 .home-page .lawyer-list {
@@ -1188,24 +1386,23 @@ onBeforeUnmount(() => {
   border: 1px solid #e5eaf3;
   border-radius: 8px;
   background: #ffffff;
-  cursor: pointer;
   text-align: left;
+}
+
+.home-page .lawyer-row {
+  cursor: pointer;
   transition:
     border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
-.home-page .lawyer-row:hover,
-.home-page .service-tile:hover {
-  border-color: #cbd5e1;
-  box-shadow: none;
-  transform: none;
+.home-page .lawyer-row:hover {
+  border-color: #2563eb;
 }
 
-.home-page .lawyer-row:active,
-.home-page .service-tile:active {
-  background: #f8fafc;
+.home-page .lawyer-row:active {
+  background: #f6f8fc;
 }
 
 .home-page .lawyer-row strong {
@@ -1232,9 +1429,9 @@ onBeforeUnmount(() => {
 
 .home-page .soft-btn:hover,
 .home-page .soft-btn:focus {
-  border-color: #b7cffb;
+  border-color: #2563eb;
   color: #1d4ed8;
-  background: #f8fbff;
+  background: #eff6ff;
 }
 
 .home-page .soft-btn:active {
@@ -1256,7 +1453,7 @@ onBeforeUnmount(() => {
   border: 1px solid #d6e4ff;
   border-radius: 8px;
   background: #ffffff;
-  color: #475467;
+  color: #667085;
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
@@ -1265,41 +1462,50 @@ onBeforeUnmount(() => {
   transition:
     background-color 0.18s ease,
     border-color 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s ease;
+    color 0.18s ease;
 }
 
 .home-page .home-back-top:hover {
-  background: #f8fafc;
-  border-color: #d9e1e8;
-  color: #334155;
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #1d4ed8;
 }
 
 .home-page .home-back-top:active {
-  background: #eef3fa;
+  background: #edf1f7;
 }
 
 .home-page .service-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+  padding-top: 8px;
 }
 
 .home-page .law-browser {
   display: grid;
   grid-template-columns: 190px 260px minmax(0, 1fr);
-  gap: 14px;
+  gap: 0;
   min-height: 360px;
   max-height: 390px;
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
   contain: layout paint;
 }
 
 .home-page .law-column {
   min-width: 0;
-  border: 1px solid #e5eaf3;
-  border-radius: 8px;
-  background: #fbfdff;
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
   overflow: hidden;
+}
+
+.home-page .law-column:not(:last-child) {
+  border-right: 1px solid #e5eaf3;
 }
 
 .home-page .law-column-title {
@@ -1308,7 +1514,7 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 0 14px;
   border-bottom: 1px solid #e5eaf3;
-  background: #f8fafc;
+  background: #f6f8fc;
   color: #172033;
   font-size: 15px;
   font-weight: 700;
@@ -1319,6 +1525,8 @@ onBeforeUnmount(() => {
   max-height: 312px;
   padding: 10px;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   content-visibility: auto;
   contain-intrinsic-size: 312px;
 }
@@ -1331,13 +1539,7 @@ onBeforeUnmount(() => {
 
 .home-page .law-scroll::-webkit-scrollbar,
 .home-page .article-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.home-page .law-scroll::-webkit-scrollbar-thumb,
-.home-page .article-scroll::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: #cbd5e1;
+  display: none;
 }
 
 .home-page .law-skeleton,
@@ -1350,30 +1552,35 @@ onBeforeUnmount(() => {
 .home-page .law-skeleton span,
 .home-page .lawyer-skeleton span {
   display: block;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e5eaf3;
   border-radius: 8px;
-  background: linear-gradient(90deg, #eef3fa, #f8fafc 46%, #eef3fa);
+  background: linear-gradient(90deg, #edf1f7, #f6f8fc 46%, #edf1f7);
   background-size: 180% 100%;
   animation: homeSkeleton 1.2s ease-in-out infinite;
 }
 
 .home-page .law-skeleton span {
   height: 40px;
+  border-radius: 6px;
 }
 
 .home-page .law-skeleton.article span {
-  height: 82px;
+  height: 98px;
+  border-radius: 8px;
 }
 
 .home-page .lawyer-skeleton span {
   height: 72px;
-  border: 1px solid #e5eaf3;
 }
 
 .home-page .law-row {
+  position: relative;
   display: block;
   width: 100%;
   min-height: 44px;
-  padding: 10px 12px;
+  padding: 10px 12px 10px 16px;
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -1381,26 +1588,48 @@ onBeforeUnmount(() => {
   text-align: left;
   line-height: 1.45;
   cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.home-page .law-row::before,
+.home-page .article-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 999px;
+  background: #2563eb;
+  opacity: 0;
 }
 
 .home-page .law-row:hover {
-  background: #f1f5f9;
+  background: #f6f8fc;
 }
 
 .home-page .law-row:active {
-  background: #e5eaf3;
+  background: #edf1f7;
 }
 
 .home-page .law-row.active {
-  background: #2563eb;
-  color: #ffffff;
-  font-weight: 600;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.home-page .law-row.active::before,
+.home-page .article-row.active::before {
+  opacity: 1;
 }
 
 .home-page .article-row {
+  position: relative;
   width: 100%;
   min-width: 0;
-  padding: 14px;
+  padding: 14px 14px 14px 18px;
   border: 1px solid #e5eaf3;
   border-radius: 8px;
   background: #ffffff;
@@ -1410,23 +1639,30 @@ onBeforeUnmount(() => {
   contain-intrinsic-size: 96px;
   transition:
     border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .home-page .article-row:hover {
-  border-color: #cbd5e1;
-  box-shadow: none;
-  transform: none;
+  border-color: #2563eb;
 }
 
 .home-page .article-row:active {
-  background: #f8fafc;
+  background: #f6f8fc;
+}
+
+.home-page .article-row.active {
+  border-color: #2563eb;
+  background: #eff6ff;
 }
 
 .home-page .article-row strong {
-  color: #334155;
+  color: #172033;
   font-size: 15px;
+}
+
+.home-page .article-row.active strong {
+  color: #1d4ed8;
 }
 
 .home-page .article-row span {
@@ -1448,37 +1684,80 @@ onBeforeUnmount(() => {
   min-height: 44px;
   border: 1px solid #d6e4ff;
   border-radius: 8px;
-  background: #f8fafc;
-  color: #475467;
+  background: #ffffff;
+  color: #667085;
   cursor: pointer;
   font-weight: 600;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .home-page .article-more:hover {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .home-page .article-more:active {
-  background: #e5eaf3;
+  background: #edf1f7;
 }
 
 .home-page .service-tile {
-  min-height: 126px;
-  padding: 16px;
+  position: relative;
+  min-height: 152px;
+  padding: 20px;
   overflow-wrap: anywhere;
 }
 
-.home-page .service-tile span {
+.home-page .service-tile:nth-child(1) {
+  background: #ffffff;
+}
+
+.home-page .service-tile:nth-child(2) {
+  margin-top: 34px;
+  background: #f8fbff;
+}
+
+.home-page .service-tile:nth-child(3) {
+  margin-top: -10px;
+  background: #fbf8ff;
+}
+
+.home-page .service-tile:nth-child(4) {
+  margin-top: 24px;
+  background: #f7fbfa;
+}
+
+.home-page .service-initial {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: #f1f5f9;
-  color: #475467;
+  background: #eff6ff;
+  color: #1d4ed8;
   font-weight: 600;
+}
+
+.home-page .service-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border: 1px solid #d6e4ff;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .home-page .service-tile strong,
@@ -1502,6 +1781,7 @@ onBeforeUnmount(() => {
   grid-template-columns: 1.1fr 0.9fr;
   gap: 18px;
   margin-top: 20px;
+  align-items: stretch;
 }
 
 .home-page .home-panel {
@@ -1523,13 +1803,13 @@ onBeforeUnmount(() => {
   width: 46px;
   height: 46px;
   border-radius: 8px;
-  background: #f1f5f9;
-  color: #475467;
+  background: #eff6ff;
+  color: #1d4ed8;
   font-weight: 700;
 }
 
 .home-page .lawyer-row em {
-  color: #475467;
+  color: #344054;
   font-style: normal;
   font-weight: 700;
 }
@@ -1541,8 +1821,13 @@ onBeforeUnmount(() => {
   align-items: center;
   min-height: 144px;
   padding: 18px;
+  border: 1px solid #e5eaf3;
   border-radius: 8px;
   background: #f6f8fc;
+}
+
+.home-page .order-entry-placeholder {
+  background: #ffffff;
 }
 
 .home-page .order-entry strong {
@@ -1560,38 +1845,58 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 1000;
   display: flex;
+  align-items: center;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.42);
+  padding: 28px;
+  background: rgba(15, 23, 42, 0.35);
+  animation: detailOverlayIn 0.2s ease-out;
 }
 
 .home-page .detail-sheet {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(760px, 100vw);
-  height: 100vh;
+  width: min(1120px, calc(100vw - 56px));
+  height: min(720px, calc(100vh - 56px));
+  min-height: 520px;
+  border: 1px solid #e5eaf3;
   background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+  overflow: hidden;
+  animation: detailSheetIn 0.2s ease-out;
 }
 
 .home-page .detail-head {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-  min-height: 72px;
-  padding: 12px 18px;
+  min-height: 76px;
+  padding: 14px 22px;
   border-bottom: 1px solid #edf1f7;
+  background: #f6f8fc;
 }
 
 .home-page .icon-btn {
   width: 44px;
   height: 44px;
-  border: 0;
-  border-radius: 50%;
-  background: #f3f6fb;
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
+  background: #ffffff;
   color: #172033;
   font-size: 28px;
   cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.home-page .icon-btn:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .home-page .detail-head span {
@@ -1605,47 +1910,49 @@ onBeforeUnmount(() => {
   color: #172033;
   font-size: 20px;
   font-weight: 700;
+  line-height: 1.35;
 }
 
-.home-page .favorite-btn,
 .home-page .bottom-favorite,
 .home-page .comment-submit {
-  border: 0;
-  border-radius: 999px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 700;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
-.home-page .favorite-btn {
-  min-height: 44px;
-  padding: 9px 14px;
-  background: #f3f6fb;
-  color: #475467;
-}
-
-.home-page .favorite-btn.active,
 .home-page .bottom-favorite.active {
-  color: #334155;
-  background: #f1f5f9;
+  color: #1d4ed8;
+  background: #eff6ff;
 }
 
-.home-page .favorite-btn:hover,
 .home-page .bottom-favorite:hover {
-  background: #eef3fa;
-  color: #334155;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
-.home-page .favorite-btn:active,
 .home-page .bottom-favorite:active {
-  background: #e5eaf3;
+  background: #edf1f7;
 }
 
 .home-page .detail-scroll {
   flex: 1;
-  overflow-y: auto;
-  padding: 24px 26px 120px;
-  content-visibility: auto;
-  contain-intrinsic-size: 680px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.85fr);
+  gap: 18px;
+  min-height: 0;
+  padding: 20px 22px 86px;
+}
+
+.home-page .detail-primary::-webkit-scrollbar,
+.home-page .detail-secondary::-webkit-scrollbar,
+.home-page .comment-list::-webkit-scrollbar {
+  display: none;
 }
 
 .home-page .section-label {
@@ -1658,9 +1965,34 @@ onBeforeUnmount(() => {
 .home-page .article-full-text,
 .home-page .explanation-block,
 .home-page .comment-block {
-  padding-bottom: 28px;
-  margin-bottom: 28px;
-  border-bottom: 1px solid #edf1f7;
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.home-page .detail-primary {
+  min-height: 0;
+  padding: 24px 26px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.home-page .detail-secondary {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 14px;
+  align-content: start;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.home-page .explanation-block,
+.home-page .comment-block {
+  padding: 20px;
 }
 
 .home-page .article-full-text h3 {
@@ -1672,9 +2004,9 @@ onBeforeUnmount(() => {
 
 .home-page .article-full-text p,
 .home-page .explanation-block p {
-  color: #2f3a4c;
-  font-size: 18px;
-  line-height: 2;
+  color: #344054;
+  font-size: 17px;
+  line-height: 1.95;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1689,22 +2021,26 @@ onBeforeUnmount(() => {
   min-width: 88px;
   min-height: 44px;
   padding: 8px 14px;
-  border: 1px solid #d8dee9;
+  border: 1px solid #e5eaf3;
   border-radius: 999px;
   background: #ffffff;
   color: #344054;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .home-page .explanation-feedback-actions button:hover {
-  border-color: #cbd5e1;
-  color: #334155;
-  background: #f8fafc;
+  border-color: #2563eb;
+  color: #1d4ed8;
+  background: #eff6ff;
 }
 
 .home-page .explanation-feedback-actions button:active {
-  background: #eef3fa;
+  background: #edf1f7;
 }
 
 .home-page .comment-head {
@@ -1722,6 +2058,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  padding-right: 2px;
 }
 
 .home-page .comment-item {
@@ -1737,8 +2074,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #f1f5f9;
-  color: #475467;
+  background: #eff6ff;
+  color: #1d4ed8;
   font-weight: 600;
 }
 
@@ -1776,31 +2113,34 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 10px;
   align-items: center;
-  padding: 14px 18px;
+  padding: 14px 22px;
   border-top: 1px solid #edf1f7;
   background: #ffffff;
+  box-shadow: none;
 }
 
 .home-page .detail-actions input {
   min-width: 0;
   height: 44px;
   padding: 0 16px;
-  border: 0;
-  border-radius: 999px;
-  background: #f3f6fb;
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
+  background: #ffffff;
   color: #172033;
   outline: none;
 }
 
 .home-page .detail-actions input:focus-visible {
   background: #ffffff;
-  outline: 3px solid rgba(37, 99, 235, 0.28);
+  border-color: #2563eb;
+  outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
 
 .home-page .comment-submit {
   height: 44px;
   padding: 0 18px;
+  border-color: #2563eb;
   background: #2563eb;
   color: #ffffff;
 }
@@ -1822,8 +2162,9 @@ onBeforeUnmount(() => {
 .home-page .bottom-favorite {
   height: 44px;
   min-width: 78px;
-  background: #f3f6fb;
-  color: #475467;
+  border-color: #e5eaf3;
+  background: #ffffff;
+  color: #667085;
 }
 
 .home-page .feedback-mask {
@@ -1844,10 +2185,11 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   padding: 30px 24px 26px;
   border: 1px solid #e5eaf3;
-  border-radius: 16px;
+  border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
   text-align: center;
+  animation: detailSheetIn 0.2s ease-out;
 }
 
 .home-page .feedback-close {
@@ -1856,21 +2198,26 @@ onBeforeUnmount(() => {
   top: 8px;
   width: 44px;
   height: 44px;
-  border: 0;
-  border-radius: 50%;
-  background: #f3f6fb;
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
+  background: #ffffff;
   color: #667085;
   font-size: 20px;
   cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .home-page .feedback-close:hover {
-  background: #eef3fa;
-  color: #334155;
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .home-page .feedback-close:active {
-  background: #e5eaf3;
+  background: #edf1f7;
 }
 
 .home-page .feedback-kicker {
@@ -1897,25 +2244,30 @@ onBeforeUnmount(() => {
   padding: 8px 12px;
   border: 1px solid #e5eaf3;
   border-radius: 999px;
-  background: #f8fafc;
+  background: #ffffff;
   color: #344054;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .home-page .feedback-reasons button.selected {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
-  color: #334155;
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .home-page .feedback-reasons button:hover {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .home-page .feedback-reasons button:active {
-  background: #e5eaf3;
+  background: #edf1f7;
 }
 
 .home-page .feedback-textarea {
@@ -1928,7 +2280,7 @@ onBeforeUnmount(() => {
   height: 106px;
   padding: 14px 14px 28px;
   border: 1px solid #e5eaf3;
-  border-radius: 12px;
+  border-radius: 8px;
   resize: none;
   outline: none;
   color: #172033;
@@ -1942,7 +2294,7 @@ onBeforeUnmount(() => {
 }
 
 .home-page .feedback-textarea textarea:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.22);
+  outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
 
@@ -1958,26 +2310,52 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 44px;
   margin-top: 18px;
-  border: 0;
-  border-radius: 999px;
-  background: #475467;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: #2563eb;
   color: #ffffff;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    opacity 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .home-page .feedback-submit:hover:not(:disabled) {
-  background: #344054;
+  border-color: #1e40af;
+  background: #1e40af;
 }
 
 .home-page .feedback-submit:active:not(:disabled) {
-  background: #172033;
+  background: #1d4ed8;
 }
 
 .home-page .feedback-submit:disabled {
-  background: #98a2b3;
-  opacity: 1;
+  opacity: 0.55;
   cursor: not-allowed;
+}
+
+@keyframes detailOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes detailSheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes homeSkeleton {
@@ -2005,28 +2383,120 @@ onBeforeUnmount(() => {
 
 @media (max-width: 1024px) {
   .home-page .hero-section,
+  .home-page .service-band,
+  .home-page .advisor-band,
   .home-page .home-columns {
     grid-template-columns: 1fr;
   }
 
+  .home-page .hero-section {
+    min-height: clamp(500px, calc(68svh - 84px), 660px);
+    padding: 72px 38px 150px;
+  }
+
+  .home-page .hero-section h1 {
+    font-size: 36px;
+  }
+
+  .home-page .hero-panel {
+    width: min(100%, 500px);
+    max-width: 100%;
+    margin-left: 0;
+    justify-self: center;
+    transform: none;
+  }
+
+  .home-page .logo-stage {
+    width: min(500px, 100%);
+    min-height: 0;
+  }
+
+  .home-page .service-band {
+    margin-top: -68px;
+  }
+
+  .home-page .service-band .section-head {
+    padding: 0;
+  }
+
+  .home-page .service-band .section-head h2 {
+    max-width: 620px;
+    font-size: 28px;
+  }
+
   .home-page .service-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-page .advisor-band {
+    gap: 30px;
+    padding: 34px 28px 40px;
+  }
+
+  .home-page .advisor-visual img {
+    margin: 0 auto;
+  }
+
+  .home-page .advisor-copy {
+    max-width: 620px;
+  }
+
+  .home-page .advisor-copy h2 {
+    font-size: 30px;
+  }
+
+  .home-page .advisor-copy h2 span {
+    font-size: 34px;
   }
 
   .home-page .law-browser {
     grid-template-columns: 150px 220px minmax(0, 1fr);
   }
+
+  .home-page .detail-overlay {
+    padding: 16px;
+  }
+
+  .home-page .detail-sheet {
+    width: min(100%, 720px);
+    height: calc(100vh - 32px);
+    min-height: 0;
+  }
+
+  .home-page .detail-scroll {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+    padding: 18px 18px 96px;
+  }
+
+  .home-page .detail-primary {
+    overflow: visible;
+  }
+
+  .home-page .detail-secondary {
+    overflow: visible;
+  }
+
+  .home-page .comment-list {
+    max-height: none;
+  }
 }
 
 @media (max-width: 640px) {
   .home-page {
-    padding: 20px 12px 40px;
+    padding: 0 12px 40px;
+  }
+
+  .home-page .hero-section {
+    min-height: clamp(480px, calc(64svh - 70px), 620px);
+    padding: 54px 20px 124px;
   }
 
   .home-page .hero-copy,
   .home-page .hero-panel,
   .home-page .law-band,
   .home-page .service-band,
+  .home-page .advisor-band,
   .home-page .home-panel {
     padding: 16px;
   }
@@ -2035,14 +2505,83 @@ onBeforeUnmount(() => {
     font-size: 28px;
   }
 
+  .home-page .hero-section h1 {
+    font-size: 30px;
+  }
+
+  .home-page .service-band {
+    margin-top: -56px;
+  }
+
+  .home-page .home-section-divider {
+    margin-top: 24px;
+  }
+
+  .home-page .service-band .section-head h2 {
+    font-size: 24px;
+  }
+
+  .home-page .advisor-band {
+    gap: 22px;
+    padding-top: 24px;
+    padding-bottom: 30px;
+  }
+
+  .home-page .advisor-copy h2 {
+    font-size: 26px;
+  }
+
+  .home-page .advisor-copy h2 span {
+    font-size: 30px;
+  }
+
+  .home-page .advisor-copy p:not(.eyebrow) {
+    font-size: 14px;
+  }
+
+  .home-page .advisor-cta {
+    width: 100%;
+  }
+
   .home-page .hero-search,
   .home-page .service-grid {
     grid-template-columns: 1fr;
   }
 
+  .home-page .hero-panel {
+    width: 100%;
+    gap: 0;
+    transform: none;
+  }
+
+  .home-page .logo-stage {
+    justify-self: center;
+    width: min(320px, 100%);
+    min-height: 0;
+  }
+
+  .home-page .hero-panel img {
+    width: min(320px, 100%);
+    height: min(320px, 80vw);
+  }
+
+  .home-page .service-grid {
+    gap: 12px;
+    padding-top: 0;
+  }
+
+  .home-page .service-tile:nth-child(n) {
+    margin-top: 0;
+  }
+
   .home-page .law-browser {
     grid-template-columns: 1fr;
     max-height: none;
+  }
+
+  .home-page .law-column:not(:last-child) {
+    border-right: 0;
+    border-bottom: 1px solid #e5eaf3;
   }
 
   .home-page .law-scroll {
@@ -2051,6 +2590,45 @@ onBeforeUnmount(() => {
 
   .home-page .article-scroll {
     max-height: 240px;
+  }
+
+  .home-page .detail-overlay {
+    padding: 8px;
+  }
+
+  .home-page .detail-sheet {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 16px);
+    border-radius: 10px;
+  }
+
+  .home-page .detail-head {
+    min-height: 68px;
+    padding: 10px 12px;
+  }
+
+  .home-page .detail-scroll {
+    padding: 16px 14px 120px;
+  }
+
+  .home-page .detail-primary,
+  .home-page .explanation-block,
+  .home-page .comment-block {
+    padding: 16px;
+  }
+
+  .home-page .article-full-text p,
+  .home-page .explanation-block p {
+    font-size: 17px;
+  }
+
+  .home-page .detail-actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 12px;
+  }
+
+  .home-page .bottom-favorite {
+    display: none;
   }
 
   .home-page .section-head,

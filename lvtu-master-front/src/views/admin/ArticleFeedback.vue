@@ -97,7 +97,7 @@ onMounted(loadFeedback)
           <option value="true">有帮助</option>
           <option value="false">无帮助</option>
         </select>
-        <input v-model="keyword" placeholder="搜索法条、用户、原因、内容" />
+        <input v-model="keyword" placeholder="搜索法条、用户、原因、内容" style="width: 300px;"/>
       </div>
 
       <div class="table-wrap">

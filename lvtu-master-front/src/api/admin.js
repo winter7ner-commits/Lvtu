@@ -4,6 +4,22 @@ export const getUsers = () => {
   return request.get('/api/admin/users').then((res) => res.data)
 }
 
+export const updateUser = (userId, data) => {
+  return request.put(`/api/admin/users/${userId}`, data).then((res) => res.data)
+}
+
+export const updateUserStatus = (userId, status) => {
+  return request.put(`/api/admin/users/${userId}/status`, { status }).then((res) => res.data)
+}
+
+export const updateUserAdminRole = (userId, adminRole) => {
+  return request.put(`/api/admin/users/${userId}/admin-role`, { adminRole }).then((res) => res.data)
+}
+
+export const deleteUser = (userId) => {
+  return request.delete(`/api/admin/users/${userId}`).then((res) => res.data)
+}
+
 export const getAuthApplications = () => {
   return request.get('/api/admin/auth-applications').then((res) => res.data)
 }

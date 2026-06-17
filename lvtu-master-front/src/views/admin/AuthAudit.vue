@@ -151,8 +151,8 @@
 
 import { ref, computed, onMounted } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { getApplicationList, approveApplication, rejectApplication } from '../../api/application'
-import { getRealnameVerifications, approveRealnameVerification, rejectRealnameVerification } from '../../api/admin'
+import { approveApplication, rejectApplication } from '../../api/application'
+import { getAuthApplications, getRealnameVerifications, approveRealnameVerification, rejectRealnameVerification } from '../../api/admin'
 const lawyerList = ref([])
 const realnameList = ref([])
 const loading = ref(false)
@@ -161,6 +161,14 @@ const activeTab = ref(-1)
 const activeMode = ref('realname')
 const previewUrl = ref(null)
 
+const readApiList = (response) => {
+  const code = response?.code ?? response?.data?.code
+  if (code !== undefined && Number(code) !== 200) {
+    throw new Error(response?.message || response?.data?.message || 'request failed')
+  }
+  const data = response?.data?.data ?? response?.data ?? response
+  return Array.isArray(data) ? data : []
+}
 const getFullImageUrl = (url) => {
   if (!url) return ''
   if (url.startsWith('http://') || url.startsWith('https://')) return url
@@ -188,44 +196,73 @@ const countByStatus = (status) => {
 const load = async () => {
   loading.value = true
   try {
-    const [lawyerRes, realnameRes] = await Promise.all([
-      getApplicationList(),
+    const [lawyerRes, realnameRes] = await Promise.allSettled([
+      getAuthApplications(),
       getRealnameVerifications()
     ])
-    let data = lawyerRes?.data?.data || lawyerRes?.data || []
-    lawyerList.value = data.map(item => ({
-      applicationId: item.applicationId || item.application_id,
-      userId: item.userId || item.user_id,
-      licenseNo: item.licenseNo || item.license_no,
-      licenseUrl: item.licenseUrl || item.license_url,
-      lawFirm: item.lawFirm || item.law_firm,
-      practiceStartYear: item.practiceStartYear || item.practice_start_year,
-      status: item.status,
-      rejectReason: item.rejectReason || item.reject_reason,
-      createTime: item.createTime || item.create_time,
-      auditTime: item.auditTime || item.audit_time,
-      applyType: item.applyType ?? item.apply_type,
-      username: item.username,
-      realname: item.realname,
-      avatarUrl: item.avatarUrl
-    }))
-    const verificationData = realnameRes?.data || []
-    realnameList.value = verificationData.map(item => ({
-      verificationId: item.verificationId || item.verification_id,
-      userId: item.userId || item.user_id,
-      username: item.username,
-      phone: item.phone,
-      realName: item.realName || item.real_name,
-      idCardNumber: item.idCardNumber || item.id_card_number,
-      idCardFrontUrl: item.idCardFrontUrl || item.id_card_front_url,
-      idCardBackUrl: item.idCardBackUrl || item.id_card_back_url,
-      status: item.verificationStatus ?? item.verification_status,
-      rejectReason: item.rejectReason || item.reject_reason,
-      reviewerId: item.reviewerId || item.reviewer_id,
-      reviewedTime: item.reviewedTime || item.reviewed_time,
-      createdTime: item.createdTime || item.created_time,
-      updatedTime: item.updatedTime || item.updated_time
-    }))
+    const failed = []
+
+    if (lawyerRes.status === 'fulfilled') {
+      try {
+        const data = readApiList(lawyerRes.value)
+        lawyerList.value = data.map(item => ({
+          applicationId: item.applicationId || item.application_id,
+          userId: item.userId || item.user_id,
+          licenseNo: item.licenseNo || item.license_no,
+          licenseUrl: item.licenseUrl || item.license_url,
+          lawFirm: item.lawFirm || item.law_firm,
+          practiceStartYear: item.practiceStartYear || item.practice_start_year,
+          status: item.status,
+          rejectReason: item.rejectReason || item.reject_reason,
+          createTime: item.createTime || item.create_time,
+          auditTime: item.auditTime || item.audit_time,
+          applyType: item.applyType ?? item.apply_type,
+          username: item.username,
+          realname: item.realname,
+          avatarUrl: item.avatarUrl
+        }))
+      } catch {
+        lawyerList.value = []
+        failed.push('律师认证')
+      }
+    } else {
+      lawyerList.value = []
+      failed.push('律师认证')
+    }
+
+    if (realnameRes.status === 'fulfilled') {
+      try {
+        const verificationData = readApiList(realnameRes.value)
+        realnameList.value = verificationData.map(item => ({
+          verificationId: item.verificationId || item.verification_id,
+          userId: item.userId || item.user_id,
+          username: item.username,
+          phone: item.phone,
+          realName: item.realName || item.real_name,
+          idCardNumber: item.idCardNumber || item.id_card_number,
+          idCardFrontUrl: item.idCardFrontUrl || item.id_card_front_url,
+          idCardBackUrl: item.idCardBackUrl || item.id_card_back_url,
+          status: item.verificationStatus ?? item.verification_status,
+          rejectReason: item.rejectReason || item.reject_reason,
+          reviewerId: item.reviewerId || item.reviewer_id,
+          reviewedTime: item.reviewedTime || item.reviewed_time,
+          createdTime: item.createdTime || item.created_time,
+          updatedTime: item.updatedTime || item.updated_time
+        }))
+      } catch {
+        realnameList.value = []
+        failed.push('实名认证')
+      }
+    } else {
+      realnameList.value = []
+      failed.push('实名认证')
+    }
+
+    if (failed.length === 2) {
+      ElMessage.error('加载失败')
+    } else if (failed.length) {
+      ElMessage.warning(`${failed.join('、')}加载失败`)
+    }
   } catch (err) {
     ElMessage.error('加载失败')
   } finally {

@@ -7,6 +7,7 @@ const SearchResults = () => import('../views/SearchResults.vue')
 const LawyerList = () => import('../views/lawyer/LawyerList.vue')
 const LawyerDetail = () => import('../views/lawyer/LawyerDetail.vue')
 const LawArticleList = () => import('../views/lawyer/LawArticleList.vue')
+const About = () => import('../views/About.vue')
 const Login = () => import('../views/auth/Login.vue')
 const Register = () => import('../views/auth/Register.vue')
 const ForgotPassword = () => import('../views/auth/ForgotPassword.vue')
@@ -38,13 +39,14 @@ const router = createRouter({
   routes: [
     { path: '/', component: Home, name: 'Home' },
     { path: '/search', component: SearchResults, name: 'SearchResults' },
-    { path: '/law-article-list', component: LawArticleList, name: 'LawArticleList' },
+    { path: '/laws', component: LawArticleList, name: 'Laws' },
+    { path: '/law-article-list', redirect: (to) => ({ path: '/laws', query: to.query }) },
     { path: '/lawyer-list', component: LawyerList, name: 'LawyerList' },
     { path: '/lawyer/:id', component: LawyerDetail, name: 'LawyerDetail' },
     { path: '/login', component: Login, name: 'Login' },
     { path: '/register', component: Register, name: 'Register' },
     { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },
-    { path: '/change-password', component: ChangePassword, name: 'ChangePassword' },
+    { path: '/change-password', component: ChangePassword, name: 'ChangePassword', meta: { requiresAuth: true } },
     { path: '/settings', component: Settings, name: 'Settings', meta: { requiresAuth: true } },
     { path: '/auth-center', component: AuthCenter, name: 'AuthCenter', meta: { requiresAuth: true } },
     { path: '/user/realname', component: RealName, name: 'RealName', meta: { requiresAuth: true } },
@@ -58,6 +60,7 @@ const router = createRouter({
     { path: '/lawyer/orders/:orderId', component: LawyerOrderDetail, name: 'LawyerOrderDetail', meta: { requiresAuth: true } },
     { path: '/evaluations', component: EvaluationDashboard, name: 'EvaluationDashboard' },
     { path: '/notifications', component: NotificationList, name: 'NotificationList', meta: { requiresAuth: true } },
+    { path: '/about', component: About, name: 'About' },
     // { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
     // { path: '/admin/register', component: AdminRegister, name: 'AdminRegister', meta: { requiresAdmin: true } },
 

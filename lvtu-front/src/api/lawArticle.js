@@ -14,9 +14,23 @@ export function getDocumentsByCategory(categoryId) {
   })
 }
 
+export function getAllDocuments() {
+  return request({
+    url: '/api/documents',
+    method: 'get'
+  })
+}
+
 export function getArticlesByDocument(documentId) {
   return request({
     url: `/api/articles/document/${documentId}`,
+    method: 'get'
+  })
+}
+
+export function getAllArticles() {
+  return request({
+    url: '/api/articles',
     method: 'get'
   })
 }

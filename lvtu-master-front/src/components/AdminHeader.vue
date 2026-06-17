@@ -1,273 +1,330 @@
 <template>
-  <header class="header">
-    <div class="header-container">
-      <router-link :to="homePath" class="logo">
-        <img src="/icons/logo.png" alt="LVTU" class="logo-img" />
-        <span class="logo-text">律途</span>
-      </router-link>
+  <aside class="admin-sidebar" aria-label="后台主导航">
+    <router-link :to="homePath" class="brand">
+      <img src="/icons/logo.png" alt="律途" class="brand-logo" />
+      <span class="brand-copy">
+        <strong>律途后台</strong>
+        <small>法律服务管理台</small>
+      </span>
+    </router-link>
 
-      <nav class="nav-menu">
-        <router-link v-for="item in visibleMenus" :key="item.path" :to="item.path" class="nav-item">
-          {{ item.label }}
+    <nav class="side-nav">
+      <section v-for="group in groupedMenus" :key="group.title" class="nav-section">
+        <p class="nav-section-title">{{ group.title }}</p>
+        <router-link
+          v-for="item in group.items"
+          :key="item.path"
+          :to="item.path"
+          class="nav-item"
+        >
+          <span class="nav-mark">{{ item.label.slice(0, 1) }}</span>
+          <span>{{ item.label }}</span>
         </router-link>
-      </nav>
+      </section>
+    </nav>
 
-      <div class="header-right">
-        <button class="search-btn" type="button">🔍</button>
-        <template v-if="!isLoggedIn">
-          <router-link to="/admin/login" class="login-btn">登录</router-link>
-        </template>
-        <div v-else class="user-menu-dropdown" :class="{ 'is-active': showUserMenu }" ref="userMenuRef">
-          <button class="user-menu-btn" type="button" @click.stop="toggleUserMenu">
-            <span class="avatar-text">admin</span>
-            <span>{{ userName }}</span>
-            <span class="role-pill">{{ roleLabel }}</span>
-            <i class="dropdown-icon">▼</i>
-          </button>
-          <div class="dropdown-menu user-dropdown">
-            <a href="#" class="dropdown-item logout" @click.prevent="handleLogout">退出登录</a>
-          </div>
+    <div class="sidebar-footer">
+      <template v-if="!isLoggedIn">
+        <router-link to="/admin/login" class="login-link">登录后台</router-link>
+      </template>
+      <template v-else>
+        <div class="user-card">
+          <span class="avatar-text">{{ userInitial }}</span>
+          <span class="user-meta">
+            <strong>{{ userName }}</strong>
+            <small>{{ roleLabel }}</small>
+          </span>
         </div>
-      </div>
+        <button class="logout-btn" type="button" @click="handleLogout">退出登录</button>
+      </template>
     </div>
-  </header>
+  </aside>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import { ADMIN_MENU_ITEMS, ADMIN_ROLE_LABELS, canAccessAdminRoute, firstAdminPath, normalizeAdminRole } from '../utils/adminPermissions'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const showUserMenu = ref(false)
-const userMenuRef = ref(null)
+
+const NAV_GROUPS = [
+  { title: '运营管理', labels: ['用户管理', '订单查询', '平台介入', '结算管理', '评价管理'] },
+  { title: '内容管理', labels: ['法条管理', '法条浏览', '解释反馈'] },
+  { title: '审核专区', labels: ['认证审核'] },
+  { title: '权限与系统', labels: ['角色管理', '系统设置'] }
+]
 
 const isLoggedIn = computed(() => authStore.isAuthenticated)
 const userName = computed(() => authStore.user?.username || 'admin')
+const userInitial = computed(() => userName.value.slice(0, 1).toUpperCase())
 const roleLabel = computed(() => ADMIN_ROLE_LABELS[normalizeAdminRole(authStore.user)] || '管理员')
 const visibleMenus = computed(() => ADMIN_MENU_ITEMS.filter((item) => canAccessAdminRoute(authStore.user, item.roles)))
 const homePath = computed(() => isLoggedIn.value ? firstAdminPath(authStore.user) : '/admin/login')
 
-const toggleUserMenu = () => {
-  showUserMenu.value = !showUserMenu.value
-}
+const groupedMenus = computed(() => {
+  const visible = visibleMenus.value
+  const used = new Set()
+  const groups = NAV_GROUPS.map((group) => {
+    const items = visible.filter((item) => {
+      const matched = group.labels.includes(item.label)
+      if (matched) used.add(item.path)
+      return matched
+    })
+    return { title: group.title, items }
+  }).filter((group) => group.items.length)
 
-const closeUserMenu = (event) => {
-  if (!userMenuRef.value || userMenuRef.value.contains(event.target)) return
-  showUserMenu.value = false
-}
+  const rest = visible.filter((item) => !used.has(item.path))
+  if (rest.length) groups.push({ title: '其他', items: rest })
+  return groups
+})
 
 const handleLogout = () => {
   authStore.logout()
-  showUserMenu.value = false
   router.push('/admin/login')
 }
-
-onMounted(() => {
-  document.addEventListener('click', closeUserMenu)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', closeUserMenu)
-})
 </script>
 
 <style scoped>
-.header {
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+.admin-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 80;
+  width: 256px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-right: 1px solid #e5eaf3;
+  color: #172033;
 }
 
-.header-container {
-  height: 70px;
+.brand {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 12px;
+  min-height: 76px;
+  padding: 18px 20px;
+  color: inherit;
   text-decoration: none;
-  flex-shrink: 0;
+  border-bottom: 1px solid #edf1f7;
 }
 
-.logo-img {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #d6e4ff;
 }
 
-.logo-text {
-  color: #fff;
-  font-size: 25px;
-  font-weight: 800;
-  letter-spacing: 2px;
+.brand-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
 }
 
-.nav-menu {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.brand-copy strong {
+  font-size: 17px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.brand-copy small,
+.user-meta small,
+.nav-section-title {
+  color: #667085;
+}
+
+.brand-copy small {
+  font-size: 12px;
+}
+
+.side-nav {
   flex: 1;
-  margin-left: 32px;
+  overflow-y: auto;
+  padding: 18px 12px;
+}
+
+.nav-section + .nav-section {
+  margin-top: 18px;
+}
+
+.nav-section-title {
+  margin: 0 0 8px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
 }
 
 .nav-item {
-  color: rgba(255, 255, 255, 0.88);
-  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  color: #344054;
   font-size: 14px;
   font-weight: 700;
-  padding: 10px 14px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.nav-item:hover,
-.nav-item.router-link-active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-shrink: 0;
-}
-
-.search-btn {
-  border: 0;
-  background: transparent;
-  color: #fff;
-  font-size: 19px;
-  cursor: pointer;
-}
-
-.login-btn,
-.signup-btn {
-  min-width: 76px;
-  text-align: center;
-  padding: 10px 18px;
-  border-radius: 4px;
-  font-size: 15px;
-  font-weight: 700;
   text-decoration: none;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
-.login-btn {
-  color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.86);
+.nav-item:hover {
+  background: #f6f8fc;
+  color: #1d4ed8;
 }
 
-.signup-btn {
-  color: #1e40af;
-  background: #fff;
+.nav-item.router-link-active,
+.nav-item.router-link-exact-active {
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
-.user-menu-dropdown {
-  position: relative;
-}
-
-.user-menu-btn {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  border: 0;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  padding: 7px 14px 7px 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.user-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.role-pill {
+.nav-mark {
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
-  height: 24px;
-  border-radius: 4px;
-  padding: 0 8px;
-  background: rgba(255, 255, 255, 0.18);
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  background: #f6f8fc;
+  color: #667085;
   font-size: 12px;
-  white-space: nowrap;
+  font-weight: 800;
+}
+
+.nav-item.router-link-active .nav-mark,
+.nav-item.router-link-exact-active .nav-mark {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.sidebar-footer {
+  padding: 14px 14px 18px;
+  border-top: 1px solid #edf1f7;
+  background: #fbfcff;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e5eaf3;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .avatar-text {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.25);
-  font-size: 11px;
-}
-
-.dropdown-icon {
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
   font-size: 12px;
-  transition: transform 0.2s ease;
+  font-weight: 900;
 }
 
-.dropdown-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  min-width: 140px;
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
-  padding: 8px 0;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translateY(-6px);
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+.user-meta {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
 }
 
-.user-menu-dropdown.is-active .dropdown-menu {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0);
+.user-meta strong,
+.user-meta small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.user-menu-dropdown.is-active .dropdown-icon {
-  transform: rotate(180deg);
+.user-meta strong {
+  font-size: 14px;
+  line-height: 1.3;
 }
 
-.dropdown-item {
-  display: block;
-  padding: 10px 16px;
-  color: #333;
+.user-meta small {
+  font-size: 12px;
+}
+
+.logout-btn,
+.login-link {
+  width: 100%;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 800;
   text-decoration: none;
 }
 
-.logout {
-  color: #ef4444;
+.logout-btn {
+  border: 1px solid #e5eaf3;
+  background: #ffffff;
+  color: #b42318;
+  cursor: pointer;
 }
 
-@media (max-width: 900px) {
-  .nav-menu {
-    gap: 0;
-    margin-left: 18px;
+.logout-btn:hover {
+  border-color: #f1b8b4;
+  background: #fff1f0;
+}
+
+.login-link {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+@media (max-width: 860px) {
+  .admin-sidebar {
+    position: static;
+    width: 100%;
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid #e5eaf3;
+  }
+
+  .brand {
+    min-height: 64px;
+  }
+
+  .side-nav {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 0 12px 12px;
+  }
+
+  .nav-section {
+    min-width: max-content;
+  }
+
+  .nav-section + .nav-section {
+    margin-top: 0;
+  }
+
+  .nav-section-title {
+    display: none;
   }
 
   .nav-item {
-    padding: 8px 10px;
-    font-size: 13px;
+    display: inline-flex;
+  }
+
+  .sidebar-footer {
+    display: none;
   }
 }
 </style>

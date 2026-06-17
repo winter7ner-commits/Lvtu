@@ -48,6 +48,7 @@ const filteredEvaluations = computed(() => {
       item.order_id,
       item.user_name,
       item.lawyer_name,
+      item.lawyer_id,
       item.evaluation_content
     ].some((field) => String(field || '').toLowerCase().includes(key))
     return statusMatched && featuredMatched && keyMatched
@@ -63,6 +64,8 @@ const summary = computed(() => ({
 
 const formatTime = (value) => value ? String(value).replace('T', ' ').slice(0, 16) : '-'
 const formatScore = (value) => value == null ? '-' : Number(value).toFixed(1)
+const lawyerName = (item) => item.lawyer_name || item.lawyerName || '-'
+const lawyerId = (item) => item.lawyer_id || item.lawyerId || '-'
 
 const loadEvaluations = async () => {
   loading.value = true
@@ -182,7 +185,12 @@ onMounted(loadEvaluations)
                 <div>订单 #{{ item.order_id }}</div>
                 <small>{{ item.user_name || item.user_id }}</small>
               </td>
-              <td>{{ item.lawyer_name || item.lawyer_id || '-' }}</td>
+              <td>
+                <div class="person-cell">
+                  <strong>{{ lawyerName(item) }}</strong>
+                  <small>律师ID {{ lawyerId(item) }}</small>
+                </div>
+              </td>
               <td>
                 <div class="score">{{ formatScore(item.total_score) }}</div>
                 <small>专业 {{ item.professional_score }} / 响应 {{ item.responsiveness_score }} / 态度 {{ item.attitude_score }}</small>
@@ -256,10 +264,10 @@ h1 { margin: 0; color: #172033; font-size: 30px; }
 .summary-card { padding: 18px; border: 1px solid #d6e4ff; border-radius: 8px; background: #f8fbff; }
 .summary-card span { display: block; color: #667085; font-size: 13px; margin-bottom: 8px; }
 .summary-card strong { color: #1d4ed8; font-size: 28px; }
-.summary-card.warning { background: #fff7ed; border-color: #fed7aa; }
-.summary-card.warning strong { color: #c2410c; }
-.summary-card.success { background: #f0fdf4; border-color: #bbf7d0; }
-.summary-card.success strong { color: #15803d; }
+.summary-card.warning { background: #fff1f0; border-color: #ffd1cf; }
+.summary-card.warning strong { color: #b42318; }
+.summary-card.success { background: #fef3c7; border-color: #fde68a; }
+.summary-card.success strong { color: #92400e; }
 .summary-card.muted { background: #f8fafc; border-color: #e2e8f0; }
 .summary-card.muted strong { color: #475467; }
 .content-card { background: #fff; border-radius: 8px; padding: 22px; box-shadow: 0 8px 24px rgba(15, 23, 42, .07); }
@@ -271,11 +279,13 @@ h1 { margin: 0; color: #172033; font-size: 30px; }
 .data-table th { background: #f6f8fc; color: #344054; text-align: left; padding: 14px; }
 .data-table td { border-top: 1px solid #edf1f7; padding: 14px; vertical-align: top; }
 .data-table small { color: #667085; }
+.person-cell { display: grid; gap: 2px; min-width: 120px; }
+.person-cell strong { color: #172033; font-weight: 800; }
 .score { color: #0958d9; font-weight: 900; font-size: 18px; }
 .content-cell { max-width: 280px; color: #344054; line-height: 1.6; white-space: pre-wrap; }
 .tag { display: inline-flex; margin: 0 6px 6px 0; padding: 4px 8px; border-radius: 999px; background: #eef4ff; color: #1d4ed8; font-size: 12px; font-weight: 800; }
-.tag-featured { background: #fff7e6; color: #ad6800; }
-.tag-report { background: #fff1f3; color: #c01048; }
+.tag-featured { background: #fef3c7; color: #92400e; }
+.tag-report { background: #fff1f0; color: #b42318; }
 .tag-hidden { background: #f8fafc; color: #475467; }
 .tag-deleted { background: #fff1f0; color: #b42318; }
 .tag-pending { background: #fef3c7; color: #92400e; }

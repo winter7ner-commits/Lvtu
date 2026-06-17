@@ -16,7 +16,7 @@ import InterventionManage from '../views/admin/InterventionManage.vue'
 import SystemSettings from '../views/admin/SystemSettings.vue'
 
 import { useAuthStore } from '../store/auth'
-import { canAccessAdminRoute, firstAdminPath } from '../utils/adminPermissions'
+import { ADMIN_ROLES, canAccessAdminRoute, firstAdminPath } from '../utils/adminPermissions'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -25,20 +25,20 @@ const router = createRouter({
     { path: '/admin', redirect: () => firstAdminPath(JSON.parse(localStorage.getItem('adminUser') || 'null')) },
     { path: '/admin/login', component: AdminLogin, name: 'AdminLogin' },
     { path: '/admin/register', redirect: '/roles' },
-    { path: '/roles', component: AdminRegister, name: 'RoleManagement', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN'] } },
-    { path: '/settings', component: SystemSettings, name: 'SystemSettings', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN'] } },
-    { path: '/law-management', component: LawManage, name: 'LawManage', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'OPERATOR'] } },
-    { path: '/law-browse', component: AdminLawBrowse, name: 'AdminLawBrowse', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'OPERATOR'] } },
-    { path: '/users', component: UserManagement, name: 'UserManagement', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'OPERATOR'] } },
-    { path: '/auth-audit', component: AuthAudit, name: 'AuthAudit', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'CERT_AUDITOR'] } },
-    { path: '/orders', component: OrderQuery, name: 'OrderQuery', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'OPERATOR', 'CUSTOMER_SERVICE'] } },
-    { path: '/interventions', component: InterventionManage, name: 'InterventionManage', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'CUSTOMER_SERVICE'] } },
-    { path: '/settlements', component: SettlementManage, name: 'SettlementManage', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN'] } },
-    { path: '/evaluations', component: EvaluationManage, name: 'EvaluationManage', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'OPERATOR'] } },
-    { path: '/article-feedback', component: ArticleFeedback, name: 'ArticleFeedback', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'OPERATOR'] } },
-    { path: '/categories', component: LawCategory, name: 'LawCategory', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'OPERATOR'] } },
-    { path: '/documents', component: LawDocument, name: 'LawDocument', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'OPERATOR'] } },
-    { path: '/articles', component: LawArticle, name: 'LawArticle', meta: { requiresAdmin: true, roles: ['SUPER_ADMIN', 'OPERATOR'] } },
+    { path: '/roles', component: AdminRegister, name: 'RoleManagement', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN] } },
+    { path: '/settings', component: SystemSettings, name: 'SystemSettings', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN] } },
+    { path: '/law-management', component: LawManage, name: 'LawManage', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.OPERATOR] } },
+    { path: '/law-browse', component: AdminLawBrowse, name: 'AdminLawBrowse', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.OPERATOR] } },
+    { path: '/users', component: UserManagement, name: 'UserManagement', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN] } },
+    { path: '/auth-audit', component: AuthAudit, name: 'AuthAudit', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.CERT_AUDITOR] } },
+    { path: '/orders', component: OrderQuery, name: 'OrderQuery', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.CUSTOMER_SERVICE] } },
+    { path: '/interventions', component: InterventionManage, name: 'InterventionManage', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.CUSTOMER_SERVICE] } },
+    { path: '/settlements', component: SettlementManage, name: 'SettlementManage', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN] } },
+    { path: '/evaluations', component: EvaluationManage, name: 'EvaluationManage', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.OPERATOR] } },
+    { path: '/article-feedback', component: ArticleFeedback, name: 'ArticleFeedback', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.OPERATOR] } },
+    { path: '/categories', component: LawCategory, name: 'LawCategory', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.OPERATOR] } },
+    { path: '/documents', component: LawDocument, name: 'LawDocument', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.OPERATOR] } },
+    { path: '/articles', component: LawArticle, name: 'LawArticle', meta: { requiresAdmin: true, roles: [ADMIN_ROLES.SUPER_ADMIN, ADMIN_ROLES.OPERATOR] } },
   ]
 })
 
@@ -49,7 +49,7 @@ router.beforeEach((to) => {
 
   if (to.meta.requiresAdmin) {
     if (!isLoggedIn) return { path: '/admin/login', query: { redirect: to.fullPath } }
-    if (Number(user?.userType) !== 3) return { path: '/admin/login', query: { redirect: to.fullPath } }
+    if (Number(user?.userType ?? user?.user_type) !== 3) return { path: '/admin/login', query: { redirect: to.fullPath } }
     if (!canAccessAdminRoute(user, to.meta.roles || [])) return { path: firstAdminPath(user) }
   }
 })

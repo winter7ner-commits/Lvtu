@@ -1,0 +1,492 @@
+:root {
+  --el-color-primary: #2563eb;
+  --el-color-primary-light-3: #5b8def;
+  --el-color-primary-light-5: #91b2f5;
+  --el-color-primary-light-7: #bfcefa;
+  --el-color-primary-light-8: #d6e4ff;
+  --el-color-primary-light-9: #eff6ff;
+  --el-color-primary-dark-2: #1e40af;
+  --el-border-radius-base: 6px;
+  --el-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --el-text-color-primary: #172033;
+  --el-text-color-regular: #344054;
+  --el-text-color-secondary: #667085;
+  --el-border-color: #e5eaf3;
+  --el-border-color-light: #edf1f7;
+  --el-fill-color-light: #f6f8fc;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+#app .admin-main {
+  color: var(--admin-text);
+}
+
+#app .admin-main :is(.page-shell, .law-container, .settlement-page, .page) {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0;
+  padding: 32px;
+  background: transparent;
+  color: var(--admin-text);
+}
+
+#app .admin-main .bg-glow {
+  display: none;
+}
+
+#app .admin-main :is(.page-head, .law-header, .page > .toolbar) {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: none;
+  margin: 0 0 22px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#app .admin-main :is(.page-head h1, .law-header h1, .page > .toolbar h1, h1) {
+  margin: 0;
+  color: var(--admin-text);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+#app .admin-main :is(.page-head p, .subtext, .page-desc, .modal-sub) {
+  max-width: 68ch;
+  color: var(--admin-text-muted);
+  line-height: 1.7;
+}
+
+#app .admin-main :is(.content-card, .law-table-container, .table-shell, .admin-list-card, .settings-card, .summary-card, .summary-band div, .audit-card, .empty-state) {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  box-shadow: var(--admin-shadow-panel);
+}
+
+#app .admin-main :is(.content-card, .law-table-container, .table-shell, .admin-list-card) {
+  padding: 22px;
+  overflow-x: auto;
+}
+
+#app .admin-main :is(.card-title, .admin-list-card h3, .setting-main strong) {
+  margin: 0 0 18px;
+  color: var(--admin-text);
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+#app .admin-main :is(.summary-band, .stats-row) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+#app .admin-main :is(.summary-card, .summary-band div, .settings-card) {
+  padding: 18px;
+}
+
+#app .admin-main :is(.summary-card span, .summary-band span, .settings-card span, .setting-main p, .info-item span, .applicant-sub, .audit-time) {
+  color: var(--admin-text-muted);
+}
+
+#app .admin-main :is(.summary-card strong, .summary-band strong, .settings-card strong, .score) {
+  color: var(--admin-primary-text);
+  font-weight: 900;
+}
+
+#app .admin-main :is(.data-table, .law-table) {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--admin-text-secondary);
+}
+
+#app .admin-main :is(.data-table th, .law-table th) {
+  background: var(--admin-panel);
+  color: var(--admin-text-secondary);
+  padding: 13px 14px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+
+#app .admin-main :is(.data-table td, .law-table td) {
+  border-top: 1px solid var(--admin-divider);
+  border-bottom: 0;
+  padding: 13px 14px;
+  color: var(--admin-text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  vertical-align: top;
+}
+
+#app .admin-main :is(.data-table tr:hover td, .law-table tr:hover td) {
+  background: #fbfdff;
+}
+
+#app .admin-main :is(input:not(.el-input__inner), select, textarea:not(.el-textarea__inner), .search-input) {
+  border: 1px solid #d8dee9;
+  border-radius: var(--admin-radius-sm);
+  background: #ffffff;
+  color: var(--admin-text);
+  outline: none;
+}
+
+#app .admin-main :is(input:not(.el-input__inner), select, textarea:not(.el-textarea__inner), .search-input):focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+#app .admin-main :is(input::placeholder, textarea::placeholder) {
+  color: #667085;
+}
+
+#app .admin-main :is(a, button, input, select, textarea):focus-visible,
+#app .admin-sidebar :is(a, button):focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.2);
+  outline-offset: 2px;
+}
+
+#app .admin-main :is(.actions, .filters, .toolbar, .card-actions, .modal-actions, .modal-footer) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+#app .admin-main :is(.action-btn, .action-link, .primary-btn, .table-btn, .add-btn, .save-btn, .detail-btn, .refresh-btn, .edit-btn, .cancel-btn, .delete-btn, .btn-success, .btn-danger) {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: var(--admin-radius-sm);
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#app .admin-main :is(.action-btn, .primary-btn, .table-btn, .add-btn, .save-btn, .detail-btn, .refresh-btn, .edit-btn),
+#app .admin-main :is(.action-btn.blue, .action-link.browse, .blue) {
+  border: 1px solid var(--admin-primary);
+  background: var(--admin-primary);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+#app .admin-main :is(.action-btn:hover, .primary-btn:hover, .table-btn:hover, .add-btn:hover, .save-btn:hover, .detail-btn:hover, .refresh-btn:hover, .edit-btn:hover),
+#app .admin-main :is(.action-btn.blue:hover, .action-link.browse:hover, .blue:hover) {
+  border-color: var(--admin-primary-deep);
+  background: var(--admin-primary-deep);
+}
+
+#app .admin-main :is(.green, .btn-success) {
+  border: 1px solid var(--admin-success);
+  background: var(--admin-success);
+  color: #ffffff;
+}
+
+#app .admin-main :is(.yellow, .cancel-btn) {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: var(--admin-text-secondary);
+}
+
+#app .admin-main :is(.delete-btn, .btn-danger) {
+  border: 1px solid var(--admin-danger);
+  background: var(--admin-danger);
+  color: #ffffff;
+}
+
+#app .admin-main :is(.delete-btn:hover, .btn-danger:hover) {
+  border-color: #991b1b;
+  background: #991b1b;
+}
+
+#app .admin-main :is(button:disabled, .btn-success:disabled, .btn-danger:disabled) {
+  opacity: 0.62;
+  cursor: not-allowed;
+  transform: none;
+}
+
+#app .admin-main :is(.segment, .audit-type-tabs, .filter-tabs) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: auto;
+  margin-bottom: 18px;
+  padding: 4px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  background: var(--admin-panel);
+  box-shadow: none;
+}
+
+#app .admin-main :is(.segment button, .audit-type-tabs button, .tab-btn) {
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius-sm);
+  background: transparent;
+  color: var(--admin-text-secondary);
+  padding: 7px 12px;
+  font-weight: 800;
+}
+
+#app .admin-main :is(.segment button.active, .audit-type-tabs button.active, .tab-btn.active) {
+  border-color: var(--admin-soft-blue-border);
+  background: #ffffff;
+  color: var(--admin-primary-text);
+  box-shadow: none;
+}
+
+#app .admin-main :is(.tag, .role-tag, .status-badge, .tab-count) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+#app .admin-main :is(.tag, .role-tag, .tab-count, .badge-default) {
+  background: var(--admin-soft-blue);
+  color: var(--admin-primary-text);
+}
+
+#app .admin-main .badge-warning {
+  background: var(--admin-warning-bg);
+  color: var(--admin-warning);
+}
+
+#app .admin-main .badge-success {
+  background: var(--admin-success-bg);
+  color: var(--admin-success);
+}
+
+#app .admin-main .badge-danger {
+  background: var(--admin-danger-bg);
+  color: var(--admin-danger);
+}
+
+#app .admin-main :is(.modal-mask, .modal-overlay, .img-modal) {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+#app .admin-main :is(.modal, .modal-content, .modal-inner) {
+  width: min(640px, 92vw);
+  max-height: 86vh;
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
+  padding: 22px;
+}
+
+#app .admin-main .modal-content.large {
+  width: min(900px, 92vw);
+}
+
+#app .admin-main :is(.modal-head, .modal-header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--admin-divider);
+}
+
+#app .admin-main :is(.modal h2, .modal-head h2, .modal-header h2) {
+  margin: 0;
+  color: var(--admin-text);
+  font-size: 21px;
+  font-weight: 800;
+}
+
+#app .admin-main :is(.close-btn, .modal-head button, .modal-close) {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-sm);
+  background: #ffffff;
+  color: var(--admin-text-secondary);
+  font-size: 18px;
+}
+
+#app .admin-main .modal-img {
+  max-width: 85vw;
+  max-height: 82vh;
+  border-radius: var(--admin-radius-md);
+  object-fit: contain;
+}
+
+#app .admin-main .content-container {
+  max-width: none;
+}
+
+#app .admin-main .audit-list {
+  gap: 14px;
+}
+
+#app .admin-main .audit-card {
+  padding: 20px;
+}
+
+#app .admin-main .info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid var(--admin-divider);
+  border-radius: var(--admin-radius-md);
+  background: var(--admin-panel);
+}
+
+#app .admin-main .reject-info {
+  border: 1px solid #ffd1cf;
+  border-radius: var(--admin-radius-md);
+  background: var(--admin-danger-bg);
+  color: var(--admin-danger);
+}
+
+#app .admin-main .license-thumb {
+  border-radius: var(--admin-radius-sm);
+}
+
+#app .admin-main .loading,
+#app .admin-main .loading-wrap,
+#app .admin-main .empty {
+  color: var(--admin-text-muted);
+}
+
+#app .admin-main .el-button {
+  font-weight: 800;
+}
+
+#app .admin-main .el-table {
+  color: var(--admin-text-secondary);
+}
+
+#app .admin-main .el-table th.el-table__cell {
+  background: var(--admin-panel);
+  color: var(--admin-text-secondary);
+  font-weight: 800;
+}
+
+#app .admin-app.is-auth-route .auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: var(--admin-bg);
+}
+
+#app .admin-main .auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  padding: 32px;
+  background: transparent;
+}
+
+#app .auth-card {
+  width: min(420px, 100%);
+  padding: 28px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  background: #ffffff;
+  box-shadow: var(--admin-shadow-panel);
+}
+
+#app .auth-card h2 {
+  margin: 0 0 20px;
+  color: var(--admin-text);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+#app .admin-main .auth-card h2 {
+  margin-bottom: 8px;
+}
+
+#app .auth-link {
+  color: var(--admin-primary-text);
+  font-weight: 800;
+}
+
+@media (max-width: 1080px) {
+  #app .admin-main :is(.page-shell, .law-container, .settlement-page, .page),
+  #app .admin-main .auth-page {
+    padding: 24px;
+  }
+
+  #app .admin-main :is(.page-head, .law-header, .page > .toolbar) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 860px) {
+  #app .admin-main :is(.page-shell, .law-container, .settlement-page, .page),
+  #app .admin-main .auth-page {
+    padding: 18px;
+  }
+
+  #app .admin-main .auth-page {
+    grid-template-columns: 1fr;
+  }
+
+  #app .admin-main :is(.content-card, .law-table-container, .table-shell, .admin-list-card) {
+    padding: 16px;
+  }
+
+  #app .admin-main :is(.page-head h1, .law-header h1, .page > .toolbar h1, h1) {
+    font-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app *,
+  #app *::before,
+  #app *::after {
+    scroll-behavior: auto;
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+}

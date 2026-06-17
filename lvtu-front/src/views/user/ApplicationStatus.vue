@@ -91,6 +91,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getMyApplication } from '@/api/application'
 import { ElMessage } from 'element-plus'
+import { goBack as goBackToPrevious } from '@/utils/navigation'
 
 const router = useRouter()
 const application = ref(null)
@@ -173,7 +174,7 @@ const statusClass = computed(() => {
 const formatTime = (t) => t ? new Date(t).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—'
 
 const goBack = () => {
-  router.push('/settings')
+  goBackToPrevious(router, '/settings')
 }
 const reApply = () => router.push({ path: '/apply', query: { apply_type: 0 } })
 const goToModify = () => router.push({ path: '/apply', query: { apply_type: 1 } })
@@ -349,9 +350,9 @@ h1 {
 .reject-box {
   margin-top: 20px;
   background: #fff2f0;
+  border: 1px solid #fecaca;
   border-radius: 12px;
   padding: 16px;
-  border-left: 4px solid #ff4d4f;
 }
 .reject-title {
   font-weight: 600;

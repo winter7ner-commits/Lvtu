@@ -90,6 +90,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { submitApplication, uploadLicenseImage, getMyApplication } from '@/api/application'
 import { me } from '@/api/auth'
+import { goBack as goBackToPrevious } from '@/utils/navigation'
 
 const router = useRouter()
 const route = useRoute()
@@ -278,7 +279,7 @@ const submit = () => {
 }
 
 const goBack = () => {
-  router.push('/auth-center')
+  goBackToPrevious(router, '/auth-center')
 }
 
 onMounted(async () => {

@@ -28,18 +28,46 @@ const sortOptions = [
   { label: '姓名排序', value: 'name' }
 ]
 
+const unwrapResponse = (res) => {
+  const payload = res?.data ?? res
+  if (payload && typeof payload === 'object' && 'code' in payload) {
+    return payload.data ?? []
+  }
+  return payload
+}
+
 const normalizeList = (res) => {
-  const data = res?.data
+  const data = unwrapResponse(res)
   if (Array.isArray(data)) return data
   if (Array.isArray(data?.records)) return data.records
   if (Array.isArray(data?.list)) return data.list
+  if (Array.isArray(data?.data)) return data.data
   return []
 }
 
 const getSpecialtyNames = (lawyer) => {
-  return (lawyer.specialties || [])
+  const names = (lawyer.specialties || [])
     .map((item) => item?.name || item?.specialtyName)
     .filter(Boolean)
+
+  if (names.length) return names
+  return lawyer.specialty ? String(lawyer.specialty).split(/[,，、]/).map((item) => item.trim()).filter(Boolean) : []
+}
+
+const getSearchText = (lawyer) => [
+  lawyer.name,
+  lawyer.lawFirm,
+  lawyer.description,
+  lawyer.city,
+  lawyer.address,
+  lawyer.licenseNo,
+  getSpecialtyNames(lawyer).join(' ')
+].filter(Boolean).join(' ').toLowerCase()
+
+const matchesKeyword = (lawyer) => {
+  const text = keyword.value.trim().toLowerCase()
+  if (!text) return true
+  return getSearchText(lawyer).includes(text)
 }
 
 const specialties = computed(() => {
@@ -50,11 +78,12 @@ const specialties = computed(() => {
 const filteredList = computed(() => {
   const minScore = Number(minRating.value) || 0
   const result = list.value.filter((lawyer) => {
+    const keywordMatched = matchesKeyword(lawyer)
     const specialtyMatched = selectedSpecialty.value
       ? getSpecialtyNames(lawyer).includes(selectedSpecialty.value)
       : true
     const ratingMatched = minScore ? Number(lawyer.rating || 0) >= minScore : true
-    return specialtyMatched && ratingMatched
+    return keywordMatched && specialtyMatched && ratingMatched
   })
 
   return [...result].sort((a, b) => {
@@ -220,7 +249,7 @@ watch(
       <div v-if="filteredList.length" class="card-list">
         <LawyerListCard
           v-for="item in filteredList"
-          :key="item.lawyerId"
+          :key="item.lawyerId || item.id"
           :lawyer="item"
         />
       </div>

@@ -29,22 +29,22 @@ INSERT INTO users (
     `status`, is_verified, auth_status, created_time, updated_time, region
 ) VALUES
     -- 已实名认证普通用户：用于订单流程演示
-    (500001, 'user04', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000004', 'user04@lvtu.test', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
-    (500002, 'user05', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000005', 'user05@lvtu.test', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '北京'),
+    (500001, 'user04', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000004', 'user04@lvtu.com', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
+    (500002, 'user05', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000005', 'user05@lvtu.com', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '北京'),
     -- 律师账号
-    (500003, 'lawyA', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800001003', 'lawyer_alpha@lvtu.test', NULL, 2, NULL, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
-    (500004, 'lawyB', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800001004', 'lawyer_beta@lvtu.test', NULL, 2, NULL, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '深圳'),
+    (500003, 'lawyA', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800001003', 'lawyer_alpha@lvtu.com', NULL, 2, NULL, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '上海'),
+    (500004, 'lawyB', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800001004', 'lawyer_beta@lvtu.com', NULL, 2, NULL, 1, TRUE, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '深圳'),
     -- 后台账号
-    (500005, 'admin_super', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000005', 'admin_super@lvtu.test', NULL, 3, 'SUPER_ADMIN', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
-    (500006, 'admin_audit', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000006', 'admin_audit@lvtu.test', NULL, 3, 'CERT_AUDITOR', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
-    (500007, 'admin_operator', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000007', 'admin_operator@lvtu.test', NULL, 3, 'OPERATOR', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
-    (500008, 'admin_service', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000008', 'admin_service@lvtu.test', NULL, 3, 'CUSTOMER_SERVICE', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
+    (500005, 'admin_super', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000005', 'admin_super@lvtu.com', NULL, 3, 'SUPER_ADMIN', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
+    (500006, 'admin_audit', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000006', 'admin_audit@lvtu.com', NULL, 3, 'CERT_AUDITOR', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
+    (500007, 'admin_operator', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000007', 'admin_operator@lvtu.com', NULL, 3, 'OPERATOR', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
+    (500008, 'admin_service', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13900000008', 'admin_service@lvtu.com', NULL, 3, 'CUSTOMER_SERVICE', 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州'),
     -- 未实名认证普通用户：用于权限拦截演示
-    (500009, 'user01', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000001', 'user01@lvtu.test', NULL, 1, NULL, 1, FALSE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '广州'),
-    (500010, 'user02', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000002', 'user02@lvtu.test', NULL, 1, NULL, 1, FALSE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '成都'),
-    (500011, 'user03', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000003', 'user03@lvtu.test', NULL, 1, NULL, 1, FALSE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '南京'),
+    (500009, 'user01', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000001', 'user01@lvtu.com', NULL, 1, NULL, 1, FALSE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '广州'),
+    (500010, 'user02', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000002', 'user02@lvtu.com', NULL, 1, NULL, 1, FALSE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '成都'),
+    (500011, 'user03', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000003', 'user03@lvtu.com', NULL, 1, NULL, 1, FALSE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '南京'),
     -- 已实名认证普通用户：用于实名功能演示
-    (500012, 'user06', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000006', 'user06@lvtu.test', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州');
+    (500012, 'user06', '$2a$10$vRONcR9Wp.Y5EY0oC8siy.nTP.DjYIWti4QaxBtHDCpr6RbbdxNxe', '13800000006', 'user06@lvtu.com', NULL, 1, NULL, 1, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '杭州');
 
 create table users_verfications (
 	verification_id bigint auto_increment primary key comment '实名认证记录ID',
