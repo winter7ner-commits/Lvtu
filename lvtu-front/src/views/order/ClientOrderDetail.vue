@@ -106,6 +106,7 @@ const demandSectionConfig = [
       'expectedDate',
       'budget',
       'serviceSubject',
+      'consultMode',
       'consultationType',
       'consultationDirection',
       'businessDirection',
@@ -120,6 +121,11 @@ const demandSectionConfig = [
       'preferredDate',
       'preferredTimeSlot',
       'callDuration',
+      'deadline',
+      'city',
+      'address',
+      'contactName',
+      'contactPhone',
       'needFollowUp',
       'needUrgent',
       'needLawyerSignature'
@@ -129,6 +135,8 @@ const demandSectionConfig = [
     title: '问题与诉求',
     tone: 'amber',
     keys: [
+      'summary',
+      'description',
       'problemTitle',
       'problemDescription',
       'keyProblem',
@@ -165,6 +173,8 @@ const demandSectionConfig = [
   }
 ]
 const wideDemandKeys = new Set([
+  'summary',
+  'description',
   'problemTitle',
   'problemDescription',
   'keyProblem',
@@ -237,7 +247,26 @@ const fieldLabelMap = {
   existingMaterials: '已有材料',
   expectedService: '期望律师服务',
   evidenceFiles: '证据材料',
-  agreeTerms: '隐私与授权确认'
+  agreeTerms: '隐私与授权确认',
+  summary: '需求摘要',
+  description: '详细说明',
+  consultMode: '咨询方式',
+  contactName: '联系人',
+  contactPhone: '联系电话',
+  city: '所在城市',
+  address: '地址',
+  deadline: '期望完成时间'
+}
+
+const consultModeValueLabelMap = {
+  online: '在线咨询',
+  phone: '电话咨询',
+  video: '视频咨询',
+  offline: '线下咨询',
+  text: '图文咨询',
+  voice: '语音咨询',
+  online_consult: '在线法律咨询',
+  phone_consult: '电话法律咨询'
 }
 
 const valueLabelMap = {
@@ -374,6 +403,7 @@ const displayRegion = (value) => {
 
 const displayValue = (value, key = '') => {
   if (key === 'region') return displayRegion(value)
+  if (key === 'consultMode') return consultModeValueLabelMap[value] || value || '-'
   if (value === true) return '是'
   if (value === false) return '否'
   if (Array.isArray(value)) {
