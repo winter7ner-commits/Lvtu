@@ -14,6 +14,7 @@ const createOptionalPatternRule = (pattern, message) => ({
 })
 
 const createRequiredPositiveMoneyRule = () => ({
+  required: true,
   validator: (_rule, value, callback) => {
     const normalized = normalizeValue(value)
     if (!normalized) {
@@ -32,6 +33,7 @@ const createRequiredPositiveMoneyRule = () => ({
 })
 
 export const requiredTrimmedRule = (message) => ({
+  required: true,
   validator: (_rule, value, callback) => {
     if (normalizeValue(value)) {
       callback()

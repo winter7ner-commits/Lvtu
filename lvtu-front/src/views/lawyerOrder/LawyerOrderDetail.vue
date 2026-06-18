@@ -11,6 +11,7 @@ import {
   uploadServiceResultAttachment,
   updateServiceResult
 } from '@/api/lawyerOrder'
+import { useRegionOptions } from '@/components/order/useRegionOptions'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,6 +31,8 @@ const resultForm = ref({
 })
 const attachmentUploadFiles = ref([])
 const attachmentUploading = computed(() => attachmentUploadCount.value > 0)
+const collapsedInfo = ref([])
+const { regionOptions } = useRegionOptions()
 
 const serviceTypeMap = {
   101: '在线法律咨询',
@@ -112,17 +115,298 @@ const parseFormData = (raw) => {
   }
 }
 
-const labelize = (key) => {
-  const labelMap = {
-    summary: '需求摘要',
-    description: '详细说明',
-    contactName: '联系人',
-    contactPhone: '联系电话',
-    city: '所在城市',
-    address: '地址',
-    deadline: '期望完成时间'
+const identityKeys = ['realName', 'phone', 'idCard', 'verifiedText', 'accountType']
+const contactKeys = ['wechat', 'email', 'emergencyContact', 'emergencyPhone']
+const hiddenDemandKeys = new Set([...identityKeys, 'verified', ...contactKeys, 'agreeTerms'])
+const demandSectionConfig = [
+  {
+    title: '基础信息',
+    tone: 'blue',
+    keys: [
+      'businessType',
+      'region',
+      'isUrgent',
+      'expectedDate',
+      'budget',
+      'serviceSubject',
+      'consultationType',
+      'consultationDirection',
+      'businessDirection',
+      'marriageStatus',
+      'contractType',
+      'contractRole',
+      'documentType',
+      'caseType',
+      'currentStage',
+      'caseAmount',
+      'hasLawyer',
+      'preferredDate',
+      'preferredTimeSlot',
+      'callDuration',
+      'needFollowUp',
+      'needUrgent',
+      'needLawyerSignature'
+    ]
+  },
+  {
+    title: '问题与诉求',
+    tone: 'amber',
+    keys: [
+      'problemTitle',
+      'problemDescription',
+      'keyProblem',
+      'eventDescription',
+      'documentPurpose',
+      'coreDemand',
+      'helpExpected',
+      'reviewFocus',
+      'expectedService',
+      'supplementaryRemarks'
+    ]
+  },
+  {
+    title: '相关人员与财产',
+    tone: 'green',
+    keys: [
+      'otherPartyName',
+      'otherPartyContact',
+      'oppositePartyName',
+      'propertyHouse',
+      'propertyVehicle',
+      'propertyDeposit',
+      'propertyDebt',
+      'propertyOther',
+      'hasChildren',
+      'childrenCount',
+      'childrenAge'
+    ]
+  },
+  {
+    title: '证据材料',
+    tone: 'purple',
+    keys: ['existingMaterials', 'contractFile', 'evidenceFiles']
   }
-  return labelMap[key] || key
+]
+const wideDemandKeys = new Set([
+  'problemTitle',
+  'problemDescription',
+  'keyProblem',
+  'eventDescription',
+  'supplementaryRemarks',
+  'coreDemand',
+  'helpExpected',
+  'reviewFocus',
+  'expectedService',
+  'existingMaterials',
+  'contractFile',
+  'evidenceFiles'
+])
+
+const fieldLabelMap = {
+  realName: '真实姓名',
+  phone: '手机号',
+  idCard: '身份证号',
+  verified: '认证状态',
+  verifiedText: '认证状态',
+  accountType: '账户类型',
+  wechat: '微信号',
+  email: '邮箱',
+  emergencyContact: '紧急联系人',
+  emergencyPhone: '紧急电话',
+  businessType: '业务类型',
+  region: '所属地区',
+  isUrgent: '是否紧急',
+  expectedDate: '期望完成时间',
+  budget: '预估预算',
+  serviceSubject: '服务对象',
+  consultationType: '咨询类型',
+  problemTitle: '问题标题',
+  problemDescription: '问题详细描述',
+  helpExpected: '希望获得的帮助',
+  consultationDirection: '咨询方向',
+  preferredDate: '希望通话日期',
+  preferredTimeSlot: '希望通话时间段',
+  callDuration: '通话时长选择',
+  keyProblem: '本次最想解决的问题',
+  needFollowUp: '是否需要回访',
+  documentType: '文书类型',
+  documentPurpose: '文书用途',
+  eventDescription: '事件经过详细描述',
+  otherPartyName: '对方姓名/公司名称',
+  otherPartyContact: '对方联系方式',
+  needUrgent: '是否需要加急',
+  needLawyerSignature: '是否需要律师署名版',
+  contractType: '合同类型',
+  contractRole: '合同身份',
+  reviewFocus: '审核重点',
+  contractFile: '上传合同文件',
+  supplementaryRemarks: '补充说明',
+  businessDirection: '业务方向',
+  marriageStatus: '婚姻状态',
+  coreDemand: '核心诉求',
+  propertyHouse: '房产情况',
+  propertyVehicle: '车辆情况',
+  propertyDeposit: '存款情况',
+  propertyDebt: '债务情况',
+  propertyOther: '其他重要资产',
+  hasChildren: '是否有子女',
+  childrenCount: '子女人数',
+  childrenAge: '子女年龄',
+  caseType: '案件类型',
+  currentStage: '当前阶段',
+  caseAmount: '涉案金额',
+  oppositePartyName: '对方姓名/公司名称',
+  hasLawyer: '是否已有律师',
+  existingMaterials: '已有材料',
+  expectedService: '期望律师服务',
+  evidenceFiles: '证据材料',
+  agreeTerms: '隐私与授权确认',
+  summary: '需求摘要',
+  description: '详细说明',
+  contactName: '联系人',
+  contactPhone: '联系电话',
+  city: '所在城市',
+  address: '地址',
+  deadline: '期望完成时间'
+}
+
+const valueLabelMap = {
+  legalAdvice: '法律意见',
+  riskAnalysis: '风险分析',
+  solutionSuggestion: '处理方案建议',
+  worthSuing: '是否值得起诉',
+  riskClause: '风险条款排查',
+  breachLiability: '违约责任',
+  paymentClause: '付款条款',
+  terminationClause: '解约条款',
+  confidentialityClause: '保密条款',
+  jurisdiction: '管辖法院',
+  propertyDivision: '财产分割',
+  childCustody: '争取孩子抚养权',
+  wantDivorce: '想离婚',
+  infidelityEvidence: '对方出轨证据处理',
+  domesticViolenceRights: '家暴维权',
+  fullRepresentation: '全程代理',
+  singleAppearance: '单次出庭',
+  executionRepresentation: '执行代理',
+  indictment: '起诉状',
+  judgment: '判决书',
+  arbitrationAward: '仲裁裁决书',
+  other: '其他',
+  evidence: '证据材料',
+  contract: '合同/协议',
+  chatRecord: '聊天记录',
+  transferRecord: '转账记录',
+  privacy: '我已阅读并同意《隐私保护协议》',
+  service: '我已阅读并同意《法律服务协议》',
+  legal: '我已阅读并同意《法律服务协议》',
+  truthful: '我确认提交的信息真实有效',
+  truth: '我确认提交的信息真实有效',
+  authorize: '我授权平台将案件信息提供给承办律师',
+  auth: '我授权平台将案件信息提供给承办律师'
+}
+
+const getFieldLabel = (key) => fieldLabelMap[key] || key
+const pickEntries = (keys) => keys
+  .filter((key) => Object.prototype.hasOwnProperty.call(parsedFormData.value, key))
+  .map((key) => ({ key, label: getFieldLabel(key), value: parsedFormData.value[key] }))
+
+const identityEntries = computed(() => pickEntries(identityKeys))
+const contactEntries = computed(() => pickEntries(contactKeys))
+const makeDemandEntry = (key, value) => ({
+  key,
+  label: getFieldLabel(key),
+  value,
+  wide: wideDemandKeys.has(key)
+})
+
+const demandSections = computed(() => {
+  const data = parsedFormData.value
+  const usedKeys = new Set()
+  const sections = demandSectionConfig.map((section) => {
+    const entries = section.keys
+      .filter((key) => Object.prototype.hasOwnProperty.call(data, key) && !hiddenDemandKeys.has(key))
+      .map((key) => {
+        usedKeys.add(key)
+        return makeDemandEntry(key, data[key])
+      })
+
+    return { ...section, entries }
+  }).filter((section) => section.entries.length)
+
+  const otherEntries = Object.entries(data)
+    .filter(([key]) => !hiddenDemandKeys.has(key) && !usedKeys.has(key))
+    .map(([key, value]) => makeDemandEntry(key, value))
+
+  if (otherEntries.length) {
+    sections.push({
+      title: '其他信息',
+      tone: 'gray',
+      entries: otherEntries
+    })
+  }
+
+  return sections
+})
+const hasDemandData = computed(() => demandSections.value.some((section) => section.entries.length))
+
+const displayFileList = (value) => {
+  const files = Array.isArray(value) ? value : [value]
+  return files.map((file) => {
+    if (!file || typeof file !== 'object') return file
+    const sizeText = file.size ? `（${Math.round(Number(file.size) / 1024)} KB）` : ''
+    return `${file.name || file.fileName || file.url || file.fileUrl || '附件'}${sizeText}`
+  }).join('、')
+}
+
+const isFileLike = (value) => {
+  return value && typeof value === 'object' && (
+    'name' in value ||
+    'fileName' in value ||
+    'url' in value ||
+    'fileUrl' in value
+  )
+}
+
+const findRegionPath = (values, options) => {
+  if (!Array.isArray(values) || values.length === 0) return []
+  const [current, ...rest] = values
+
+  for (const option of options || []) {
+    if (String(option.value) === String(current) || option.label === current) {
+      if (rest.length === 0) return [option.label]
+      const childPath = findRegionPath(rest, option.children || [])
+      return [option.label, ...childPath]
+    }
+  }
+
+  return values
+}
+
+const displayRegion = (value) => {
+  if (!Array.isArray(value)) return value || '-'
+  return findRegionPath(value, regionOptions.value).join(' / ') || '-'
+}
+
+const displayValue = (value, key = '') => {
+  if (key === 'region') return displayRegion(value)
+  if (value === true) return '是'
+  if (value === false) return '否'
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '-'
+    if (value.every((item) => isFileLike(item))) return displayFileList(value)
+    return value.map((item) => valueLabelMap[item] || item).join('、')
+  }
+  if (isFileLike(value)) return displayFileList(value)
+  if (value && typeof value === 'object') return JSON.stringify(value)
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+    return value.slice(0, 10)
+  }
+  const displayText = valueLabelMap[value] || value || '-'
+  if (displayText !== '-' && ['budget', 'caseAmount'].includes(key)) {
+    return `${displayText} 元`
+  }
+  return displayText
 }
 
 const getStatusType = (status) => {
@@ -394,18 +678,64 @@ onMounted(loadOrder)
           </div>
         </article>
 
-        <article class="info-panel">
-          <div class="panel-title">
-            <h2>用户需求</h2>
-          </div>
-          <div v-if="Object.keys(parsedFormData).length" class="form-data">
-            <div v-for="(value, key) in parsedFormData" :key="key" class="form-row">
-              <span>{{ labelize(key) }}</span>
-              <p>{{ value || '-' }}</p>
+        <article class="info-panel folded-panel">
+          <el-collapse v-model="collapsedInfo">
+            <el-collapse-item name="identity">
+              <template #title>
+                <span class="collapse-title">用户实名信息</span>
+              </template>
+              <div v-if="identityEntries.length" class="compact-info-list">
+                <div v-for="item in identityEntries" :key="item.key" class="compact-info-row">
+                  <span>{{ item.label }}</span>
+                  <strong>{{ displayValue(item.value, item.key) }}</strong>
+                </div>
+              </div>
+              <el-empty v-else description="暂无实名信息" />
+            </el-collapse-item>
+
+            <el-collapse-item name="contact">
+              <template #title>
+                <span class="collapse-title">联系补充信息</span>
+              </template>
+              <div v-if="contactEntries.length" class="compact-info-list">
+                <div v-for="item in contactEntries" :key="item.key" class="compact-info-row">
+                  <span>{{ item.label }}</span>
+                  <strong>{{ displayValue(item.value, item.key) }}</strong>
+                </div>
+              </div>
+              <el-empty v-else description="暂无联系补充信息" />
+            </el-collapse-item>
+          </el-collapse>
+        </article>
+      </section>
+
+      <section class="demand-panel">
+        <div class="panel-title">
+          <h2>用户需求</h2>
+        </div>
+        <div v-if="hasDemandData" class="demand-sections">
+          <div
+            v-for="section in demandSections"
+            :key="section.title"
+            :class="['demand-section', `demand-section-${section.tone}`]"
+          >
+            <div class="section-title">
+              <span></span>
+              <strong>{{ section.title }}</strong>
+            </div>
+            <div class="form-data">
+              <div
+                v-for="item in section.entries"
+                :key="item.key"
+                :class="['form-row', { 'form-row-wide': item.wide }]"
+              >
+                <span>{{ item.label }}</span>
+                <p>{{ displayValue(item.value, item.key) }}</p>
+              </div>
             </div>
           </div>
-          <el-empty v-else description="暂无需求详情" />
-        </article>
+        </div>
+        <el-empty v-else description="暂无需求详情" />
       </section>
 
       <section v-if="canViewResult || serviceResult" class="result-panel" v-loading="resultLoading">
@@ -567,6 +897,7 @@ onMounted(loadOrder)
 
 .page-head,
 .detail-grid,
+.demand-panel,
 .result-panel {
   width: 100%;
   max-width: 1180px;
@@ -619,12 +950,13 @@ h3 {
 
 .detail-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
   gap: 18px;
   align-items: start;
 }
 
 .info-panel,
+.demand-panel,
 .result-panel {
   padding: 20px;
   background: #ffffff;
@@ -652,6 +984,61 @@ h3 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+}
+
+.folded-panel {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.folded-panel :deep(.el-collapse) {
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.folded-panel :deep(.el-collapse-item__header) {
+  min-height: 52px;
+  border-bottom-color: #edf1f7;
+  color: #172033;
+  font-weight: 700;
+}
+
+.folded-panel :deep(.el-collapse-item__wrap) {
+  border-bottom-color: #edf1f7;
+}
+
+.folded-panel :deep(.el-collapse-item__content) {
+  padding-bottom: 14px;
+}
+
+.collapse-title {
+  font-size: 16px;
+}
+
+.compact-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.compact-info-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f6f8fc;
+  border-radius: 10px;
+}
+
+.compact-info-row span {
+  color: #667085;
+  font-size: 13px;
+}
+
+.compact-info-row strong {
+  color: #172033;
+  font-size: 14px;
+  word-break: break-word;
 }
 
 .info-list div,
@@ -684,18 +1071,91 @@ h3 {
 }
 
 .form-data {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.demand-sections {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
+}
+
+.demand-section {
+  padding: 16px;
+  border: 1px solid var(--section-border);
+  border-radius: 12px;
+  background: var(--section-bg);
+}
+
+.demand-section-blue {
+  --section-bg: #f8fbff;
+  --section-border: #d6e4ff;
+  --section-mark: #2563eb;
+}
+
+.demand-section-amber {
+  --section-bg: #fffaf0;
+  --section-border: #fde7b5;
+  --section-mark: #d97706;
+}
+
+.demand-section-green {
+  --section-bg: #f6fef9;
+  --section-border: #bbf7d0;
+  --section-mark: #16a34a;
+}
+
+.demand-section-purple {
+  --section-bg: #fbf7ff;
+  --section-border: #e9d5ff;
+  --section-mark: #9333ea;
+}
+
+.demand-section-gray {
+  --section-bg: #f8fafc;
+  --section-border: #e2e8f0;
+  --section-mark: #64748b;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: #172033;
+}
+
+.section-title span {
+  width: 4px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--section-mark);
+}
+
+.section-title strong {
+  font-size: 15px;
+}
+
+.demand-section .form-row {
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.form-row-wide {
+  grid-column: span 3;
 }
 
 .form-row p {
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.8;
   color: #172033;
   word-break: break-word;
+  white-space: pre-wrap;
 }
 
+.demand-panel,
 .result-panel {
   margin-top: 18px;
 }
@@ -947,8 +1407,13 @@ h3 {
     align-items: stretch;
   }
 
-  .info-list {
+  .info-list,
+  .form-data {
     grid-template-columns: 1fr;
+  }
+
+  .form-row-wide {
+    grid-column: span 1;
   }
 
   .revision-process-body {

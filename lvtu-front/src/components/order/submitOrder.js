@@ -1,4 +1,5 @@
 import { ElMessage } from 'element-plus'
+import { nextTick } from 'vue'
 import { createOrder } from '@/api/order'
 
 const DEFAULT_AMOUNTS = {
@@ -64,11 +65,38 @@ const normalizeForStorage = (value) => {
   return value
 }
 
+const prefersReducedMotion = () => {
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+}
+
+const scrollToFirstInvalidField = async (formRef) => {
+  await nextTick()
+  if (typeof window === 'undefined') return
+
+  const formElement = formRef.value?.$el
+  const firstInvalidField = formElement?.querySelector?.('.el-form-item.is-error')
+  if (!firstInvalidField) return
+
+  const top = firstInvalidField.getBoundingClientRect().top + window.scrollY - 104
+  window.scrollTo({
+    top: Math.max(top, 0),
+    behavior: prefersReducedMotion() ? 'auto' : 'smooth'
+  })
+
+  const focusTarget = firstInvalidField.querySelector(
+    'input:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )
+  focusTarget?.focus?.({ preventScroll: true })
+}
+
 export const submitOrderForm = async ({ formRef, formData, serviceTypeId, targetLawyerId = null }) => {
   if (!formRef.value) return null
 
   const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return null
+  if (!valid) {
+    await scrollToFirstInvalidField(formRef)
+    return null
+  }
 
   const currentUser = getCurrentUser()
   if (Number(currentUser?.authStatus) === 2) {

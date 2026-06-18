@@ -23,6 +23,10 @@
           </div>
 
           <div class="service-select-area">
+            <div class="service-select-heading">
+              <span>服务类型</span>
+              <span class="required-mark" aria-hidden="true">*</span>
+            </div>
             <div class="service-selector">
               <button
                 v-for="service in visibleServiceOptions"
@@ -406,6 +410,21 @@ const currentForm = computed(() => {
   max-width: 520px;
 }
 
+.service-select-heading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 8px;
+  color: #344054;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.required-mark {
+  color: #f56c6c;
+  font-weight: 800;
+}
+
 .service-selector {
   display: grid;
   grid-template-columns: repeat(3, minmax(130px, 1fr));
@@ -509,6 +528,12 @@ const currentForm = computed(() => {
   background: #f6f8fb;
   color: #172033;
   font-weight: 700;
+}
+
+:deep(.form-section.required-section .el-card__header::after) {
+  content: '*';
+  margin-left: 4px;
+  color: #f56c6c;
 }
 
 :deep(.form-section .el-card__body) {

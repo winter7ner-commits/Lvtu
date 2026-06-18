@@ -14,6 +14,7 @@ import com.bitzh.lvtu.entity.ServiceResultAttachment;
 import com.bitzh.lvtu.entity.ServiceResultRevision;
 import com.bitzh.lvtu.entity.ServiceResultSubmission;
 import com.bitzh.lvtu.entity.ServiceResultSubmissionAttachment;
+import com.bitzh.lvtu.entity.LawyerProfile;
 import com.bitzh.lvtu.exception.BusinessException;
 import com.bitzh.lvtu.mapper.ServiceOrderMapper;
 import com.bitzh.lvtu.mapper.ServiceResultAttachmentMapper;
@@ -265,7 +266,7 @@ public class ServiceResultServiceImpl implements ServiceResultService {
             throw new BusinessException("订单状态更新失败");
         }
 
-        Long lawyerUserId = lawyerProfileMapper.selectByLawyerId(order.getLawyerId()).getUserId();
+        Long lawyerUserId = getLawyerUserId(order.getLawyerId());
         notificationService.create(
                 lawyerUserId,
                 needIntervention ? "ORDER_INTERVENTION" : "SERVICE_RESULT_REVISION_REQUESTED",
@@ -279,6 +280,14 @@ public class ServiceResultServiceImpl implements ServiceResultService {
 
         ServiceResult updatedResult = serviceResultMapper.selectByOrderId(orderId);
         return toServiceResultResponse(updatedResult);
+    }
+
+    private Long getLawyerUserId(Long lawyerId) {
+        if (lawyerId == null) {
+            return null;
+        }
+        LawyerProfile lawyer = lawyerProfileMapper.selectByLawyerId(lawyerId);
+        return lawyer == null ? null : lawyer.getUserId();
     }
 
     private ServiceOrder getRequiredOrder(Long orderId) {

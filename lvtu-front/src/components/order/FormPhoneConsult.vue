@@ -187,7 +187,7 @@
       </el-card>
 
       <!-- 6. 隐私与授权确认 -->
-      <el-card class="form-section" shadow="never">
+      <el-card class="form-section required-section" shadow="never">
         <template #header>6. 隐私与授权确认</template>
         <el-form-item prop="agreeTerms" label-width="0">
           <el-checkbox-group v-model="formData.agreeTerms">
